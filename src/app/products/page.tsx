@@ -552,7 +552,7 @@ export default function Products() {
                         id="website"
                         value={newProduct.website}
                         onChange={(e) => setNewProduct({ ...newProduct, website: e.target.value })}
-                        className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        className="flex-1 input-base"
                         placeholder="https://yourproduct.com"
                         required
                       />
@@ -587,35 +587,35 @@ export default function Products() {
 
                       {/* Product Name */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="label-base">
                           Product Name
                         </label>
                         <input
                           type="text"
                           value={newProduct.name}
                           onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                          className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                          className="input-base"
                           placeholder="Enter product name"
                         />
                       </div>
 
                       {/* Description */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="label-base">
                           Description
                         </label>
                         <textarea
                           rows={3}
                           value={newProduct.description}
                           onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                          className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                          className="textarea-base"
                           placeholder="Describe what your product does"
                         />
                       </div>
 
                       {/* Features */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="label-base">
                           Features
                         </label>
                         <div className="space-y-2">
@@ -629,7 +629,7 @@ export default function Products() {
                                   newFeatures[index] = e.target.value
                                   setNewProduct({ ...newProduct, features: newFeatures })
                                 }}
-                                className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                className="flex-1 input-base"
                                 placeholder="Enter feature"
                               />
                               <button
@@ -656,7 +656,7 @@ export default function Products() {
 
                       {/* Benefits */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="label-base">
                           Benefits
                         </label>
                         <div className="space-y-2">
@@ -670,7 +670,7 @@ export default function Products() {
                                   newBenefits[index] = e.target.value
                                   setNewProduct({ ...newProduct, benefits: newBenefits })
                                 }}
-                                className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                className="flex-1 input-base"
                                 placeholder="Enter benefit"
                               />
                               <button
@@ -697,7 +697,7 @@ export default function Products() {
 
                       {/* Pain Points */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="label-base">
                           Pain Points (Problems Solved)
                         </label>
                         <div className="space-y-2">
@@ -711,7 +711,7 @@ export default function Products() {
                                   newPainPoints[index] = e.target.value
                                   setNewProduct({ ...newProduct, painPoints: newPainPoints })
                                 }}
-                                className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                className="flex-1 input-base"
                                 placeholder="Enter pain point"
                               />
                               <button
@@ -738,14 +738,14 @@ export default function Products() {
 
                       {/* Ideal Customer Profile */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="label-base">
                           Ideal Customer Profile
                         </label>
                         <textarea
                           rows={2}
                           value={newProduct.idealCustomerProfile}
                           onChange={(e) => setNewProduct({ ...newProduct, idealCustomerProfile: e.target.value })}
-                          className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                          className="w-full input-base"
                           placeholder="Describe your ideal customer"
                         />
                       </div>
@@ -883,7 +883,7 @@ export default function Products() {
                       id="edit-website"
                       value={newProduct.website}
                       onChange={(e) => setNewProduct({ ...newProduct, website: e.target.value })}
-                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      className="w-full input-base"
                       placeholder="https://yourproduct.com"
                       required
                     />
@@ -898,7 +898,7 @@ export default function Products() {
                       type="text"
                       value={newProduct.name}
                       onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      className="w-full input-base"
                       placeholder="Enter product name"
                       required
                     />
@@ -913,7 +913,7 @@ export default function Products() {
                       rows={3}
                       value={newProduct.description}
                       onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      className="w-full input-base"
                       placeholder="Describe what your product does"
                     />
                   </div>
@@ -934,7 +934,7 @@ export default function Products() {
                               newFeatures[index] = e.target.value
                               setNewProduct({ ...newProduct, features: newFeatures })
                             }}
-                            className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            className="flex-1 input-base"
                             placeholder="Enter feature"
                           />
                           <button
@@ -975,7 +975,7 @@ export default function Products() {
                               newBenefits[index] = e.target.value
                               setNewProduct({ ...newProduct, benefits: newBenefits })
                             }}
-                            className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            className="flex-1 input-base"
                             placeholder="Enter benefit"
                           />
                           <button
@@ -1016,7 +1016,7 @@ export default function Products() {
                               newPainPoints[index] = e.target.value
                               setNewProduct({ ...newProduct, painPoints: newPainPoints })
                             }}
-                            className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            className="flex-1 input-base"
                             placeholder="Enter pain point"
                           />
                           <button
@@ -1050,7 +1050,7 @@ export default function Products() {
                       rows={2}
                       value={newProduct.idealCustomerProfile}
                       onChange={(e) => setNewProduct({ ...newProduct, idealCustomerProfile: e.target.value })}
-                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      className="w-full input-base"
                       placeholder="Describe your ideal customer"
                     />
                   </div>

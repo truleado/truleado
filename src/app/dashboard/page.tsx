@@ -62,6 +62,9 @@ export default function Dashboard() {
   const [statsLoading, setStatsLoading] = useState(true)
   const [activityLoading, setActivityLoading] = useState(true)
   const [trendsLoading, setTrendsLoading] = useState(true)
+  const [redditConnected, setRedditConnected] = useState(false)
+  const [hasProducts, setHasProducts] = useState(false)
+  const [leadFindingActive, setLeadFindingActive] = useState(false)
 
   // Icon mapping
   const iconMap: { [key: string]: any } = {
@@ -84,6 +87,22 @@ export default function Dashboard() {
     }
   }, [user])
 
+  const handleRedditConnect = async () => {
+    try {
+      const response = await fetch('/api/auth/reddit')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.authUrl) {
+          window.location.href = data.authUrl
+        }
+      } else {
+        console.error('Failed to get Reddit OAuth URL')
+      }
+    } catch (error) {
+      console.error('Error connecting to Reddit:', error)
+    }
+  }
+
   const fetchDashboardData = async () => {
     try {
       // Fetch stats
@@ -91,6 +110,7 @@ export default function Dashboard() {
       if (statsResponse.ok) {
         const statsData = await statsResponse.json()
         setStats(statsData)
+        setHasProducts(statsData.activeProducts > 0)
       }
 
       // Fetch recent activity
@@ -105,6 +125,20 @@ export default function Dashboard() {
       if (trendsResponse.ok) {
         const trendsData = await trendsResponse.json()
         setTrends(trendsData)
+      }
+
+      // Check Reddit connection status
+      const redditResponse = await fetch('/api/auth/reddit/status')
+      if (redditResponse.ok) {
+        const redditData = await redditResponse.json()
+        setRedditConnected(redditData.connected)
+      }
+
+      // Check if lead finding is active (has active jobs)
+      const jobsResponse = await fetch('/api/debug/current-jobs')
+      if (jobsResponse.ok) {
+        const jobsData = await jobsResponse.json()
+        setLeadFindingActive(jobsData.jobs && jobsData.jobs.length > 0)
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
@@ -226,40 +260,124 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Quick Actions */}
+        {/* Let's get started quick */}
         <div className="bg-white shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg font-medium leading-6 text-gray-900">Quick Actions</h3>
+            <h3 className="text-lg font-medium leading-6 text-gray-900">Let's get started quick</h3>
             <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <Link href="/products" className="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-6 text-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                <Package className="mx-auto h-8 w-8 text-gray-400" />
+              {/* Step 1: Connect Reddit */}
+              <div className={`relative block w-full rounded-lg border-2 p-6 text-center transition-all duration-200 ${
+                redditConnected 
+                  ? 'border-green-300 bg-green-50' 
+                  : 'border-dashed border-gray-300 hover:border-gray-400'
+              }`}>
+                {redditConnected && (
+                  <div className="absolute top-3 right-3">
+                    <CheckCircle className="h-6 w-6 text-green-600" />
+                  </div>
+                )}
+                <div className="flex items-center justify-center">
+                  {redditConnected ? (
+                    <CheckCircle className="mx-auto h-8 w-8 text-green-600" />
+                  ) : (
+                    <Search className="mx-auto h-8 w-8 text-gray-400" />
+                  )}
+                </div>
                 <span className="mt-2 block text-sm font-medium text-gray-900">
-                  Add your first product
+                  {redditConnected ? 'Reddit Connected!' : 'Connect Reddit Account'}
                 </span>
                 <span className="mt-1 block text-sm text-gray-500">
-                  Define what your SaaS does to start finding leads
+                  {redditConnected 
+                    ? 'Your Reddit account is ready for lead discovery' 
+                    : 'Connect your Reddit account to start finding leads'
+                  }
                 </span>
-              </Link>
-              
-              <Link href="/settings" className="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-6 text-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                <Search className="mx-auto h-8 w-8 text-gray-400" />
+                {!redditConnected && (
+                  <button 
+                    onClick={handleRedditConnect}
+                    className="mt-3 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Connect Now
+                  </button>
+                )}
+              </div>
+
+              {/* Step 2: Add Products */}
+              <div className={`relative block w-full rounded-lg border-2 p-6 text-center transition-all duration-200 ${
+                hasProducts 
+                  ? 'border-green-300 bg-green-50' 
+                  : 'border-dashed border-gray-300 hover:border-gray-400'
+              }`}>
+                {hasProducts && (
+                  <div className="absolute top-3 right-3">
+                    <CheckCircle className="h-6 w-6 text-green-600" />
+                  </div>
+                )}
+                <div className="flex items-center justify-center">
+                  {hasProducts ? (
+                    <CheckCircle className="mx-auto h-8 w-8 text-green-600" />
+                  ) : (
+                    <Package className="mx-auto h-8 w-8 text-gray-400" />
+                  )}
+                </div>
                 <span className="mt-2 block text-sm font-medium text-gray-900">
-                  Configure subreddits
+                  {hasProducts ? 'Products Added!' : 'Add Your Products'}
                 </span>
                 <span className="mt-1 block text-sm text-gray-500">
-                  Choose which communities to monitor
+                  {hasProducts 
+                    ? 'Your products are ready for lead discovery' 
+                    : 'Define what your SaaS does to start finding leads'
+                  }
                 </span>
-              </Link>
-              
-              <Link href="/leads" className="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-6 text-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                <Users className="mx-auto h-8 w-8 text-gray-400" />
+                {!hasProducts && (
+                  <Link 
+                    href="/products" 
+                    className="mt-3 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Add Product
+                  </Link>
+                )}
+              </div>
+
+              {/* Step 3: Lead Finding Magic */}
+              <div className={`relative block w-full rounded-lg border-2 p-6 text-center transition-all duration-200 ${
+                (redditConnected && hasProducts) || leadFindingActive
+                  ? 'border-green-300 bg-green-50' 
+                  : 'border-dashed border-gray-300'
+              }`}>
+                {(redditConnected && hasProducts) || leadFindingActive ? (
+                  <div className="absolute top-3 right-3">
+                    <CheckCircle className="h-6 w-6 text-green-600" />
+                  </div>
+                ) : null}
+                <div className="flex items-center justify-center">
+                  {(redditConnected && hasProducts) || leadFindingActive ? (
+                    <Sparkles className="mx-auto h-8 w-8 text-green-600" />
+                  ) : (
+                    <Zap className="mx-auto h-8 w-8 text-gray-400" />
+                  )}
+                </div>
                 <span className="mt-2 block text-sm font-medium text-gray-900">
-                  View your leads
+                  {(redditConnected && hasProducts) || leadFindingActive 
+                    ? 'Lead Finding Active! 🚀' 
+                    : 'Lead Finding Ready'
+                  }
                 </span>
                 <span className="mt-1 block text-sm text-gray-500">
-                  See who's interested in your product
+                  {(redditConnected && hasProducts) || leadFindingActive
+                    ? 'We\'re automatically finding leads for you!' 
+                    : 'Complete steps 1 & 2 to start the magic'
+                  }
                 </span>
-              </Link>
+                {(redditConnected && hasProducts) && !leadFindingActive && (
+                  <div className="mt-3">
+                    <span className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-green-700 bg-green-100">
+                      <Sparkles className="w-4 h-4 mr-1" />
+                      Starting automatically...
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

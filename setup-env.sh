@@ -21,8 +21,9 @@ PADDLE_API_KEY=your_paddle_api_key_here
 REDDIT_CLIENT_ID=your_reddit_client_id_here
 REDDIT_CLIENT_SECRET=your_reddit_client_secret_here
 
-# Google API Configuration (optional)
-GOOGLE_API_KEY=your_google_api_key_here
+# Google OAuth Configuration (for Google sign-in)
+GOOGLE_CLIENT_ID=your_google_client_id_here
+GOOGLE_CLIENT_SECRET=your_google_client_secret_here
 EOF
   echo "✅ Created .env.local file"
 else
@@ -41,7 +42,13 @@ echo "   - Add REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET to .env.local"
 echo "5. Add Supabase service role key for background jobs:"
 echo "   - Get from Supabase Dashboard > Settings > API"
 echo "   - Add SUPABASE_SERVICE_ROLE_KEY to .env.local"
-echo "6. Set up Paddle credentials (optional for now)"
+echo "6. Set up Google OAuth for Google sign-in:"
+echo "   - Go to https://console.cloud.google.com/"
+echo "   - Create a new project or select existing one"
+echo "   - Enable Google+ API"
+echo "   - Create OAuth 2.0 credentials"
+echo "   - Add GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET to .env.local"
+echo "7. Set up Paddle credentials (optional for now)"
 echo ""
 echo "🔗 Supabase Setup Guide: ./SUPABASE_SETUP.md"
 echo ""

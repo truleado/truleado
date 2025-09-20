@@ -233,7 +233,7 @@ export default function Settings() {
 
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="email" className="label-base">
                       Email Address
                     </label>
                     <input
@@ -241,7 +241,7 @@ export default function Settings() {
                       id="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      className="mt-1 input-base"
                     />
                   </div>
                 </div>
@@ -259,7 +259,7 @@ export default function Settings() {
                           id="currentPassword"
                           value={formData.currentPassword}
                           onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm pr-10"
+                          className="input-base pr-10"
                         />
                         <button
                           type="button"
@@ -283,7 +283,7 @@ export default function Settings() {
                         id="newPassword"
                         value={formData.newPassword}
                         onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        className="mt-1 input-base"
                       />
                     </div>
                   </div>

@@ -1,0 +1,135 @@
+/* Modern Input Styles for Truleado */
+
+/* Base input styles */
+.input-base {
+  @apply w-full px-4 py-3 text-sm text-gray-900 placeholder-gray-500 bg-white border border-gray-200 rounded-xl shadow-sm transition-all duration-200 ease-in-out;
+}
+
+.input-base:focus {
+  @apply outline-none ring-2 ring-blue-500/20 border-blue-500 shadow-md;
+}
+
+.input-base:hover:not(:focus) {
+  @apply border-gray-300 shadow-sm;
+}
+
+/* Input with error state */
+.input-error {
+  @apply border-red-300 ring-2 ring-red-500/20;
+}
+
+.input-error:focus {
+  @apply border-red-500 ring-red-500/20;
+}
+
+/* Textarea styles */
+.textarea-base {
+  @apply w-full px-4 py-3 text-sm text-gray-900 placeholder-gray-500 bg-white border border-gray-200 rounded-xl shadow-sm transition-all duration-200 ease-in-out resize-none;
+}
+
+.textarea-base:focus {
+  @apply outline-none ring-2 ring-blue-500/20 border-blue-500 shadow-md;
+}
+
+.textarea-base:hover:not(:focus) {
+  @apply border-gray-300 shadow-sm;
+}
+
+/* Select styles */
+.select-base {
+  @apply w-full px-4 py-3 text-sm text-gray-900 bg-white border border-gray-200 rounded-xl shadow-sm transition-all duration-200 ease-in-out appearance-none bg-no-repeat bg-right;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 40px;
+}
+
+.select-base:focus {
+  @apply outline-none ring-2 ring-blue-500/20 border-blue-500 shadow-md;
+}
+
+.select-base:hover:not(:focus) {
+  @apply border-gray-300 shadow-sm;
+}
+
+/* Label styles */
+.label-base {
+  @apply block text-sm font-medium text-gray-700 mb-2;
+}
+
+/* Input group styles */
+.input-group {
+  @apply space-y-1;
+}
+
+/* Checkbox styles */
+.checkbox-base {
+  @apply h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-colors;
+}
+
+/* Radio styles */
+.radio-base {
+  @apply h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 transition-colors;
+}
+
+/* File input styles */
+.file-input-base {
+  @apply block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors;
+}
+
+/* Search input styles */
+.search-input {
+  @apply w-full pl-10 pr-4 py-3 text-sm text-gray-900 placeholder-gray-500 bg-white border border-gray-200 rounded-xl shadow-sm transition-all duration-200 ease-in-out;
+}
+
+.search-input:focus {
+  @apply outline-none ring-2 ring-blue-500/20 border-blue-500 shadow-md;
+}
+
+.search-input:hover:not(:focus) {
+  @apply border-gray-300 shadow-sm;
+}
+
+/* Input with icon */
+.input-with-icon {
+  @apply relative;
+}
+
+.input-with-icon input {
+  @apply pl-10;
+}
+
+.input-icon {
+  @apply absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none;
+}
+
+/* Input with button */
+.input-with-button {
+  @apply relative;
+}
+
+.input-with-button input {
+  @apply pr-12;
+}
+
+.input-button {
+  @apply absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors;
+}
+
+/* Disabled state */
+.input-disabled {
+  @apply bg-gray-50 text-gray-500 cursor-not-allowed;
+}
+
+.input-disabled:focus {
+  @apply ring-0 border-gray-200 shadow-sm;
+}
+
+/* Success state */
+.input-success {
+  @apply border-green-300 ring-2 ring-green-500/20;
+}
+
+.input-success:focus {
+  @apply border-green-500 ring-green-500/20;
+}
