@@ -122,7 +122,7 @@ export default function Home() {
               </div>
               <h3 className="mt-6 text-lg font-semibold text-gray-900">Monitor Reddit</h3>
               <p className="mt-2 text-gray-600">
-                We scan 500+ relevant subreddits to find discussions where people need your solution.
+                We scan all relevant subreddits to find discussions where people need your solution.
               </p>
             </div>
             
@@ -195,7 +195,7 @@ export default function Home() {
                 <div className="flex items-center">
                   <Users className="h-8 w-8 text-blue-600" />
                   <div className="ml-4">
-                    <p className="text-2xl font-bold text-gray-900">500+</p>
+                    <p className="text-2xl font-bold text-gray-900">All</p>
                     <p className="text-gray-600">Subreddits Monitored</p>
                   </div>
                 </div>
@@ -272,7 +272,7 @@ export default function Home() {
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-700">500+ subreddits monitored</span>
+                    <span className="text-gray-700">All subreddits monitored</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
@@ -324,7 +324,7 @@ export default function Home() {
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-700">500+ subreddits monitored</span>
+                    <span className="text-gray-700">All subreddits monitored</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />

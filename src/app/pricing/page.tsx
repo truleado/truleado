@@ -127,7 +127,7 @@ export default function Pricing() {
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-700">500+ subreddits monitored</span>
+                    <span className="text-gray-700">All subreddits monitored</span>
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
@@ -147,7 +147,7 @@ export default function Pricing() {
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-700">Export leads to CSV</span>
+                    <span className="text-gray-700">Export leads to CSV <span className="text-blue-600 font-medium">(Coming Soon)</span></span>
                   </li>
                 </ul>
               </div>
@@ -191,7 +191,7 @@ export default function Pricing() {
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-700">500+ subreddits monitored</span>
+                    <span className="text-gray-700">All subreddits monitored</span>
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
@@ -211,7 +211,7 @@ export default function Pricing() {
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-700">Export leads to CSV</span>
+                    <span className="text-gray-700">Export leads to CSV <span className="text-blue-600 font-medium">(Coming Soon)</span></span>
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
@@ -305,7 +305,7 @@ export default function Pricing() {
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">What subreddits do you monitor?</h3>
                 <p className="mt-2 text-gray-600">
-                  We monitor 500+ relevant subreddits including business, entrepreneurship, marketing, and industry-specific communities where people discuss problems and seek solutions.
+                  We monitor all relevant subreddits including business, entrepreneurship, marketing, and industry-specific communities where people discuss problems and seek solutions.
                 </p>
               </div>
             </div>
