@@ -1200,7 +1200,7 @@ export default function Products() {
           cancelText="Maybe Later"
           onConfirm={() => {
             setShowUpgradeModal(false)
-            window.open('/pricing', '_blank')
+            window.location.href = '/upgrade'
           }}
         />
 

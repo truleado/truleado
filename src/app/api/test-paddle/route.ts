@@ -1,40 +1,28 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { paddleConfig } from '@/lib/paddle-config'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Test Paddle API connection
-    const apiUrl = paddleConfig.environment === 'production' 
-      ? 'https://api.paddle.com/prices'
-      : 'https://sandbox-api.paddle.com/prices'
-
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${paddleConfig.apiKey}`,
-        'Content-Type': 'application/json'
-      }
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      return NextResponse.json({ 
-        error: 'Paddle API test failed',
-        details: errorData,
-        status: response.status
-      })
+    // Test Paddle configuration
+    const config = {
+      vendorId: paddleConfig.vendorId ? 'Set' : 'Missing',
+      apiKey: paddleConfig.apiKey ? 'Set' : 'Missing',
+      productId: paddleConfig.productId ? 'Set' : 'Missing',
+      priceId: paddleConfig.priceId ? 'Set' : 'Missing',
+      environment: paddleConfig.environment,
+      webhookSecret: paddleConfig.webhookSecret ? 'Set' : 'Missing',
     }
 
-    const data = await response.json()
-    return NextResponse.json({ 
-      success: true,
-      message: 'Paddle API connection successful',
-      data: data
+    return NextResponse.json({
+      message: 'Paddle configuration test',
+      config,
+      environment: process.env.NODE_ENV,
+      appUrl: process.env.NEXT_PUBLIC_APP_URL,
     })
   } catch (error) {
+    console.error('Paddle test error:', error)
     return NextResponse.json({ 
-      error: 'Paddle API test failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    })
+      error: error instanceof Error ? error.message : 'Test failed'
+    }, { status: 500 })
   }
 }

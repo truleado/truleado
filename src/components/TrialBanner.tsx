@@ -40,7 +40,7 @@ export function TrialBanner() {
           <div className="mt-4">
             <div className="-mx-2 -my-1.5 flex">
               <button
-                onClick={() => window.location.href = '/settings?tab=billing'}
+                onClick={() => window.location.href = '/upgrade'}
                 className={`px-2 py-1.5 rounded-md text-sm font-medium ${
                   isExpired 
                     ? 'bg-red-100 text-red-800 hover:bg-red-200' 

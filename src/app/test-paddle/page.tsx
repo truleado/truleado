@@ -11,7 +11,7 @@ export default function TestPaddle() {
         <p>Click the button below to test the Paddle checkout:</p>
         <button 
           onClick={() => {
-            const url = 'https://brewprompts.com/billing?price_id=pri_01k5kd5a217mwebj7dnvbrsmgh&customer_email=test@example.com&customer_id=test-user-id&return_url=http%3A%2F%2Flocalhost%3A3000%2Fbilling%2Fsuccess&cancel_url=http%3A%2F%2Flocalhost%3A3000%2Fbilling%2Fcancel'
+            const url = 'https://buy.paddle.com/product/pro_01k5kd1pam009p3f3w4d76r9dz?customer_email=test@example.com&customer_id=test-user-id&return_url=http%3A%2F%2Flocalhost%3A3000%2Fbilling%2Fsuccess&cancel_url=http%3A%2F%2Flocalhost%3A3000%2Fbilling%2Fcancel'
             window.open(url, '_blank')
           }}
           style={{ 

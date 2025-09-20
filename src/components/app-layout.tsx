@@ -14,7 +14,8 @@ import {
   X, 
   LogOut,
   User,
-  ChevronRight
+  ChevronRight,
+  Megaphone
 } from 'lucide-react'
 import { TrialBanner } from './TrialBanner'
 
@@ -22,6 +23,7 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, description: 'Overview & analytics' },
   { name: 'Products', href: '/products', icon: Package, description: 'Manage your products' },
   { name: 'Leads', href: '/leads', icon: Users, description: 'Discover new leads' },
+  { name: 'Promote', href: '/promote', icon: Megaphone, description: 'Generate promotional posts' },
   { name: 'Settings', href: '/settings', icon: Settings, description: 'Account & preferences' },
 ]
 

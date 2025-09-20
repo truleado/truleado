@@ -3,13 +3,8 @@ import { paddleConfig } from '@/lib/paddle-config'
 
 export async function GET() {
   try {
-    // Test the new approved domain checkout URL format
-    const baseUrl = paddleConfig.environment === 'sandbox' 
-      ? 'https://brewprompts.com/billing'
-      : 'https://brewprompts.com/billing'
-    
-    const testCheckoutUrl = `${baseUrl}?` +
-      `price_id=${paddleConfig.priceId}&` +
+    // Test the direct Paddle checkout URL format
+    const testCheckoutUrl = `https://buy.paddle.com/product/${paddleConfig.productId}?` +
       `customer_email=test@example.com&` +
       `customer_id=test-user-id&` +
       `return_url=${encodeURIComponent('http://localhost:3000/billing/success')}&` +

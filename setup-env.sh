@@ -16,6 +16,9 @@ OPENAI_API_KEY=your_openai_api_key_here
 NEXT_PUBLIC_PADDLE_CLIENT_TOKEN=your_paddle_client_token_here
 PADDLE_VENDOR_ID=your_paddle_vendor_id_here
 PADDLE_API_KEY=your_paddle_api_key_here
+PADDLE_PRODUCT_ID=your_paddle_product_id_here
+PADDLE_PRICE_ID=your_paddle_price_id_here
+PADDLE_WEBHOOK_SECRET=your_paddle_webhook_secret_here
 
 # Reddit API Configuration (optional)
 REDDIT_CLIENT_ID=your_reddit_client_id_here
@@ -48,7 +51,12 @@ echo "   - Create a new project or select existing one"
 echo "   - Enable Google+ API"
 echo "   - Create OAuth 2.0 credentials"
 echo "   - Add GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET to .env.local"
-echo "7. Set up Paddle credentials (optional for now)"
+echo "7. Set up Paddle credentials:"
+echo "   - Go to https://vendors.paddle.com/ (or sandbox)"
+echo "   - Get your Vendor ID, API Key, Product ID, Price ID"
+echo "   - Set up webhook endpoint: https://yourdomain.com/api/billing/webhook"
+echo "   - Get webhook secret from Paddle dashboard"
+echo "   - Add all Paddle variables to .env.local"
 echo ""
 echo "🔗 Supabase Setup Guide: ./SUPABASE_SETUP.md"
 echo ""

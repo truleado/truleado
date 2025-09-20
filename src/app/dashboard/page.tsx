@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { useAuth } from '@/contexts/auth-context'
+import { useSubscription } from '@/lib/subscription-context'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import AppLayout from '@/components/app-layout'
@@ -20,7 +21,9 @@ import {
   BarChart3,
   Target,
   Zap,
-  ExternalLink
+  ExternalLink,
+  Clock,
+  CreditCard
 } from 'lucide-react'
 
 interface DashboardStats {
@@ -48,6 +51,7 @@ interface TrendData {
 
 export default function Dashboard() {
   const { user, loading } = useAuth()
+  const { subscriptionStatus, trialTimeRemaining, accessLevel } = useSubscription()
   const router = useRouter()
   const [stats, setStats] = useState<DashboardStats>({
     totalLeads: 0,
@@ -208,7 +212,14 @@ export default function Dashboard() {
               Here's what's happening with your Reddit lead generation.
             </p>
           </div>
-          <div className="mt-4 flex md:ml-4 md:mt-0">
+          <div className="mt-4 flex md:ml-4 md:mt-0 space-x-3">
+            <Link
+              href="/upgrade"
+              className="inline-flex items-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
+            >
+              <ArrowUpRight className="w-4 h-4 mr-2" />
+              Upgrade to Pro
+            </Link>
             <Link
               href="/products"
               className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
@@ -218,6 +229,48 @@ export default function Dashboard() {
             </Link>
           </div>
         </div>
+
+        {/* Trial Status */}
+        {subscriptionStatus === 'trial' && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <Clock className="h-5 w-5 text-blue-600" />
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-blue-800">Free Trial Active</h3>
+                  <p className="text-sm text-blue-700">
+                    {trialTimeRemaining} remaining. Upgrade to Pro for unlimited access.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/upgrade"
+                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <CreditCard className="w-4 h-4 mr-1" />
+                Upgrade Now
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {subscriptionStatus === 'active' && (
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-green-800">Pro Plan Active</h3>
+                <p className="text-sm text-green-700">
+                  You have access to all premium features. Thank you for being a Pro user!
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">

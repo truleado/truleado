@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
-import { paddleConfig } from '@/lib/paddle-config'
+import { paddleConfig, verifyPaddleWebhook, paddleAPI } from '@/lib/paddle-config'
 import { trialManager } from '@/lib/trial-manager'
 
 export async function POST(request: NextRequest) {
@@ -14,11 +14,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing signature' }, { status: 400 })
     }
 
-    // TODO: Implement webhook signature verification
-    // const isValid = verifyPaddleWebhook(body, signature, paddleConfig.webhookSecret)
-    // if (!isValid) {
-    //   return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
-    // }
+    // Verify webhook signature
+    const isValid = verifyPaddleWebhook(body, signature, paddleConfig.webhookSecret)
+    if (!isValid) {
+      console.error('Invalid webhook signature')
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
+    }
 
     const event = JSON.parse(body)
     console.log('Paddle webhook received:', event.event_type)
@@ -68,27 +69,51 @@ async function handleTransactionCompleted(event: any, supabase: any) {
     return
   }
 
-  // Update user subscription status
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      subscription_status: 'active',
-      paddle_customer_id: transaction.customer_id,
-      subscription_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
-    })
-    .eq('id', customerId)
+  try {
+    // Get full transaction details from Paddle API
+    const fullTransaction = await paddleAPI.getTransaction(transaction.id)
+    
+    // Update user subscription status
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        subscription_status: 'active',
+        paddle_customer_id: transaction.customer_id,
+        subscription_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
+      })
+      .eq('id', customerId)
 
-  if (error) {
-    console.error('Error updating user subscription:', error)
-  } else {
-    await trialManager.logSubscriptionChange(
-      customerId,
-      'active',
-      'trial',
-      'transaction_completed',
-      event.event_id,
-      { transaction_id: transaction.id }
-    )
+    if (error) {
+      console.error('Error updating user subscription:', error)
+    } else {
+      await trialManager.logSubscriptionChange(
+        customerId,
+        'active',
+        'trial',
+        'transaction_completed',
+        event.event_id,
+        { 
+          transaction_id: transaction.id,
+          amount: fullTransaction.details?.totals?.total,
+          currency: fullTransaction.details?.currency_code
+        }
+      )
+    }
+  } catch (apiError) {
+    console.error('Error fetching transaction details from Paddle API:', apiError)
+    // Fallback to basic update without API call
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        subscription_status: 'active',
+        paddle_customer_id: transaction.customer_id,
+        subscription_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      })
+      .eq('id', customerId)
+
+    if (error) {
+      console.error('Error updating user subscription (fallback):', error)
+    }
   }
 }
 
@@ -101,17 +126,51 @@ async function handleSubscriptionCreated(event: any, supabase: any) {
     return
   }
 
-  // Update user with subscription ID
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      paddle_subscription_id: subscription.id,
-      subscription_ends_at: new Date(subscription.next_billed_at).toISOString()
-    })
-    .eq('id', customerId)
+  try {
+    // Get full subscription details from Paddle API
+    const fullSubscription = await paddleAPI.getSubscription(subscription.id)
+    
+    // Update user with subscription ID
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        paddle_subscription_id: subscription.id,
+        subscription_ends_at: new Date(subscription.next_billed_at).toISOString(),
+        subscription_status: 'active'
+      })
+      .eq('id', customerId)
 
-  if (error) {
-    console.error('Error updating user subscription ID:', error)
+    if (error) {
+      console.error('Error updating user subscription ID:', error)
+    } else {
+      await trialManager.logSubscriptionChange(
+        customerId,
+        'active',
+        'trial',
+        'subscription_created',
+        event.event_id,
+        { 
+          subscription_id: subscription.id,
+          price_id: fullSubscription.items?.[0]?.price_id,
+          billing_cycle: fullSubscription.billing_cycle
+        }
+      )
+    }
+  } catch (apiError) {
+    console.error('Error fetching subscription details from Paddle API:', apiError)
+    // Fallback to basic update
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        paddle_subscription_id: subscription.id,
+        subscription_ends_at: new Date(subscription.next_billed_at).toISOString(),
+        subscription_status: 'active'
+      })
+      .eq('id', customerId)
+
+    if (error) {
+      console.error('Error updating user subscription ID (fallback):', error)
+    }
   }
 }
 
