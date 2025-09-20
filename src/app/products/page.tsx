@@ -198,7 +198,13 @@ export default function Products() {
       setAddProductProgress(100)
 
       if (!response.ok) {
-        throw new Error('Failed to create product')
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Product creation failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        })
+        throw new Error(errorData.error || 'Failed to create product')
       }
 
       const data = await response.json()
