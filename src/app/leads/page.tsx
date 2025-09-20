@@ -82,6 +82,7 @@ export default function Leads() {
   const [redditConnected, setRedditConnected] = useState(false)
   const [showRedditConnectionModal, setShowRedditConnectionModal] = useState(false)
   const [copiedReply, setCopiedReply] = useState<string | null>(null)
+  const [redditConnectionChecked, setRedditConnectionChecked] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -93,9 +94,23 @@ export default function Leads() {
     if (user) {
       fetchProducts()
       fetchLeads()
-      checkRedditConnection()
+      if (!redditConnectionChecked) {
+        checkRedditConnection()
+      }
     }
-  }, [user])
+  }, [user, redditConnectionChecked])
+
+  // Refresh Reddit connection status when page becomes visible (after OAuth redirect)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && user && redditConnectionChecked) {
+        checkRedditConnection()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [user, redditConnectionChecked])
 
   const checkRedditConnection = async () => {
     try {
@@ -103,14 +118,16 @@ export default function Leads() {
       if (response.ok) {
         const data = await response.json()
         setRedditConnected(data.connected)
+        setRedditConnectionChecked(true)
         
         // If Reddit is not connected and user has products, show connection modal
-        if (!data.connected && products.length > 0) {
+        if (!data.connected && products.length > 0 && !showRedditConnectionModal) {
           setShowRedditConnectionModal(true)
         }
       }
     } catch (error) {
       console.error('Failed to check Reddit connection:', error)
+      setRedditConnectionChecked(true)
     }
   }
 
@@ -149,11 +166,6 @@ export default function Leads() {
           createdAt: product.created_at,
         }))
         setProducts(transformedProducts)
-        
-        // Check Reddit connection after products are loaded
-        if (transformedProducts.length > 0) {
-          checkRedditConnection()
-        }
       }
     } catch (error) {
       console.error('Failed to fetch products:', error)
@@ -270,6 +282,24 @@ export default function Leads() {
               Discover and manage potential customers from Reddit discussions.
             </p>
           </div>
+          
+          {/* Reddit Connection Status */}
+          <div className="mt-4 md:mt-0">
+            {redditConnected ? (
+              <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-green-100 text-green-800 border border-green-200">
+                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                <span>Reddit Connected</span>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowRedditConnectionModal(true)}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-red-100 text-red-800 border border-red-200 hover:bg-red-200 transition-colors cursor-pointer"
+              >
+                <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                <span>Reddit Not Connected</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Products Section */}
@@ -319,14 +349,12 @@ export default function Leads() {
                 >
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="font-medium text-gray-900 truncate">{product.name}</h3>
-                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                      product.isSearching 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      <Activity className="w-3 h-3" />
-                      {product.isSearching ? 'Searching' : 'Stopped'}
-                    </div>
+                    {product.isSearching && (
+                      <div className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <Activity className="w-3 h-3" />
+                        Searching
+                      </div>
+                    )}
                   </div>
                   
                   <p className="text-sm text-gray-600 mb-3 line-clamp-2">
@@ -339,12 +367,14 @@ export default function Leads() {
                     <span>{product.status}</span>
                   </div>
                   
-                  <div className="flex gap-2">
-                    <div className="flex items-center gap-1 px-3 py-1 text-sm bg-green-100 text-green-700 rounded">
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      Auto-discovering
+                  {redditConnected && (
+                    <div className="flex gap-2">
+                      <div className="flex items-center gap-1 px-3 py-1 text-sm bg-green-100 text-green-700 rounded">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        Auto-discovering
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -364,15 +394,13 @@ export default function Leads() {
                   {selectedProduct.subreddits.length > 3 && ` +${selectedProduct.subreddits.length - 3} more`}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  selectedProduct.isSearching 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {selectedProduct.isSearching ? '🔍 Searching Active' : '⏸️ Search Stopped'}
+              {selectedProduct.isSearching && (
+                <div className="flex items-center gap-2">
+                  <div className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                    🔍 Searching Active
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         )}
@@ -655,7 +683,10 @@ export default function Leads() {
               <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
                 <button
                   type="button"
-                  onClick={() => window.location.href = '/api/auth/reddit/connect'}
+                  onClick={() => {
+                    setShowRedditConnectionModal(false)
+                    window.location.href = '/api/auth/reddit'
+                  }}
                   className="inline-flex w-full justify-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 sm:col-start-2"
                 >
                   Connect Reddit Account

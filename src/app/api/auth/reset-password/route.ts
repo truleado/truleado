@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
-    // Update password using the token
+    // Verify the token and update password
     const { error } = await supabase.auth.updateUser({
       password: password
     })

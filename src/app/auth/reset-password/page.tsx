@@ -17,12 +17,14 @@ function ResetPasswordForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
+  const type = searchParams.get('type')
 
   useEffect(() => {
-    if (!token) {
+    // Supabase sends type=recovery and token in the URL
+    if (!token || type !== 'recovery') {
       router.push('/auth/forgot-password')
     }
-  }, [token, router])
+  }, [token, type, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

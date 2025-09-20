@@ -48,6 +48,12 @@ export default function Home() {
             </div>
             <div className="flex items-center space-x-4">
               <Link 
+                href="/pricing" 
+                className="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium"
+              >
+                Pricing
+              </Link>
+              <Link 
                 href="/auth/signin" 
                 className="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium"
               >
@@ -74,7 +80,7 @@ export default function Home() {
             <p className="mt-6 text-lg leading-8 text-gray-600 max-w-3xl mx-auto">
               Stop cold emailing strangers. Discover relevant Reddit discussions where people are actively seeking solutions your SaaS product provides.
             </p>
-            <div className="mt-10 flex items-center justify-center gap-x-6">
+            <div className="mt-10 flex items-center justify-center">
               <Link 
                 href="/auth/signup" 
                 className="bg-blue-600 text-white px-6 py-3 rounded-md text-sm font-semibold hover:bg-blue-700 flex items-center"
@@ -82,9 +88,6 @@ export default function Home() {
                 Start Finding Leads
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
-              <button className="text-sm font-semibold leading-6 text-gray-900 hover:text-gray-700">
-                Learn more <span aria-hidden="true">→</span>
-              </button>
             </div>
           </div>
         </div>
@@ -214,6 +217,139 @@ export default function Home() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="bg-gray-50 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              Simple Pricing
+            </h2>
+            <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+              Start with a free trial and see how Truleado can help you find your next customers.
+            </p>
+          </div>
+          
+          <div className="mt-16 grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Free Trial Card */}
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
+              <div className="text-center">
+                <h3 className="text-2xl font-bold text-gray-900">Free Trial</h3>
+                <p className="mt-2 text-gray-600">Try everything for 1 day</p>
+                
+                <div className="mt-8">
+                  <div className="flex items-baseline justify-center">
+                    <span className="text-5xl font-bold text-gray-900">$0</span>
+                    <span className="text-xl text-gray-500 ml-1">for 1 day</span>
+                  </div>
+                  <p className="mt-2 text-sm text-gray-600">No credit card required</p>
+                </div>
+
+                <div className="mt-8">
+                  <Link 
+                    href="/auth/signup" 
+                    className="w-full bg-green-600 text-white px-6 py-3 rounded-md text-sm font-semibold hover:bg-green-700 flex items-center justify-center"
+                  >
+                    Start Free Trial
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Link>
+                </div>
+              </div>
+
+              <div className="mt-8 border-t border-gray-200 pt-8">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">What's included:</h4>
+                <ul className="space-y-3">
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                    <span className="text-gray-700">Full access to all features</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                    <span className="text-gray-700">Unlimited product monitoring</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                    <span className="text-gray-700">500+ subreddits monitored</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                    <span className="text-gray-700">AI-powered lead analysis</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                    <span className="text-gray-700">24/7 background monitoring</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Pro Plan Card */}
+            <div className="bg-white rounded-2xl shadow-xl border-2 border-blue-200 p-8 relative">
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <span className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium">Most Popular</span>
+              </div>
+              
+              <div className="text-center">
+                <h3 className="text-2xl font-bold text-gray-900">Pro Plan</h3>
+                <p className="mt-2 text-gray-600">Everything you need to find quality leads</p>
+                
+                <div className="mt-8">
+                  <div className="flex items-baseline justify-center">
+                    <span className="text-5xl font-bold text-gray-900">$30</span>
+                    <span className="text-xl text-gray-500 ml-1">/month</span>
+                  </div>
+                  <p className="mt-2 text-sm text-gray-600">After 1-day free trial</p>
+                </div>
+
+                <div className="mt-8">
+                  <Link 
+                    href="/auth/signup" 
+                    className="w-full bg-blue-600 text-white px-6 py-3 rounded-md text-sm font-semibold hover:bg-blue-700 flex items-center justify-center"
+                  >
+                    Start Free Trial
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Link>
+                </div>
+              </div>
+
+              <div className="mt-8 border-t border-gray-200 pt-8">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">What's included:</h4>
+                <ul className="space-y-3">
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                    <span className="text-gray-700">Unlimited product monitoring</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                    <span className="text-gray-700">500+ subreddits monitored</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                    <span className="text-gray-700">AI-powered lead analysis</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                    <span className="text-gray-700">24/7 background monitoring</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                    <span className="text-gray-700">Real-time lead notifications</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-12 text-center">
+            <Link 
+              href="/pricing" 
+              className="text-blue-600 hover:text-blue-700 font-medium"
+            >
+              View detailed pricing →
+            </Link>
           </div>
         </div>
       </section>

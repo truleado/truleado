@@ -170,6 +170,11 @@ export default function Settings() {
     return null
   }
 
+  // Check if user is connected via Google OAuth
+  const isGoogleUser = user.app_metadata?.providers?.includes('google') || 
+                      user.user_metadata?.provider === 'google' ||
+                      user.identities?.some(identity => identity.provider === 'google')
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -246,48 +251,69 @@ export default function Settings() {
                   </div>
                 </div>
 
-                <div>
-                  <h4 className="text-md font-medium text-gray-900 mb-4">Change Password</h4>
-                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <div>
-                      <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
-                        Current Password
-                      </label>
-                      <div className="relative mt-1">
+                {!isGoogleUser && (
+                  <div>
+                    <h4 className="text-md font-medium text-gray-900 mb-4">Change Password</h4>
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                      <div>
+                        <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
+                          Current Password
+                        </label>
+                        <div className="relative mt-1">
+                          <input
+                            type={showPassword ? 'text' : 'password'}
+                            id="currentPassword"
+                            value={formData.currentPassword}
+                            onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
+                            className="input-base pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-4 w-4 text-gray-400" />
+                            ) : (
+                              <Eye className="h-4 w-4 text-gray-400" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                      <div>
+                        <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
+                          New Password
+                        </label>
                         <input
-                          type={showPassword ? 'text' : 'password'}
-                          id="currentPassword"
-                          value={formData.currentPassword}
-                          onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-                          className="input-base pr-10"
+                          type="password"
+                          id="newPassword"
+                          value={formData.newPassword}
+                          onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                          className="mt-1 input-base"
                         />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                        >
-                          {showPassword ? (
-                            <EyeOff className="h-4 w-4 text-gray-400" />
-                          ) : (
-                            <Eye className="h-4 w-4 text-gray-400" />
-                          )}
-                        </button>
                       </div>
                     </div>
-                    <div>
-                      <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
-                        New Password
-                      </label>
-                      <input
-                        type="password"
-                        id="newPassword"
-                        value={formData.newPassword}
-                        onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                        className="mt-1 input-base"
-                      />
+                  </div>
+                )}
+
+                {isGoogleUser && (
+                  <div>
+                    <h4 className="text-md font-medium text-gray-900 mb-4">Password Management</h4>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex">
+                        <div className="flex-shrink-0">
+                          <AlertCircle className="h-5 w-5 text-blue-400" />
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="text-sm font-medium text-blue-800">Google Account</h3>
+                          <div className="mt-2 text-sm text-blue-700">
+                            <p>Your account is connected via Google. Password changes are managed through your Google account settings.</p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 <div className="flex justify-end">
                   <button
@@ -483,27 +509,6 @@ export default function Settings() {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h4 className="text-md font-medium text-gray-900">Plan Features</h4>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
-                      <span className="text-sm text-gray-600">Up to 3 products</span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
-                      <span className="text-sm text-gray-600">Basic lead monitoring</span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-gray-300 rounded-full mr-3"></div>
-                      <span className="text-sm text-gray-400">Advanced analytics</span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-gray-300 rounded-full mr-3"></div>
-                      <span className="text-sm text-gray-400">Priority support</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             )}
 

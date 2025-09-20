@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
         }
       } else {
         // Create new job
-        await jobScheduler.createJob(user.id, productId, 'reddit_monitoring', 60)
+        await jobScheduler.createJob(user.id, productId, 'reddit_monitoring', 120)
       }
 
       return NextResponse.json({ 

@@ -51,7 +51,7 @@ export const getAccessLevel = (user: UserWithSubscription): AccessLevel => {
   return 'limited'
 }
 
-export const canAccessFeature = (user: UserWithSubscription, feature: string): boolean => {
+export const canAccessFeature = (user: UserWithSubscription, feature: string, currentProductCount?: number): boolean => {
   const accessLevel = getAccessLevel(user)
   
   // Always accessible features
@@ -69,7 +69,6 @@ export const canAccessFeature = (user: UserWithSubscription, feature: string): b
   
   // Full access features
   const fullAccessFeatures = [
-    'add_products',
     'edit_products',
     'delete_products',
     'delete_leads',
@@ -81,6 +80,22 @@ export const canAccessFeature = (user: UserWithSubscription, feature: string): b
   
   if (fullAccessFeatures.includes(feature)) {
     return accessLevel === 'full'
+  }
+  
+  // Special handling for add_products based on trial status
+  if (feature === 'add_products') {
+    // If user has active subscription, allow unlimited products
+    if (user.subscription_status === 'active' && isSubscriptionActive(user)) {
+      return true
+    }
+    
+    // If user is on trial, check product count
+    if (user.subscription_status === 'trial' && !isTrialExpired(user)) {
+      return (currentProductCount || 0) < 1
+    }
+    
+    // For expired/cancelled users, no access
+    return false
   }
   
   // Limited access features (view-only)

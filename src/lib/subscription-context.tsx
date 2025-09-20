@@ -11,7 +11,7 @@ interface SubscriptionContextType {
   showUpgradePrompt: boolean
   isLoading: boolean
   refreshSubscription: () => Promise<void>
-  canAccess: (feature: string) => boolean
+  canAccess: (feature: string, currentProductCount?: number) => boolean
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined)
@@ -25,7 +25,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const trialTimeRemaining = user ? formatTrialTimeRemaining(user) : ''
   const showUpgradePrompt = user ? shouldShowUpgradePrompt(user) : false
 
-  const canAccess = (feature: string) => user ? canAccessFeature(user, feature) : false
+  const canAccess = (feature: string, currentProductCount?: number) => user ? canAccessFeature(user, feature, currentProductCount) : false
 
   const refreshSubscription = async () => {
     if (!authUser) return

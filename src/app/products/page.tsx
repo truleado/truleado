@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { AccessGuard, UpgradeButton } from '@/components/AccessGuard'
 import { useSubscription } from '@/lib/subscription-context'
+import CustomModal from '@/components/CustomModal'
 
 interface Product {
   id: string
@@ -54,6 +55,15 @@ export default function Products() {
   const [isAddingProduct, setIsAddingProduct] = useState(false)
   const [isUpdatingProduct, setIsUpdatingProduct] = useState(false)
   const [addProductProgress, setAddProductProgress] = useState(0)
+  
+  // Modal states
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [showErrorModal, setShowErrorModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [modalMessage, setModalMessage] = useState('')
+  const [modalTitle, setModalTitle] = useState('')
+  const [productToDelete, setProductToDelete] = useState<string | null>(null)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -170,7 +180,9 @@ export default function Products() {
     e.preventDefault()
     
     if (!newProduct.name || !newProduct.website) {
-      alert('Product name and website are required')
+      setModalTitle('Validation Error')
+      setModalMessage('Product name and website are required')
+      setShowErrorModal(true)
       return
     }
 
@@ -242,26 +254,49 @@ export default function Products() {
       
       // Show success message based on lead discovery status
       if (data.leadDiscoveryStarted) {
-        alert('Product added successfully! Lead discovery has started automatically.')
+        setModalTitle('Success')
+        setModalMessage('Product added successfully! Lead discovery has started automatically.')
+        setShowSuccessModal(true)
       } else {
-        alert('Product added successfully! Connect your Reddit account to start finding leads.')
+        setModalTitle('Success')
+        setModalMessage('Product added successfully! Connect your Reddit account to start finding leads.')
+        setShowSuccessModal(true)
       }
     } catch (error) {
       console.error('Product creation error:', error)
-      alert('Failed to create product. Please try again.')
+      setModalTitle('Error')
+      setModalMessage('Failed to create product. Please try again.')
+      setShowErrorModal(true)
     } finally {
       setIsAddingProduct(false)
       setAddProductProgress(0)
     }
   }
 
-  const handleDeleteProduct = async (productId: string) => {
-    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+  const handleAddProductClick = () => {
+    // Check if user can add more products
+    if (!canAccess('add_products', products.length)) {
+      setModalTitle('Upgrade Required')
+      setModalMessage('You\'ve reached the limit of 1 product on your free trial. Upgrade to Pro to add unlimited products and unlock all features!')
+      setShowUpgradeModal(true)
       return
     }
+    
+    setShowAddModal(true)
+  }
+
+  const handleDeleteProduct = (productId: string) => {
+    setProductToDelete(productId)
+    setModalTitle('Delete Product')
+    setModalMessage('Are you sure you want to delete this product? This action cannot be undone.')
+    setShowDeleteModal(true)
+  }
+
+  const confirmDeleteProduct = async () => {
+    if (!productToDelete) return
 
     try {
-      const response = await fetch(`/api/products/${productId}`, {
+      const response = await fetch(`/api/products/${productToDelete}`, {
         method: 'DELETE',
       })
 
@@ -270,12 +305,19 @@ export default function Products() {
       }
 
       // Remove the product from local state
-      setProducts(prev => prev.filter(product => product.id !== productId))
+      setProducts(prev => prev.filter(product => product.id !== productToDelete))
       
-      alert('Product deleted successfully!')
+      setModalTitle('Success')
+      setModalMessage('Product deleted successfully!')
+      setShowSuccessModal(true)
     } catch (error) {
       console.error('Product deletion error:', error)
-      alert('Failed to delete product. Please try again.')
+      setModalTitle('Error')
+      setModalMessage('Failed to delete product. Please try again.')
+      setShowErrorModal(true)
+    } finally {
+      setShowDeleteModal(false)
+      setProductToDelete(null)
     }
   }
 
@@ -351,10 +393,14 @@ export default function Products() {
       })
       
       // Show success message
-      alert('Product updated successfully!')
+      setModalTitle('Success')
+      setModalMessage('Product updated successfully!')
+      setShowSuccessModal(true)
     } catch (error) {
       console.error('Product update error:', error)
-      alert('Failed to update product. Please try again.')
+      setModalTitle('Error')
+      setModalMessage('Failed to update product. Please try again.')
+      setShowErrorModal(true)
     } finally {
       setIsUpdatingProduct(false)
     }
@@ -391,7 +437,7 @@ export default function Products() {
           <div className="mt-4 flex md:ml-4 md:mt-0">
             <UpgradeButton feature="add_products">
               <button
-                onClick={() => setShowAddModal(true)}
+                onClick={handleAddProductClick}
                 className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -412,7 +458,7 @@ export default function Products() {
             <div className="mt-6">
               <UpgradeButton feature="add_products">
                 <button
-                  onClick={() => setShowAddModal(true)}
+                  onClick={handleAddProductClick}
                   className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -1141,6 +1187,52 @@ export default function Products() {
             </div>
           </div>
         )}
+
+        {/* Custom Modals */}
+        <CustomModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          title={modalTitle}
+          message={modalMessage}
+          type="warning"
+          showCancel={true}
+          confirmText="Upgrade Now"
+          cancelText="Maybe Later"
+          onConfirm={() => {
+            setShowUpgradeModal(false)
+            window.open('/pricing', '_blank')
+          }}
+        />
+
+        <CustomModal
+          isOpen={showSuccessModal}
+          onClose={() => setShowSuccessModal(false)}
+          title={modalTitle}
+          message={modalMessage}
+          type="success"
+          confirmText="OK"
+        />
+
+        <CustomModal
+          isOpen={showErrorModal}
+          onClose={() => setShowErrorModal(false)}
+          title={modalTitle}
+          message={modalMessage}
+          type="error"
+          confirmText="OK"
+        />
+
+        <CustomModal
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          title={modalTitle}
+          message={modalMessage}
+          type="warning"
+          showCancel={true}
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={confirmDeleteProduct}
+        />
       </div>
     </AppLayout>
   )
