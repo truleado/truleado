@@ -6,6 +6,7 @@ import { UserWithSubscription, getAccessLevel, canAccessFeature, formatTrialTime
 
 interface SubscriptionContextType {
   user: UserWithSubscription | null
+  subscriptionStatus: string
   accessLevel: 'full' | 'limited' | 'none'
   trialTimeRemaining: string
   showUpgradePrompt: boolean
@@ -58,6 +59,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   const value: SubscriptionContextType = {
     user,
+    subscriptionStatus: user?.subscription_status || 'trial',
     accessLevel,
     trialTimeRemaining,
     showUpgradePrompt,
