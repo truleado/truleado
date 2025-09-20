@@ -93,10 +93,10 @@ export class RazorpayAPI {
     try {
       const subscription = await this.instance!.subscriptions.create({
         plan_id: planId,
-        customer_id: customerId,
+        customer_notify: 1,
         total_count: 12, // 12 months
         quantity: 1
-      })
+      } as any)
       return subscription
     } catch (error) {
       console.error('Error creating Razorpay subscription:', error)
