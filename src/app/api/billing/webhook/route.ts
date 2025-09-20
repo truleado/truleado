@@ -156,7 +156,7 @@ async function handleSubscriptionCreated(event: any, supabase: any) {
         { 
           subscription_id: subscription.id,
           plan_id: fullSubscription.plan_id,
-          billing_cycle: fullSubscription.billing_cycle
+          billing_cycle: (fullSubscription as any).billing_cycle
         }
       )
     }
