@@ -45,7 +45,7 @@ export function verifyRazorpayWebhook(body: string, signature: string, secret: s
 
 // Razorpay API class for subscription management
 export class RazorpayAPI {
-  private instance: Razorpay
+  private instance: Razorpay | null
 
   constructor() {
     this.instance = razorpay
