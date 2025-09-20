@@ -31,7 +31,16 @@ export async function GET(request: NextRequest) {
     const clientSecret = process.env.REDDIT_OAUTH_CLIENT_SECRET
     const redirectUri = process.env.REDDIT_OAUTH_REDIRECT_URI
 
+    console.log('OAuth callback debug:', {
+      clientId,
+      redirectUri,
+      hasClientSecret: !!clientSecret,
+      code: code?.substring(0, 10) + '...',
+      state
+    })
+
     if (!clientId || !clientSecret || !redirectUri) {
+      console.error('Missing OAuth configuration:', { clientId: !!clientId, clientSecret: !!clientSecret, redirectUri: !!redirectUri })
       return NextResponse.redirect(new URL('/settings?error=oauth_not_configured', request.url))
     }
 
@@ -50,7 +59,15 @@ export async function GET(request: NextRequest) {
     })
 
     if (!tokenResponse.ok) {
-      console.error('Failed to exchange code for token:', await tokenResponse.text())
+      const errorText = await tokenResponse.text()
+      console.error('Failed to exchange code for token:', {
+        status: tokenResponse.status,
+        statusText: tokenResponse.statusText,
+        error: errorText,
+        requestUrl: request.url,
+        redirectUri,
+        clientId
+      })
       return NextResponse.redirect(new URL('/settings?error=token_exchange_failed', request.url))
     }
 
