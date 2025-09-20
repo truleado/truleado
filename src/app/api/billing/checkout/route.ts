@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create subscription with user metadata
-    const subscription = await razorpayAPI.createSubscription(customer.id, razorpayConfig.planId)
+    const subscription: any = await razorpayAPI.createSubscription(customer.id, razorpayConfig.planId)
     
     // Update subscription with user metadata for webhook processing
     try {
