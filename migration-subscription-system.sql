@@ -5,8 +5,8 @@
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(20) DEFAULT 'trial';
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS subscription_ends_at TIMESTAMP WITH TIME ZONE;
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS paddle_customer_id VARCHAR(255);
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS paddle_subscription_id VARCHAR(255);
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS razorpay_customer_id VARCHAR(255);
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS razorpay_subscription_id VARCHAR(255);
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS trial_count INTEGER DEFAULT 1;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS last_trial_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS ip_address VARCHAR(45);
@@ -28,8 +28,8 @@ CREATE TABLE IF NOT EXISTS public.subscription_history (
   status VARCHAR(20) NOT NULL,
   previous_status VARCHAR(20),
   changed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  paddle_event_id VARCHAR(255),
-  paddle_event_type VARCHAR(100),
+  razorpay_event_id VARCHAR(255),
+  razorpay_event_type VARCHAR(100),
   metadata JSONB,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS public.trial_abuse_prevention (
 -- Add indexes for performance
 CREATE INDEX IF NOT EXISTS idx_profiles_subscription_status ON public.profiles(subscription_status);
 CREATE INDEX IF NOT EXISTS idx_profiles_trial_ends_at ON public.profiles(trial_ends_at);
-CREATE INDEX IF NOT EXISTS idx_profiles_paddle_customer_id ON public.profiles(paddle_customer_id);
+CREATE INDEX IF NOT EXISTS idx_profiles_razorpay_customer_id ON public.profiles(razorpay_customer_id);
 CREATE INDEX IF NOT EXISTS idx_subscription_history_user_id ON public.subscription_history(user_id);
 CREATE INDEX IF NOT EXISTS idx_subscription_history_changed_at ON public.subscription_history(changed_at);
 CREATE INDEX IF NOT EXISTS idx_trial_abuse_email ON public.trial_abuse_prevention(email);
@@ -86,8 +86,8 @@ CREATE POLICY "Only service role can access trial abuse prevention" ON public.tr
 COMMENT ON COLUMN public.profiles.subscription_status IS 'Current subscription status: trial, active, expired, cancelled, past_due';
 COMMENT ON COLUMN public.profiles.trial_ends_at IS 'When the trial period ends';
 COMMENT ON COLUMN public.profiles.subscription_ends_at IS 'When the current subscription ends';
-COMMENT ON COLUMN public.profiles.paddle_customer_id IS 'Paddle customer ID for billing';
-COMMENT ON COLUMN public.profiles.paddle_subscription_id IS 'Paddle subscription ID';
+COMMENT ON COLUMN public.profiles.razorpay_customer_id IS 'Razorpay customer ID for billing';
+COMMENT ON COLUMN public.profiles.razorpay_subscription_id IS 'Razorpay subscription ID';
 COMMENT ON COLUMN public.profiles.trial_count IS 'Number of trials used (max 1)';
 COMMENT ON COLUMN public.profiles.last_trial_at IS 'When the last trial started';
 COMMENT ON COLUMN public.profiles.ip_address IS 'IP address for abuse prevention';

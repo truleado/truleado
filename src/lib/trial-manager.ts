@@ -1,5 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
-import { paddleConfig } from '@/lib/paddle-config'
+
+// Trial configuration
+const trialConfig = {
+  maxTrialPerEmail: 1,
+  maxTrialPerIP: 3,
+  trialDays: 7,
+  trialCooldownHours: 24
+}
 
 export interface TrialAbuseCheck {
   allowed: boolean
@@ -41,7 +48,7 @@ export class TrialManager {
           }
         }
 
-        if (emailCheck.trial_count >= paddleConfig.maxTrialPerEmail) {
+        if (emailCheck.trial_count >= trialConfig.maxTrialPerEmail) {
           return { allowed: false, reason: 'Email has already used trial' }
         }
       }
@@ -57,7 +64,7 @@ export class TrialManager {
         return { allowed: false, reason: 'Database error' }
       }
 
-      if (ipCheck && ipCheck.length >= paddleConfig.maxTrialPerIP) {
+      if (ipCheck && ipCheck.length >= trialConfig.maxTrialPerIP) {
         return { allowed: false, reason: 'IP address has exceeded trial limit' }
       }
 
@@ -71,7 +78,7 @@ export class TrialManager {
   async startTrial(userId: string, email: string, ipAddress: string, userAgent: string): Promise<boolean> {
     try {
       const trialEndsAt = new Date()
-      trialEndsAt.setDate(trialEndsAt.getDate() + paddleConfig.trialDays)
+      trialEndsAt.setDate(trialEndsAt.getDate() + trialConfig.trialDays)
 
       // Update user profile with trial information
       const { error: profileError } = await this.supabase
@@ -162,7 +169,7 @@ export class TrialManager {
     newStatus: string, 
     previousStatus: string | null, 
     eventType: string,
-    paddleEventId?: string,
+    razorpayEventId?: string,
     metadata?: any
   ): Promise<void> {
     try {
@@ -172,8 +179,8 @@ export class TrialManager {
           user_id: userId,
           status: newStatus,
           previous_status: previousStatus,
-          paddle_event_id: paddleEventId,
-          paddle_event_type: eventType,
+          razorpay_event_id: razorpayEventId,
+          razorpay_event_type: eventType,
           metadata: metadata
         })
 
@@ -188,14 +195,14 @@ export class TrialManager {
   async blockAbusiveUser(email: string, ipAddress: string, reason: string): Promise<void> {
     try {
       const blockUntil = new Date()
-      blockUntil.setHours(blockUntil.getHours() + paddleConfig.trialCooldownHours)
+      blockUntil.setHours(blockUntil.getHours() + trialConfig.trialCooldownHours)
 
       const { error } = await this.supabase
         .from('trial_abuse_prevention')
         .upsert({
           email: email.toLowerCase(),
           ip_address: ipAddress,
-          trial_count: paddleConfig.maxTrialPerEmail,
+          trial_count: trialConfig.maxTrialPerEmail,
           blocked_until: blockUntil.toISOString()
         }, {
           onConflict: 'email,ip_address'

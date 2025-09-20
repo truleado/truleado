@@ -12,13 +12,11 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 # OpenAI Configuration (for website analysis and subreddit discovery)
 OPENAI_API_KEY=your_openai_api_key_here
 
-# Paddle Configuration (for payments)
-NEXT_PUBLIC_PADDLE_CLIENT_TOKEN=your_paddle_client_token_here
-PADDLE_VENDOR_ID=your_paddle_vendor_id_here
-PADDLE_API_KEY=your_paddle_api_key_here
-PADDLE_PRODUCT_ID=your_paddle_product_id_here
-PADDLE_PRICE_ID=your_paddle_price_id_here
-PADDLE_WEBHOOK_SECRET=your_paddle_webhook_secret_here
+# Razorpay Configuration (for payments)
+RAZORPAY_KEY_ID=your_razorpay_key_id_here
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret_here
+RAZORPAY_PLAN_ID=your_razorpay_plan_id_here
+RAZORPAY_WEBHOOK_SECRET=your_razorpay_webhook_secret_here
 
 # Reddit API Configuration (optional)
 REDDIT_CLIENT_ID=your_reddit_client_id_here
@@ -51,12 +49,13 @@ echo "   - Create a new project or select existing one"
 echo "   - Enable Google+ API"
 echo "   - Create OAuth 2.0 credentials"
 echo "   - Add GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET to .env.local"
-echo "7. Set up Paddle credentials:"
-echo "   - Go to https://vendors.paddle.com/ (or sandbox)"
-echo "   - Get your Vendor ID, API Key, Product ID, Price ID"
+echo "7. Set up Razorpay credentials:"
+echo "   - Go to https://dashboard.razorpay.com/"
+echo "   - Get your Key ID and Key Secret from API Keys section"
+echo "   - Create a subscription plan and get Plan ID"
 echo "   - Set up webhook endpoint: https://yourdomain.com/api/billing/webhook"
-echo "   - Get webhook secret from Paddle dashboard"
-echo "   - Add all Paddle variables to .env.local"
+echo "   - Get webhook secret from Razorpay dashboard"
+echo "   - Add all Razorpay variables to .env.local"
 echo ""
 echo "🔗 Supabase Setup Guide: ./SUPABASE_SETUP.md"
 echo ""

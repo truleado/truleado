@@ -1,34 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
-import { paddleConfig, verifyPaddleWebhook, paddleAPI } from '@/lib/paddle-config'
+import { razorpayConfig, verifyRazorpayWebhook, razorpayAPI } from '@/lib/razorpay-config'
 import { trialManager } from '@/lib/trial-manager'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text()
-    const signature = request.headers.get('paddle-signature')
+    const signature = request.headers.get('x-razorpay-signature')
     
     // Verify webhook signature
     if (!signature) {
-      console.error('Missing Paddle signature')
+      console.error('Missing Razorpay signature')
       return NextResponse.json({ error: 'Missing signature' }, { status: 400 })
     }
 
     // Verify webhook signature
-    const isValid = verifyPaddleWebhook(body, signature, paddleConfig.webhookSecret)
+    const isValid = verifyRazorpayWebhook(body, signature, razorpayConfig.webhookSecret)
     if (!isValid) {
       console.error('Invalid webhook signature')
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
     }
 
     const event = JSON.parse(body)
-    console.log('Paddle webhook received:', event.event_type)
+    console.log('Razorpay webhook received:', event.event)
 
     const supabase = createClient()
 
-    switch (event.event_type) {
-      case 'transaction.completed':
-        await handleTransactionCompleted(event, supabase)
+    switch (event.event) {
+      case 'payment.captured':
+        await handlePaymentCaptured(event, supabase)
         break
       
       case 'subscription.created':
@@ -43,12 +43,16 @@ export async function POST(request: NextRequest) {
         await handleSubscriptionCancelled(event, supabase)
         break
       
-      case 'subscription.past_due':
-        await handleSubscriptionPastDue(event, supabase)
+      case 'subscription.paused':
+        await handleSubscriptionPaused(event, supabase)
+        break
+      
+      case 'subscription.resumed':
+        await handleSubscriptionResumed(event, supabase)
         break
       
       default:
-        console.log('Unhandled webhook event:', event.event_type)
+        console.log('Unhandled webhook event:', event.event)
     }
 
     return NextResponse.json({ received: true })
@@ -60,25 +64,25 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function handleTransactionCompleted(event: any, supabase: any) {
-  const transaction = event.data
-  const customerId = transaction.custom_data?.user_id
+async function handlePaymentCaptured(event: any, supabase: any) {
+  const payment = event.payload.payment.entity
+  const customerId = payment.notes?.user_id
   
   if (!customerId) {
-    console.error('No user ID in transaction data')
+    console.error('No user ID in payment data')
     return
   }
 
   try {
-    // Get full transaction details from Paddle API
-    const fullTransaction = await paddleAPI.getTransaction(transaction.id)
+    // Get full payment details from Razorpay API
+    const fullPayment = await razorpayAPI.getPayment(payment.id)
     
     // Update user subscription status
     const { error } = await supabase
       .from('profiles')
       .update({
         subscription_status: 'active',
-        paddle_customer_id: transaction.customer_id,
+        razorpay_customer_id: payment.customer_id,
         subscription_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
       })
       .eq('id', customerId)
@@ -90,23 +94,23 @@ async function handleTransactionCompleted(event: any, supabase: any) {
         customerId,
         'active',
         'trial',
-        'transaction_completed',
-        event.event_id,
+        'payment_captured',
+        event.id,
         { 
-          transaction_id: transaction.id,
-          amount: fullTransaction.details?.totals?.total,
-          currency: fullTransaction.details?.currency_code
+          payment_id: payment.id,
+          amount: fullPayment.amount,
+          currency: fullPayment.currency
         }
       )
     }
   } catch (apiError) {
-    console.error('Error fetching transaction details from Paddle API:', apiError)
+    console.error('Error fetching payment details from Razorpay API:', apiError)
     // Fallback to basic update without API call
     const { error } = await supabase
       .from('profiles')
       .update({
         subscription_status: 'active',
-        paddle_customer_id: transaction.customer_id,
+        razorpay_customer_id: payment.customer_id,
         subscription_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
       })
       .eq('id', customerId)
@@ -118,8 +122,8 @@ async function handleTransactionCompleted(event: any, supabase: any) {
 }
 
 async function handleSubscriptionCreated(event: any, supabase: any) {
-  const subscription = event.data
-  const customerId = subscription.custom_data?.user_id
+  const subscription = event.payload.subscription.entity
+  const customerId = subscription.notes?.user_id
   
   if (!customerId) {
     console.error('No user ID in subscription data')
@@ -127,15 +131,15 @@ async function handleSubscriptionCreated(event: any, supabase: any) {
   }
 
   try {
-    // Get full subscription details from Paddle API
-    const fullSubscription = await paddleAPI.getSubscription(subscription.id)
+    // Get full subscription details from Razorpay API
+    const fullSubscription = await razorpayAPI.getSubscription(subscription.id)
     
     // Update user with subscription ID
     const { error } = await supabase
       .from('profiles')
       .update({
-        paddle_subscription_id: subscription.id,
-        subscription_ends_at: new Date(subscription.next_billed_at).toISOString(),
+        razorpay_subscription_id: subscription.id,
+        subscription_ends_at: new Date(subscription.current_end).toISOString(),
         subscription_status: 'active'
       })
       .eq('id', customerId)
@@ -148,22 +152,22 @@ async function handleSubscriptionCreated(event: any, supabase: any) {
         'active',
         'trial',
         'subscription_created',
-        event.event_id,
+        event.id,
         { 
           subscription_id: subscription.id,
-          price_id: fullSubscription.items?.[0]?.price_id,
+          plan_id: fullSubscription.plan_id,
           billing_cycle: fullSubscription.billing_cycle
         }
       )
     }
   } catch (apiError) {
-    console.error('Error fetching subscription details from Paddle API:', apiError)
+    console.error('Error fetching subscription details from Razorpay API:', apiError)
     // Fallback to basic update
     const { error } = await supabase
       .from('profiles')
       .update({
-        paddle_subscription_id: subscription.id,
-        subscription_ends_at: new Date(subscription.next_billed_at).toISOString(),
+        razorpay_subscription_id: subscription.id,
+        subscription_ends_at: new Date(subscription.current_end).toISOString(),
         subscription_status: 'active'
       })
       .eq('id', customerId)
@@ -175,8 +179,8 @@ async function handleSubscriptionCreated(event: any, supabase: any) {
 }
 
 async function handleSubscriptionUpdated(event: any, supabase: any) {
-  const subscription = event.data
-  const customerId = subscription.custom_data?.user_id
+  const subscription = event.payload.subscription.entity
+  const customerId = subscription.notes?.user_id
   
   if (!customerId) {
     console.error('No user ID in subscription data')
@@ -187,7 +191,7 @@ async function handleSubscriptionUpdated(event: any, supabase: any) {
   const { error } = await supabase
     .from('profiles')
     .update({
-      subscription_ends_at: new Date(subscription.next_billed_at).toISOString()
+      subscription_ends_at: new Date(subscription.current_end).toISOString()
     })
     .eq('id', customerId)
 
@@ -197,8 +201,8 @@ async function handleSubscriptionUpdated(event: any, supabase: any) {
 }
 
 async function handleSubscriptionCancelled(event: any, supabase: any) {
-  const subscription = event.data
-  const customerId = subscription.custom_data?.user_id
+  const subscription = event.payload.subscription.entity
+  const customerId = subscription.notes?.user_id
   
   if (!customerId) {
     console.error('No user ID in subscription data')
@@ -221,15 +225,15 @@ async function handleSubscriptionCancelled(event: any, supabase: any) {
       'cancelled',
       'active',
       'subscription_cancelled',
-      event.event_id,
+      event.id,
       { subscription_id: subscription.id }
     )
   }
 }
 
-async function handleSubscriptionPastDue(event: any, supabase: any) {
-  const subscription = event.data
-  const customerId = subscription.custom_data?.user_id
+async function handleSubscriptionPaused(event: any, supabase: any) {
+  const subscription = event.payload.subscription.entity
+  const customerId = subscription.notes?.user_id
   
   if (!customerId) {
     console.error('No user ID in subscription data')
@@ -240,19 +244,50 @@ async function handleSubscriptionPastDue(event: any, supabase: any) {
   const { error } = await supabase
     .from('profiles')
     .update({
-      subscription_status: 'past_due'
+      subscription_status: 'paused'
     })
     .eq('id', customerId)
 
   if (error) {
-    console.error('Error updating subscription to past due:', error)
+    console.error('Error updating subscription to paused:', error)
   } else {
     await trialManager.logSubscriptionChange(
       customerId,
-      'past_due',
+      'paused',
       'active',
-      'subscription_past_due',
-      event.event_id,
+      'subscription_paused',
+      event.id,
+      { subscription_id: subscription.id }
+    )
+  }
+}
+
+async function handleSubscriptionResumed(event: any, supabase: any) {
+  const subscription = event.payload.subscription.entity
+  const customerId = subscription.notes?.user_id
+  
+  if (!customerId) {
+    console.error('No user ID in subscription data')
+    return
+  }
+
+  // Update user subscription status
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      subscription_status: 'active'
+    })
+    .eq('id', customerId)
+
+  if (error) {
+    console.error('Error updating subscription to active:', error)
+  } else {
+    await trialManager.logSubscriptionChange(
+      customerId,
+      'active',
+      'paused',
+      'subscription_resumed',
+      event.id,
       { subscription_id: subscription.id }
     )
   }

@@ -67,12 +67,12 @@ CREATE TABLE public.leads (
   UNIQUE(user_id, reddit_post_id) -- Prevent duplicate leads per user
 );
 
--- Create subscriptions table (Paddle integration)
+-- Create subscriptions table (Razorpay integration)
 CREATE TABLE public.subscriptions (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-  paddle_subscription_id TEXT UNIQUE,
-  paddle_plan_id TEXT,
+  razorpay_subscription_id TEXT UNIQUE,
+  razorpay_plan_id TEXT,
   status TEXT NOT NULL CHECK (status IN ('active', 'cancelled', 'past_due', 'paused')),
   current_period_start TIMESTAMP WITH TIME ZONE,
   current_period_end TIMESTAMP WITH TIME ZONE,

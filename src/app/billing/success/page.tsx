@@ -1,52 +1,57 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/auth-context'
-import AppLayout from '@/components/app-layout'
 import { CheckCircle, ArrowRight, Loader2 } from 'lucide-react'
+import AppLayout from '@/components/app-layout'
 
 export default function BillingSuccessPage() {
-  const { user } = useAuth()
+  const searchParams = useSearchParams()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
-  const [subscriptionStatus, setSubscriptionStatus] = useState<string>('')
+  const [error, setError] = useState<string | null>(null)
+  
+  const paymentId = searchParams.get('payment_id')
+  const subscriptionId = searchParams.get('subscription_id')
 
   useEffect(() => {
-    if (!user) {
-      router.push('/auth/signin')
-      return
-    }
+    // Simulate processing time
+    const timer = setTimeout(() => {
+      setLoading(false)
+    }, 2000)
 
-    // Check subscription status after a short delay to allow webhook processing
-    const checkSubscriptionStatus = async () => {
-      try {
-        // Wait a bit for webhook to process
-        await new Promise(resolve => setTimeout(resolve, 3000))
-        
-        const response = await fetch('/api/billing/status')
-        if (response.ok) {
-          const data = await response.json()
-          setSubscriptionStatus(data.subscription_status)
-        }
-      } catch (error) {
-        console.error('Error checking subscription status:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    checkSubscriptionStatus()
-  }, [user, router])
+    return () => clearTimeout(timer)
+  }, [])
 
   if (loading) {
     return (
       <AppLayout>
-        <div className="min-h-96 flex items-center justify-center">
+        <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Processing Your Payment</h2>
+            <Loader2 className="w-16 h-16 animate-spin text-blue-600 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Processing Payment</h1>
             <p className="text-gray-600">Please wait while we confirm your subscription...</p>
+          </div>
+        </div>
+      </AppLayout>
+    )
+  }
+
+  if (error) {
+    return (
+      <AppLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-red-600 text-6xl mb-4">⚠️</div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Payment Error</h1>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+            >
+              Return to Dashboard
+            </button>
           </div>
         </div>
       </AppLayout>
@@ -55,31 +60,29 @@ export default function BillingSuccessPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-96 flex items-center justify-center">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-8 h-8 text-green-600" />
-          </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center">
+          <CheckCircle className="w-20 h-20 text-green-600 mx-auto mb-6" />
           
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">
             Payment Successful!
           </h1>
           
           <p className="text-gray-600 mb-6">
-            Thank you for subscribing to Truleado Pro! Your account has been upgraded and you now have access to all premium features.
+            Welcome to Truleado Pro! Your subscription is now active and you have access to all premium features.
           </p>
 
-          {subscriptionStatus === 'active' && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-              <p className="text-green-800 font-medium">✅ Subscription Active</p>
-              <p className="text-green-700 text-sm">You can now access all Pro features</p>
+          {paymentId && (
+            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+              <p className="text-sm text-gray-500 mb-1">Payment ID</p>
+              <p className="font-mono text-sm text-gray-900">{paymentId}</p>
             </div>
           )}
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <button
               onClick={() => router.push('/dashboard')}
-              className="w-full bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 flex items-center justify-center"
+              className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 flex items-center justify-center"
             >
               Go to Dashboard
               <ArrowRight className="w-4 h-4 ml-2" />
@@ -87,23 +90,17 @@ export default function BillingSuccessPage() {
             
             <button
               onClick={() => router.push('/products')}
-              className="w-full bg-gray-100 text-gray-700 px-6 py-3 rounded-md hover:bg-gray-200"
+              className="w-full bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200"
             >
-              Manage Products
+              Start Creating Products
             </button>
           </div>
 
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-500">
-              Need help? Contact us at{' '}
-              <a href="mailto:support@truleado.com" className="text-blue-600 hover:text-blue-700">
-                support@truleado.com
-              </a>
-            </p>
+          <div className="mt-8 text-sm text-gray-500">
+            <p>You can manage your subscription in the settings page.</p>
           </div>
         </div>
       </div>
     </AppLayout>
   )
 }
-
