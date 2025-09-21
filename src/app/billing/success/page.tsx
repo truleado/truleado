@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { AppLayout } from '@/components/app-layout'
+import AppLayout from '@/components/app-layout'
 import { CheckCircle, ArrowRight, Loader2 } from 'lucide-react'
 
 export default function BillingSuccess() {

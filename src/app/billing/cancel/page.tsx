@@ -1,6 +1,6 @@
 'use client'
 
-import { AppLayout } from '@/components/app-layout'
+import AppLayout from '@/components/app-layout'
 import { XCircle, ArrowLeft, ArrowRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
