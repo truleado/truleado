@@ -2,9 +2,9 @@ import { createClient } from '@supabase/supabase-js'
 
 // Paddle Configuration
 export const paddleConfig = {
-  apiKey: process.env.PADDLE_API_KEY!,
-  webhookSecret: process.env.PADDLE_WEBHOOK_SECRET!,
-  productId: process.env.PADDLE_PRODUCT_ID!,
+  apiKey: process.env.PADDLE_API_KEY || '',
+  webhookSecret: process.env.PADDLE_WEBHOOK_SECRET || '',
+  productId: process.env.PADDLE_PRODUCT_ID || '',
   environment: process.env.NODE_ENV === 'production' ? 'production' : 'sandbox',
   baseUrl: process.env.NODE_ENV === 'production' 
     ? 'https://api.paddle.com' 
@@ -19,13 +19,13 @@ export class PaddleAPI {
   constructor() {
     this.apiKey = paddleConfig.apiKey
     this.baseUrl = paddleConfig.baseUrl
-    
-    if (!this.apiKey) {
-      throw new Error('PADDLE_API_KEY is required')
-    }
   }
 
   private async makeRequest(endpoint: string, options: RequestInit = {}) {
+    if (!this.apiKey) {
+      throw new Error('PADDLE_API_KEY is required. Please set up your Paddle environment variables.')
+    }
+    
     const url = `${this.baseUrl}${endpoint}`
     
     const response = await fetch(url, {
