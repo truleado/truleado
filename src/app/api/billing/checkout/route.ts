@@ -20,14 +20,21 @@ export async function POST(request: NextRequest) {
     // Create or get Razorpay customer
     let customer
     try {
-      console.log('Attempting to get customer:', user.id)
-      customer = await razorpayAPI.getCustomer(user.id)
-      console.log('Customer found:', customer.id)
+      // Try to find existing customer by email first
+      console.log('Looking for existing customer with email:', user.email)
+      const customers = await razorpayAPI.listCustomers({ email: user.email })
+      
+      if (customers.items && customers.items.length > 0) {
+        customer = customers.items[0]
+        console.log('Found existing customer:', customer.id)
+      } else {
+        console.log('No existing customer found, creating new one for:', user.email)
+        customer = await razorpayAPI.createCustomer(user.email!, user.user_metadata?.full_name)
+        console.log('Customer created:', customer.id)
+      }
     } catch (error) {
-      console.log('Customer not found, creating new one:', error)
-      // Customer doesn't exist, create one
-      customer = await razorpayAPI.createCustomer(user.email!, user.user_metadata?.full_name)
-      console.log('Customer created:', customer.id)
+      console.error('Error with customer operations:', error)
+      throw error
     }
 
     // Create subscription with user metadata

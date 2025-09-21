@@ -6,7 +6,7 @@ export const razorpayConfig = {
   keySecret: process.env.RAZORPAY_KEY_SECRET!,
   webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET!,
   planId: process.env.RAZORPAY_PLAN_ID!,
-  environment: process.env.NODE_ENV === 'production' ? 'production' : 'sandbox'
+  environment: process.env.RAZORPAY_ENVIRONMENT || (process.env.NODE_ENV === 'production' ? 'production' : 'sandbox')
 }
 
 // Initialize Razorpay instance (only if keys are available)
@@ -93,6 +93,18 @@ export class RazorpayAPI {
     }
   }
 
+  // List customers (to find by email)
+  async listCustomers(options: any = {}) {
+    this.checkInitialized()
+    try {
+      const customers = await this.instance!.customers.all(options)
+      return customers
+    } catch (error) {
+      console.error('Error listing customers:', error)
+      throw error
+    }
+  }
+
   // Create subscription
   async createSubscription(customerId: string, planId: string) {
     this.checkInitialized()
@@ -100,6 +112,7 @@ export class RazorpayAPI {
       console.log('Creating Razorpay subscription:', { customerId, planId })
       const subscription = await this.instance!.subscriptions.create({
         plan_id: planId,
+        customer_id: customerId,
         customer_notify: 1,
         total_count: 12, // 12 months
         quantity: 1
