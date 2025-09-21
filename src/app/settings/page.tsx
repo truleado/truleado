@@ -18,7 +18,9 @@ import {
   CheckCircle,
   AlertCircle,
   Clock,
-  Star
+  Star,
+  XCircle,
+  AlertTriangle
 } from 'lucide-react'
 
 export default function Settings() {
@@ -31,6 +33,9 @@ export default function Settings() {
   const [redditUsername, setRedditUsername] = useState('')
   const [isConnectingReddit, setIsConnectingReddit] = useState(false)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
+  const [subscriptionStatus, setSubscriptionStatus] = useState('')
   const [formData, setFormData] = useState({
     email: '',
     currentPassword: '',
@@ -50,8 +55,21 @@ export default function Settings() {
     if (user) {
       setFormData(prev => ({ ...prev, email: user.email || '' }))
       checkRedditConnection()
+      fetchSubscriptionStatus()
     }
   }, [user, loading, router])
+
+  const fetchSubscriptionStatus = async () => {
+    try {
+      const response = await fetch('/api/debug/subscription')
+      if (response.ok) {
+        const data = await response.json()
+        setSubscriptionStatus(data.subscription_status || 'free')
+      }
+    } catch (error) {
+      console.error('Error fetching subscription status:', error)
+    }
+  }
 
   useEffect(() => {
     // Check for tab parameter in URL
@@ -104,6 +122,37 @@ export default function Settings() {
       }
     } catch (error) {
       console.error('Error creating checkout session:', error)
+    }
+  }
+
+  const handleCancelSubscription = async () => {
+    setIsCancelling(true)
+    try {
+      const response = await fetch('/api/billing/cancel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setSubscriptionStatus('cancelled')
+        setShowCancelModal(false)
+        setShowSuccessMessage(true)
+        setTimeout(() => setShowSuccessMessage(false), 5000)
+        // Refresh the page to update subscription context
+        window.location.reload()
+      } else {
+        const errorData = await response.json()
+        console.error('Failed to cancel subscription:', errorData.error)
+        alert('Failed to cancel subscription. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error cancelling subscription:', error)
+      alert('Error cancelling subscription. Please try again.')
+    } finally {
+      setIsCancelling(false)
     }
   }
 
@@ -486,28 +535,85 @@ export default function Settings() {
                   <p className="text-sm text-gray-500">Manage your subscription and billing information.</p>
                 </div>
 
+                {/* Current Plan Status */}
                 <div className="bg-gray-50 rounded-lg p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="text-lg font-medium text-gray-900">
-                        {accessLevel === 'full' ? 'Trial Plan' : 'Free Plan'}
+                        {subscriptionStatus === 'active' ? 'Pro Plan' : 
+                         subscriptionStatus === 'cancelled' ? 'Cancelled Plan' :
+                         accessLevel === 'full' ? 'Trial Plan' : 'Free Plan'}
                       </h4>
                       <p className="text-sm text-gray-500">
-                        {accessLevel === 'full' 
+                        {subscriptionStatus === 'active' ? 'Your subscription is active' :
+                         subscriptionStatus === 'cancelled' ? 'Your subscription has been cancelled' :
+                         accessLevel === 'full' 
                           ? `Trial ends in ${trialTimeRemaining}`
                           : 'You\'re currently on the free plan'
                         }
                       </p>
                     </div>
-                    <button 
-                      onClick={handleUpgrade}
-                      className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-                    >
-                      <Star className="w-4 h-4 mr-2" />
-                      Upgrade Plan
-                    </button>
+                    {subscriptionStatus !== 'active' && (
+                      <button 
+                        onClick={handleUpgrade}
+                        className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                      >
+                        <Star className="w-4 h-4 mr-2" />
+                        Upgrade Plan
+                      </button>
+                    )}
                   </div>
                 </div>
+
+                {/* Subscription Management */}
+                {subscriptionStatus === 'active' && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                    <div className="flex items-start">
+                      <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 mr-3" />
+                      <div className="flex-1">
+                        <h4 className="text-lg font-medium text-red-900">Cancel Subscription</h4>
+                        <p className="text-sm text-red-700 mt-1">
+                          Cancelling your subscription will immediately revoke access to all premium features. 
+                          You can resubscribe at any time.
+                        </p>
+                        <div className="mt-4">
+                          <button
+                            onClick={() => setShowCancelModal(true)}
+                            className="inline-flex items-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+                          >
+                            <XCircle className="w-4 h-4 mr-2" />
+                            Cancel Subscription
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Cancelled Subscription Info */}
+                {subscriptionStatus === 'cancelled' && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                    <div className="flex items-start">
+                      <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 mr-3" />
+                      <div className="flex-1">
+                        <h4 className="text-lg font-medium text-yellow-900">Subscription Cancelled</h4>
+                        <p className="text-sm text-yellow-700 mt-1">
+                          Your subscription has been cancelled. You now have limited access to features. 
+                          Upgrade again to regain full access.
+                        </p>
+                        <div className="mt-4">
+                          <button
+                            onClick={handleUpgrade}
+                            className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                          >
+                            <Star className="w-4 h-4 mr-2" />
+                            Resubscribe
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
               </div>
             )}
@@ -515,6 +621,54 @@ export default function Settings() {
           </div>
         </div>
       </div>
+
+      {/* Cancel Subscription Confirmation Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <AlertTriangle className="w-6 h-6 text-red-600 mr-3" />
+              <h3 className="text-lg font-medium text-gray-900">Cancel Subscription</h3>
+            </div>
+            
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure you want to cancel your subscription? This action will:
+            </p>
+            
+            <ul className="text-sm text-gray-600 mb-6 space-y-2">
+              <li className="flex items-center">
+                <XCircle className="w-4 h-4 text-red-500 mr-2" />
+                Immediately revoke access to all premium features
+              </li>
+              <li className="flex items-center">
+                <XCircle className="w-4 h-4 text-red-500 mr-2" />
+                Stop all future billing
+              </li>
+              <li className="flex items-center">
+                <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                Allow you to resubscribe at any time
+              </li>
+            </ul>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                disabled={isCancelling}
+              >
+                Keep Subscription
+              </button>
+              <button
+                onClick={handleCancelSubscription}
+                disabled={isCancelling}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
+              >
+                {isCancelling ? 'Cancelling...' : 'Cancel Subscription'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   )
 }

@@ -214,13 +214,6 @@ export default function Dashboard() {
           </div>
           <div className="mt-4 flex md:ml-4 md:mt-0 space-x-3">
             <Link
-              href="/upgrade"
-              className="inline-flex items-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
-            >
-              <ArrowUpRight className="w-4 h-4 mr-2" />
-              Upgrade to Pro
-            </Link>
-            <Link
               href="/products"
               className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
             >
@@ -230,7 +223,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Trial Status */}
+        {/* Trial Status - Only show for trial users */}
         {subscriptionStatus === 'trial' && (
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
@@ -247,15 +240,16 @@ export default function Dashboard() {
               </div>
               <Link
                 href="/upgrade"
-                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
               >
-                <CreditCard className="w-4 h-4 mr-1" />
-                Upgrade Now
+                <ArrowUpRight className="w-4 h-4 mr-2" />
+                Upgrade to Pro
               </Link>
             </div>
           </div>
         )}
 
+        {/* Pro Plan Status - Only show for active subscribers */}
         {subscriptionStatus === 'active' && (
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
             <div className="flex items-center">
