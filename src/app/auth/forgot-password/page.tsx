@@ -40,12 +40,12 @@ export default function ForgotPassword() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#e6f4ff] via-white to-purple-50 flex items-center justify-center px-4">
         <div className="max-w-md w-full">
           {/* Logo */}
           <div className="text-center mb-8">
             <Link href="/" className="inline-flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-[#148cfc] to-[#0d7ce8] rounded-lg flex items-center justify-center">
                 <Filter className="w-6 h-6 text-white" />
               </div>
               <span className="text-2xl font-bold text-gray-900">Truleado</span>
@@ -76,7 +76,7 @@ export default function ForgotPassword() {
               </button>
               <Link
                 href="/auth/signin"
-                className="block w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 text-center"
+                className="block w-full bg-gradient-to-r from-[#148cfc] to-[#0d7ce8] text-white py-3 px-4 rounded-lg font-semibold hover:from-[#0c6bc7] hover:to-[#0a5bb8] transition-all duration-200 text-center"
               >
                 Back to sign in
               </Link>
@@ -88,12 +88,12 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#e6f4ff] via-white to-purple-50 flex items-center justify-center px-4">
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-[#148cfc] to-[#0d7ce8] rounded-lg flex items-center justify-center">
               <Filter className="w-6 h-6 text-white" />
             </div>
             <span className="text-2xl font-bold text-gray-900">Truleado</span>
@@ -103,8 +103,8 @@ export default function ForgotPassword() {
         {/* Forgot Password Form */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Mail className="w-8 h-8 text-blue-600" />
+            <div className="w-16 h-16 bg-[#e6f4ff] rounded-full flex items-center justify-center mx-auto mb-4">
+              <Mail className="w-8 h-8 text-[#148cfc]" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900">Forgot your password?</h1>
             <p className="text-gray-600 mt-2">No worries, we'll send you reset instructions.</p>
@@ -135,7 +135,7 @@ export default function ForgotPassword() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-[#148cfc] to-[#0d7ce8] text-white py-3 px-4 rounded-lg font-semibold hover:from-[#0c6bc7] hover:to-[#0a5bb8] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Sending...' : 'Send reset instructions'}
             </button>
@@ -144,7 +144,7 @@ export default function ForgotPassword() {
           <div className="mt-6 text-center">
             <Link 
               href="/auth/signin" 
-              className="inline-flex items-center text-blue-600 hover:text-blue-500 font-medium"
+              className="inline-flex items-center text-[#148cfc] hover:text-[#0d7ce8] font-medium"
             >
               <ArrowLeft className="w-4 h-4 mr-1" />
               Back to sign in

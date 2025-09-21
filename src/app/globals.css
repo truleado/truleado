@@ -4,6 +4,10 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --primary-blue: #148cfc;
+  --primary-blue-hover: #0d7ce8;
+  --primary-blue-light: #e6f4ff;
+  --primary-blue-dark: #0c6bc7;
 }
 
 @theme inline {

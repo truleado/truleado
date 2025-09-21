@@ -20,7 +20,7 @@ export default function Pricing() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+          <div className="w-8 h-8 bg-[#148cfc] rounded-lg flex items-center justify-center mx-auto mb-4">
             <Filter className="w-5 h-5 text-white" />
           </div>
           <p className="text-gray-600">Loading...</p>
@@ -41,7 +41,7 @@ export default function Pricing() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-[#148cfc] rounded-lg flex items-center justify-center">
                   <Filter className="w-5 h-5 text-white" />
                 </div>
                 <span className="ml-2 text-xl font-semibold text-gray-900">Truleado</span>
@@ -62,7 +62,7 @@ export default function Pricing() {
               </Link>
               <Link 
                 href="/auth/signup" 
-                className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+                className="bg-[#148cfc] text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-[#0d7ce8]"
               >
                 Get Started
               </Link>
@@ -147,7 +147,7 @@ export default function Pricing() {
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-700">Export leads to CSV <span className="text-blue-600 font-medium">(Coming Soon)</span></span>
+                    <span className="text-gray-700">Export leads to CSV <span className="text-[#148cfc] font-medium">(Coming Soon)</span></span>
                   </li>
                 </ul>
               </div>
@@ -156,7 +156,7 @@ export default function Pricing() {
             {/* Pro Plan Card */}
             <div className="bg-white rounded-2xl shadow-xl border-2 border-blue-200 p-8 relative">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium">Most Popular</span>
+                <span className="bg-[#148cfc] text-white px-4 py-1 rounded-full text-sm font-medium">Most Popular</span>
               </div>
               
               <div className="text-center">
@@ -174,7 +174,7 @@ export default function Pricing() {
                 <div className="mt-8">
                   <Link 
                     href="/auth/signup" 
-                    className="w-full bg-blue-600 text-white px-6 py-3 rounded-md text-sm font-semibold hover:bg-blue-700 flex items-center justify-center"
+                    className="w-full bg-[#148cfc] text-white px-6 py-3 rounded-md text-sm font-semibold hover:bg-[#0d7ce8] flex items-center justify-center"
                   >
                     Start Free Trial
                     <ArrowRight className="ml-2 w-4 h-4" />
@@ -211,7 +211,7 @@ export default function Pricing() {
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-700">Export leads to CSV <span className="text-blue-600 font-medium">(Coming Soon)</span></span>
+                    <span className="text-gray-700">Export leads to CSV <span className="text-[#148cfc] font-medium">(Coming Soon)</span></span>
                   </li>
                   <li className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
@@ -238,7 +238,7 @@ export default function Pricing() {
           
           <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
             <div className="text-center">
-              <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-[#148cfc] rounded-lg flex items-center justify-center mx-auto">
                 <Target className="w-8 h-8 text-white" />
               </div>
               <h3 className="mt-6 text-lg font-semibold text-gray-900">Targeted Discovery</h3>
@@ -248,7 +248,7 @@ export default function Pricing() {
             </div>
             
             <div className="text-center">
-              <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-[#148cfc] rounded-lg flex items-center justify-center mx-auto">
                 <Zap className="w-8 h-8 text-white" />
               </div>
               <h3 className="mt-6 text-lg font-semibold text-gray-900">AI-Powered Analysis</h3>
@@ -258,7 +258,7 @@ export default function Pricing() {
             </div>
             
             <div className="text-center">
-              <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-[#148cfc] rounded-lg flex items-center justify-center mx-auto">
                 <Users className="w-8 h-8 text-white" />
               </div>
               <h3 className="mt-6 text-lg font-semibold text-gray-900">Real Context</h3>
@@ -314,7 +314,7 @@ export default function Pricing() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-blue-600">
+      <section className="bg-[#148cfc]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
             <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
@@ -326,7 +326,7 @@ export default function Pricing() {
             <div className="mt-8">
               <Link 
                 href="/auth/signup" 
-                className="bg-white text-blue-600 px-6 py-3 rounded-md text-sm font-semibold hover:bg-gray-100 inline-flex items-center"
+                className="bg-white text-[#148cfc] px-6 py-3 rounded-md text-sm font-semibold hover:bg-gray-100 inline-flex items-center"
               >
                 Start Your Free Trial
                 <ArrowRight className="ml-2 w-4 h-4" />
@@ -343,7 +343,7 @@ export default function Pricing() {
             {/* Company Info */}
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-[#148cfc] rounded-lg flex items-center justify-center">
                   <Filter className="w-5 h-5 text-white" />
                 </div>
                 <span className="ml-2 text-xl font-semibold text-white">Truleado</span>

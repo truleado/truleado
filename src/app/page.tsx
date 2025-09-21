@@ -20,7 +20,7 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+          <div className="w-8 h-8 bg-[#148cfc] rounded-lg flex items-center justify-center mx-auto mb-4">
             <Filter className="w-5 h-5 text-white" />
           </div>
           <p className="text-gray-600">Loading...</p>
@@ -40,7 +40,7 @@ export default function Home() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-[#148cfc] rounded-lg flex items-center justify-center">
                   <Filter className="w-5 h-5 text-white" />
                 </div>
                 <span className="ml-2 text-xl font-semibold text-gray-900">Truleado</span>
@@ -61,7 +61,7 @@ export default function Home() {
               </Link>
               <Link 
                 href="/auth/signup" 
-                className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+                className="bg-[#148cfc] text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-[#0d7ce8]"
               >
                 Get Started
               </Link>
@@ -83,7 +83,7 @@ export default function Home() {
             <div className="mt-10 flex items-center justify-center">
               <Link 
                 href="/auth/signup" 
-                className="bg-blue-600 text-white px-6 py-3 rounded-md text-sm font-semibold hover:bg-blue-700 flex items-center"
+                className="bg-[#148cfc] text-white px-6 py-3 rounded-md text-sm font-semibold hover:bg-[#0d7ce8] flex items-center"
               >
                 Start Finding Leads
                 <ArrowRight className="ml-2 w-4 h-4" />
@@ -107,7 +107,7 @@ export default function Home() {
           
           <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
             <div className="text-center">
-              <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-[#148cfc] rounded-lg flex items-center justify-center mx-auto">
                 <Target className="w-8 h-8 text-white" />
               </div>
               <h3 className="mt-6 text-lg font-semibold text-gray-900">Define Your Product</h3>
@@ -117,7 +117,7 @@ export default function Home() {
             </div>
             
             <div className="text-center">
-              <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-[#148cfc] rounded-lg flex items-center justify-center mx-auto">
                 <Filter className="w-8 h-8 text-white" />
               </div>
               <h3 className="mt-6 text-lg font-semibold text-gray-900">Monitor Reddit</h3>
@@ -127,7 +127,7 @@ export default function Home() {
             </div>
             
             <div className="text-center">
-              <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-[#148cfc] rounded-lg flex items-center justify-center mx-auto">
                 <Zap className="w-8 h-8 text-white" />
               </div>
               <h3 className="mt-6 text-lg font-semibold text-gray-900">Get Quality Leads</h3>
@@ -193,7 +193,7 @@ export default function Home() {
             <div className="bg-gray-50 p-8 rounded-lg">
               <div className="space-y-6">
                 <div className="flex items-center">
-                  <Users className="h-8 w-8 text-blue-600" />
+                  <Users className="h-8 w-8 text-[#148cfc]" />
                   <div className="ml-4">
                     <p className="text-2xl font-bold text-gray-900">All</p>
                     <p className="text-gray-600">Subreddits Monitored</p>
@@ -201,7 +201,7 @@ export default function Home() {
                 </div>
                 
                 <div className="flex items-center">
-                  <TrendingUp className="h-8 w-8 text-blue-600" />
+                  <TrendingUp className="h-8 w-8 text-[#148cfc]" />
                   <div className="ml-4">
                     <p className="text-2xl font-bold text-gray-900">24/7</p>
                     <p className="text-gray-600">Continuous Monitoring</p>
@@ -209,7 +209,7 @@ export default function Home() {
                 </div>
                 
                 <div className="flex items-center">
-                  <Zap className="h-8 w-8 text-blue-600" />
+                  <Zap className="h-8 w-8 text-[#148cfc]" />
                   <div className="ml-4">
                     <p className="text-2xl font-bold text-gray-900">AI-Powered</p>
                     <p className="text-gray-600">Smart Lead Filtering</p>
@@ -289,7 +289,7 @@ export default function Home() {
             {/* Pro Plan Card */}
             <div className="bg-white rounded-2xl shadow-xl border-2 border-blue-200 p-8 relative">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium">Most Popular</span>
+                <span className="bg-[#148cfc] text-white px-4 py-1 rounded-full text-sm font-medium">Most Popular</span>
               </div>
               
               <div className="text-center">
@@ -307,7 +307,7 @@ export default function Home() {
                 <div className="mt-8">
                   <Link 
                     href="/auth/signup" 
-                    className="w-full bg-blue-600 text-white px-6 py-3 rounded-md text-sm font-semibold hover:bg-blue-700 flex items-center justify-center"
+                    className="w-full bg-[#148cfc] text-white px-6 py-3 rounded-md text-sm font-semibold hover:bg-[#0d7ce8] flex items-center justify-center"
                   >
                     Start Free Trial
                     <ArrowRight className="ml-2 w-4 h-4" />
@@ -346,7 +346,7 @@ export default function Home() {
           <div className="mt-12 text-center">
             <Link 
               href="/pricing" 
-              className="text-blue-600 hover:text-blue-700 font-medium"
+              className="text-[#148cfc] hover:text-[#0c6bc7] font-medium"
             >
               View detailed pricing →
             </Link>
@@ -355,7 +355,7 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-blue-600">
+      <section className="bg-[#148cfc]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
             <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
@@ -367,7 +367,7 @@ export default function Home() {
             <div className="mt-8">
               <Link 
                 href="/auth/signup" 
-                className="bg-white text-blue-600 px-6 py-3 rounded-md text-sm font-semibold hover:bg-gray-100 inline-flex items-center"
+                className="bg-white text-[#148cfc] px-6 py-3 rounded-md text-sm font-semibold hover:bg-gray-100 inline-flex items-center"
               >
                 Start Your Free Trial
                 <ArrowRight className="ml-2 w-4 h-4" />
@@ -384,7 +384,7 @@ export default function Home() {
             {/* Company Info */}
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-[#148cfc] rounded-lg flex items-center justify-center">
                   <Filter className="w-5 h-5 text-white" />
                 </div>
                 <span className="ml-2 text-xl font-semibold text-white">Truleado</span>

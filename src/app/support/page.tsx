@@ -10,7 +10,7 @@ export default function SupportPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <Link href="/" className="flex items-center">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-[#148cfc] rounded-lg flex items-center justify-center">
                   <Filter className="w-5 h-5 text-white" />
                 </div>
                 <span className="ml-2 text-xl font-semibold text-gray-900">Truleado</span>
@@ -39,9 +39,9 @@ export default function SupportPage() {
         </div>
 
         {/* Contact Information */}
-        <div className="bg-blue-50 rounded-lg p-8 mb-12">
+        <div className="bg-[#e6f4ff] rounded-lg p-8 mb-12">
           <div className="text-center">
-            <Mail className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+            <Mail className="w-12 h-12 text-[#148cfc] mx-auto mb-4" />
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Get in Touch</h2>
             <p className="text-gray-600 mb-6">
               Have a question or need help? Our support team is here to assist you.
@@ -50,7 +50,7 @@ export default function SupportPage() {
               <p className="text-lg font-medium text-gray-900 mb-2">Email Support</p>
               <a 
                 href="mailto:support@truleado.com" 
-                className="text-blue-600 hover:text-blue-700 text-xl font-semibold"
+                className="text-[#148cfc] hover:text-blue-700 text-xl font-semibold"
               >
                 support@truleado.com
               </a>
@@ -61,7 +61,7 @@ export default function SupportPage() {
         {/* Support Options */}
         <div className="grid md:grid-cols-3 gap-8 mb-12">
           <div className="text-center p-6 border border-gray-200 rounded-lg">
-            <MessageCircle className="w-8 h-8 text-blue-600 mx-auto mb-4" />
+            <MessageCircle className="w-8 h-8 text-[#148cfc] mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Email Support</h3>
             <p className="text-gray-600 text-sm">
               Send us an email and we'll get back to you within 24 hours
@@ -69,7 +69,7 @@ export default function SupportPage() {
           </div>
           
           <div className="text-center p-6 border border-gray-200 rounded-lg">
-            <HelpCircle className="w-8 h-8 text-blue-600 mx-auto mb-4" />
+            <HelpCircle className="w-8 h-8 text-[#148cfc] mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Help Center</h3>
             <p className="text-gray-600 text-sm">
               Browse our documentation and frequently asked questions
@@ -77,7 +77,7 @@ export default function SupportPage() {
           </div>
           
           <div className="text-center p-6 border border-gray-200 rounded-lg">
-            <Clock className="w-8 h-8 text-blue-600 mx-auto mb-4" />
+            <Clock className="w-8 h-8 text-[#148cfc] mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Response Time</h3>
             <p className="text-gray-600 text-sm">
               We typically respond to support requests within 24 hours
@@ -135,7 +135,7 @@ export default function SupportPage() {
           </p>
           <a 
             href="mailto:support@truleado.com"
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[#148cfc] hover:bg-[#0d7ce8] transition-colors"
           >
             <Mail className="w-5 h-5 mr-2" />
             Contact Support

@@ -71,12 +71,12 @@ function ResetPasswordForm() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#e6f4ff] via-white to-purple-50 flex items-center justify-center px-4">
         <div className="max-w-md w-full">
           {/* Logo */}
           <div className="text-center mb-8">
             <Link href="/" className="inline-flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-[#148cfc] to-[#0d7ce8] rounded-lg flex items-center justify-center">
                 <Filter className="w-6 h-6 text-white" />
               </div>
               <span className="text-2xl font-bold text-gray-900">Truleado</span>
@@ -102,12 +102,12 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#e6f4ff] via-white to-purple-50 flex items-center justify-center px-4">
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-[#148cfc] to-[#0d7ce8] rounded-lg flex items-center justify-center">
               <Filter className="w-6 h-6 text-white" />
             </div>
             <span className="text-2xl font-bold text-gray-900">Truleado</span>
@@ -179,7 +179,7 @@ function ResetPasswordForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-[#148cfc] to-[#0d7ce8] text-white py-3 px-4 rounded-lg font-semibold hover:from-[#0c6bc7] hover:to-[#0a5bb8] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Updating password...' : 'Update password'}
             </button>
@@ -188,7 +188,7 @@ function ResetPasswordForm() {
           <div className="mt-6 text-center">
             <Link 
               href="/auth/signin" 
-              className="text-blue-600 hover:text-blue-500 font-medium"
+              className="text-[#148cfc] hover:text-[#0d7ce8] font-medium"
             >
               Back to sign in
             </Link>
