@@ -3,14 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, CreditCard, AlertCircle } from 'lucide-react'
-
-declare global {
-  interface Window {
-    Paddle: any
-    paddleInitialized?: boolean
-    paddleClientToken?: string
-  }
-}
+import { initializePaddle } from '@paddle/paddle-js'
 
 interface PaddleCheckoutProps {
   priceId?: string
@@ -38,84 +31,13 @@ export default function PaddleCheckout({
   const [isLoading, setIsLoading] = useState(false)
   const [paddleLoaded, setPaddleLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [paddleInstance, setPaddleInstance] = useState<any>(null)
   const router = useRouter()
 
-  // Load Paddle.js script
-  const loadPaddleScript = useCallback(() => {
-    return new Promise<void>((resolve, reject) => {
-      if (typeof window === 'undefined') {
-        reject(new Error('Window is not available'))
-        return
-      }
-
-      if (window.Paddle && window.Paddle.initialize) {
-        console.log('Paddle.js already loaded and available')
-        resolve()
-        return
-      }
-
-      // Remove any existing Paddle scripts
-      const existingScripts = document.querySelectorAll('script[src*="paddle.com"]')
-      existingScripts.forEach(script => script.remove())
-
-      const script = document.createElement('script')
-      // Try the official Paddle CDN first
-      script.src = 'https://cdn.paddle.com/paddle/v2/paddle.js'
-      script.async = true
-      script.defer = true
-      
-      script.onload = () => {
-        console.log('Paddle.js script loaded, checking for Paddle object...')
-        
-        // Wait a bit for Paddle to initialize
-        setTimeout(() => {
-          if (window.Paddle && typeof window.Paddle.initialize === 'function') {
-            console.log('Paddle.js loaded successfully with initialize function')
-            resolve()
-          } else {
-            console.error('Paddle.js loaded but initialize function not available')
-            console.log('Available Paddle methods:', window.Paddle ? Object.keys(window.Paddle) : 'Paddle object not found')
-            
-            // Try alternative CDN
-            console.log('Trying alternative Paddle CDN...')
-            const altScript = document.createElement('script')
-            altScript.src = 'https://js.paddle.com/paddle.js'
-            altScript.async = true
-            altScript.defer = true
-            
-            altScript.onload = () => {
-              setTimeout(() => {
-                if (window.Paddle && typeof window.Paddle.initialize === 'function') {
-                  console.log('Alternative Paddle.js loaded successfully')
-                  resolve()
-                } else {
-                  reject(new Error('Both Paddle.js CDNs failed to load initialize function'))
-                }
-              }, 100)
-            }
-            
-            altScript.onerror = () => {
-              reject(new Error('Both Paddle.js CDNs failed to load'))
-            }
-            
-            document.head.appendChild(altScript)
-          }
-        }, 100)
-      }
-      
-      script.onerror = () => {
-        console.error('Failed to load Paddle.js script')
-        reject(new Error('Failed to load Paddle.js script'))
-      }
-      
-      document.head.appendChild(script)
-    })
-  }, [])
-
-  // Initialize Paddle
-  const initializePaddle = useCallback(async () => {
+  // Initialize Paddle using the official npm package
+  const initializePaddleInstance = useCallback(async () => {
     try {
-      console.log('Initializing Paddle...')
+      console.log('Initializing Paddle with npm package...')
       console.log('Client Token:', clientToken ? 'Present' : 'Missing')
       console.log('Environment:', environment)
       console.log('Price ID:', priceId ? 'Present' : 'Missing')
@@ -128,39 +50,18 @@ export default function PaddleCheckout({
         throw new Error('Paddle price ID is required')
       }
 
-      // Load Paddle script if not already loaded
-      await loadPaddleScript()
-
-      if (!window.Paddle) {
-        throw new Error('Paddle.js failed to load')
-      }
-
-      // Check if already initialized with the same token
-      if (window.paddleInitialized && window.paddleClientToken === clientToken) {
-        console.log('Paddle already initialized with same token')
-        setPaddleLoaded(true)
-        return
-      }
-
-      // Initialize Paddle
-      console.log('Calling window.Paddle.initialize with:', {
-        token: clientToken ? 'Present' : 'Missing',
-        environment: environment,
-        debug: environment === 'sandbox'
-      })
-      
-      window.Paddle.initialize({
+      // Initialize Paddle using the official npm package
+      const paddle = await initializePaddle({
         token: clientToken,
         environment: environment,
         debug: environment === 'sandbox'
       })
 
-      window.paddleInitialized = true
-      window.paddleClientToken = clientToken
+      console.log('Paddle initialized successfully with npm package')
+      setPaddleInstance(paddle)
       setPaddleLoaded(true)
       setError(null)
       
-      console.log('Paddle initialized successfully')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to initialize Paddle'
       console.error('Paddle initialization error:', errorMessage)
@@ -171,16 +72,16 @@ export default function PaddleCheckout({
         onError({ message: errorMessage })
       }
     }
-  }, [clientToken, environment, priceId, loadPaddleScript, onError])
+  }, [clientToken, environment, priceId, onError])
 
   // Initialize on mount
   useEffect(() => {
-    initializePaddle()
-  }, [initializePaddle])
+    initializePaddleInstance()
+  }, [initializePaddleInstance])
 
   // Handle checkout
   const handleCheckout = useCallback(async () => {
-    if (!paddleLoaded || !window.Paddle) {
+    if (!paddleLoaded || !paddleInstance) {
       const errorMsg = 'Paddle is not loaded'
       console.error(errorMsg)
       setError(errorMsg)
@@ -232,7 +133,7 @@ export default function PaddleCheckout({
       console.log('Opening Paddle checkout with data:', checkoutData)
 
       // Set up event listeners before opening checkout
-      window.Paddle.Checkout.onComplete((data: any) => {
+      paddleInstance.Checkout.onComplete((data: any) => {
         console.log('Checkout completed:', data)
         setIsLoading(false)
         
@@ -244,12 +145,12 @@ export default function PaddleCheckout({
         }
       })
 
-      window.Paddle.Checkout.onClose((data: any) => {
+      paddleInstance.Checkout.onClose((data: any) => {
         console.log('Checkout closed:', data)
         setIsLoading(false)
       })
 
-      window.Paddle.Checkout.onError((error: any) => {
+      paddleInstance.Checkout.onError((error: any) => {
         console.error('Checkout error:', error)
         setIsLoading(false)
         setError(error.message || 'Checkout failed')
@@ -260,7 +161,7 @@ export default function PaddleCheckout({
       })
 
       // Open checkout
-      window.Paddle.Checkout.open(checkoutData)
+      paddleInstance.Checkout.open(checkoutData)
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to open checkout'
@@ -272,7 +173,7 @@ export default function PaddleCheckout({
         onError({ message: errorMessage })
       }
     }
-  }, [paddleLoaded, priceId, customerEmail, customData, onSuccess, onError, router])
+  }, [paddleLoaded, paddleInstance, priceId, customerEmail, customData, onSuccess, onError, router])
 
   // Show error state
   if (error) {
