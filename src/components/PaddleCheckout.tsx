@@ -54,7 +54,40 @@ export default function PaddleCheckout({
       const paddle = await initializePaddle({
         token: clientToken,
         environment: environment,
-        debug: environment === 'sandbox'
+        debug: environment === 'sandbox',
+        eventCallback: (event: any) => {
+          try {
+            console.log('Paddle event:', event)
+            if (!event || !event.name) return
+
+            if (event.name === 'checkout.completed') {
+              setIsLoading(false)
+              const data = event.data || {}
+              if (onSuccess) {
+                onSuccess(data)
+              } else {
+                const txId = data.transactionId || data.id
+                router.push(`/billing/success?session_id=${txId || ''}`)
+              }
+            }
+
+            if (event.name === 'checkout.closed') {
+              setIsLoading(false)
+            }
+
+            if (event.name === 'checkout.error') {
+              setIsLoading(false)
+              const err = (event.error || event.data || {})
+              const message = err.message || 'Checkout failed'
+              setError(message)
+              if (onError) {
+                onError(err)
+              }
+            }
+          } catch (e) {
+            console.error('Error handling Paddle event:', e)
+          }
+        }
       })
 
       console.log('Paddle initialized successfully with npm package')
@@ -131,34 +164,6 @@ export default function PaddleCheckout({
       }
 
       console.log('Opening Paddle checkout with data:', checkoutData)
-
-      // Set up event listeners before opening checkout
-      paddleInstance.Checkout.onComplete((data: any) => {
-        console.log('Checkout completed:', data)
-        setIsLoading(false)
-        
-        if (onSuccess) {
-          onSuccess(data)
-        } else {
-          // Default success behavior
-          router.push(`/billing/success?session_id=${data.transactionId || data.id}`)
-        }
-      })
-
-      paddleInstance.Checkout.onClose((data: any) => {
-        console.log('Checkout closed:', data)
-        setIsLoading(false)
-      })
-
-      paddleInstance.Checkout.onError((error: any) => {
-        console.error('Checkout error:', error)
-        setIsLoading(false)
-        setError(error.message || 'Checkout failed')
-        
-        if (onError) {
-          onError(error)
-        }
-      })
 
       // Open checkout
       paddleInstance.Checkout.open(checkoutData)
