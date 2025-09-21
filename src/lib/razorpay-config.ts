@@ -189,6 +189,30 @@ export class RazorpayAPI {
       throw error
     }
   }
+
+  // List plans
+  async listPlans(options: any = {}) {
+    this.checkInitialized()
+    try {
+      const plans = await this.instance!.plans.all(options)
+      return plans
+    } catch (error) {
+      console.error('Error listing plans:', error)
+      throw error
+    }
+  }
+
+  // Get plan by ID
+  async getPlan(planId: string) {
+    this.checkInitialized()
+    try {
+      const plan = await this.instance!.plans.fetch(planId)
+      return plan
+    } catch (error) {
+      console.error('Error fetching plan:', error)
+      throw error
+    }
+  }
 }
 
 export const razorpayAPI = new RazorpayAPI()
