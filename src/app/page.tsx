@@ -408,9 +408,7 @@ export default function Home() {
               <ul className="space-y-2">
                 <li><a href="/auth/signup" className="text-gray-400 hover:text-white transition-colors text-sm">Get Started</a></li>
                 <li><a href="/auth/signin" className="text-gray-400 hover:text-white transition-colors text-sm">Sign In</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">Pricing</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">Features</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">API</a></li>
+                <li><a href="/pricing" className="text-gray-400 hover:text-white transition-colors text-sm">Pricing</a></li>
               </ul>
             </div>
 

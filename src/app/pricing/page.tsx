@@ -360,7 +360,6 @@ export default function Pricing() {
                 <li><a href="/auth/signup" className="text-gray-400 hover:text-white transition-colors text-sm">Get Started</a></li>
                 <li><a href="/auth/signin" className="text-gray-400 hover:text-white transition-colors text-sm">Sign In</a></li>
                 <li><a href="/pricing" className="text-gray-400 hover:text-white transition-colors text-sm">Pricing</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">Features</a></li>
               </ul>
             </div>
 
@@ -371,6 +370,8 @@ export default function Pricing() {
                 <li><a href="/terms" className="text-gray-400 hover:text-white transition-colors text-sm">Terms of Service</a></li>
                 <li><a href="/privacy" className="text-gray-400 hover:text-white transition-colors text-sm">Privacy Policy</a></li>
                 <li><a href="/refund" className="text-gray-400 hover:text-white transition-colors text-sm">Refund Policy</a></li>
+                <li><a href="/cookie-policy" className="text-gray-400 hover:text-white transition-colors text-sm">Cookie Policy</a></li>
+                <li><a href="/gdpr" className="text-gray-400 hover:text-white transition-colors text-sm">GDPR</a></li>
               </ul>
             </div>
           </div>
@@ -381,6 +382,9 @@ export default function Pricing() {
               <p className="text-gray-400 text-sm">
                 © 2025 Truleado. All rights reserved.
               </p>
+              <div className="mt-4 md:mt-0 flex space-x-6">
+                <a href="/support" className="text-gray-400 hover:text-white transition-colors text-sm">Support</a>
+              </div>
             </div>
           </div>
         </div>
