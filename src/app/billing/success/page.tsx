@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import AppLayout from '@/components/app-layout'
 import { CheckCircle, ArrowRight, Loader2 } from 'lucide-react'
 
-export default function BillingSuccess() {
+function BillingSuccessContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
@@ -85,5 +85,22 @@ export default function BillingSuccess() {
         </div>
       </div>
     </AppLayout>
+  )
+}
+
+export default function BillingSuccess() {
+  return (
+    <Suspense fallback={
+      <AppLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </AppLayout>
+    }>
+      <BillingSuccessContent />
+    </Suspense>
   )
 }
