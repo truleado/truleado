@@ -7,7 +7,6 @@ import AppLayout from '@/components/app-layout'
 import { 
   Users, 
   Filter, 
-  Filter, 
   ExternalLink, 
   MessageSquare,
   Calendar,
@@ -212,7 +211,7 @@ export default function Leads() {
     const filteredLeads = leads.filter(lead => {
       const matchesFilter = filter === 'all' || lead.status === filter
       const matchesType = typeFilter === 'all' || lead.leadType === typeFilter
-      const matchesFilter = searchTerm === '' || 
+      const matchesSearch = searchTerm === '' || 
                             lead.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             lead.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             lead.subreddit.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -221,7 +220,7 @@ export default function Leads() {
       // If a product is selected, only show leads for that product
       const matchesProduct = !selectedProduct || lead.productId === selectedProduct.id
       
-      return matchesFilter && matchesType && matchesFilter && matchesProduct
+      return matchesFilter && matchesType && matchesSearch && matchesProduct
     })
 
   const getStatusColor = (status: string) => {
