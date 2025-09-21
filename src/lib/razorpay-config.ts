@@ -64,13 +64,19 @@ export class RazorpayAPI {
   async createCustomer(email: string, name?: string) {
     this.checkInitialized()
     try {
+      console.log('Creating Razorpay customer:', { email, name })
       const customer = await this.instance!.customers.create({
         email,
         name: name || email.split('@')[0]
       })
+      console.log('Customer created successfully:', customer.id)
       return customer
     } catch (error) {
-      console.error('Error creating Razorpay customer:', error)
+      console.error('Error creating Razorpay customer:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        error: error
+      })
       throw error
     }
   }
@@ -91,15 +97,21 @@ export class RazorpayAPI {
   async createSubscription(customerId: string, planId: string) {
     this.checkInitialized()
     try {
+      console.log('Creating Razorpay subscription:', { customerId, planId })
       const subscription = await this.instance!.subscriptions.create({
         plan_id: planId,
         customer_notify: 1,
         total_count: 12, // 12 months
         quantity: 1
       } as any)
+      console.log('Subscription created successfully:', subscription.id)
       return subscription
     } catch (error) {
-      console.error('Error creating Razorpay subscription:', error)
+      console.error('Error creating Razorpay subscription:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        error: error
+      })
       throw error
     }
   }
