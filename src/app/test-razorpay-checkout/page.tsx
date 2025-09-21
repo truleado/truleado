@@ -1,17 +1,30 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/auth-context'
+import { createClient } from '@/lib/supabase-client'
 import AppLayout from '@/components/app-layout'
 
 export default function TestRazorpayCheckoutPage() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
+  const [manualUser, setManualUser] = useState<any>(null)
+
+  // Manual auth check
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      setManualUser(session?.user || null)
+    }
+    checkAuth()
+  }, [])
 
   const handleTestCheckout = async () => {
-    if (!user) {
+    const currentUser = user || manualUser
+    if (!currentUser) {
       setError('Please sign in first')
       return
     }
@@ -60,14 +73,30 @@ export default function TestRazorpayCheckoutPage() {
             <div className="bg-gray-50 rounded-lg p-4 mb-4">
               <h3 className="font-semibold mb-2">Current User:</h3>
               <p className="text-sm text-gray-600">
-                {user ? `${user.email} (${user.id})` : 'Not signed in'}
+                {authLoading ? 'Loading...' : (user || manualUser) ? `${(user || manualUser)?.email} (${(user || manualUser)?.id})` : 'Not signed in'}
               </p>
+              {!(user || manualUser) && !authLoading && (
+                <div className="mt-2 space-x-2">
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="text-blue-600 hover:text-blue-800 text-sm underline"
+                  >
+                    Refresh Auth State
+                  </button>
+                  <button
+                    onClick={() => window.location.href = '/auth/signin'}
+                    className="text-green-600 hover:text-green-800 text-sm underline"
+                  >
+                    Sign In
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
           <button
             onClick={handleTestCheckout}
-            disabled={loading || !user}
+            disabled={loading || !(user || manualUser)}
             className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Creating Checkout...' : 'Test Checkout Flow'}

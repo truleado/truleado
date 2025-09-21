@@ -19,14 +19,14 @@ export async function GET(request: NextRequest) {
       await razorpayAPI.getCustomer('non-existent-customer-id')
       apiTests.customerApi = 'Working (expected 404)'
     } catch (error: any) {
-      apiTests.customerApi = error.message.includes('404') ? 'Working (expected 404)' : `API Key Issue: ${error.message}`
+      apiTests.customerApi = error?.message?.includes('404') ? 'Working (expected 404)' : `API Key Issue: ${error?.message || 'Unknown error'}`
     }
 
     try {
       await razorpayAPI.getPayment('non-existent-payment-id')
       apiTests.paymentApi = 'Working (expected 404)'
     } catch (error: any) {
-      apiTests.paymentApi = error.message.includes('404') ? 'Working (expected 404)' : `API Key Issue: ${error.message}`
+      apiTests.paymentApi = error?.message?.includes('404') ? 'Working (expected 404)' : `API Key Issue: ${error?.message || 'Unknown error'}`
     }
 
     return NextResponse.json({
