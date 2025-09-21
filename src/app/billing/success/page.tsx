@@ -81,7 +81,7 @@ function BillingSuccessContent() {
 
           <div className="space-y-4">
             <button
-              onClick={() => router.push('/dashboard')}
+              onClick={() => router.push('/dashboard?payment_success=true')}
               className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 flex items-center justify-center"
             >
               Go to Dashboard

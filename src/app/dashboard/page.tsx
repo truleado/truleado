@@ -51,7 +51,7 @@ interface TrendData {
 
 export default function Dashboard() {
   const { user, loading } = useAuth()
-  const { subscriptionStatus, trialTimeRemaining, accessLevel } = useSubscription()
+  const { subscriptionStatus, trialTimeRemaining, accessLevel, refreshSubscription } = useSubscription()
   const router = useRouter()
   const [stats, setStats] = useState<DashboardStats>({
     totalLeads: 0,
@@ -88,8 +88,27 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) {
       fetchDashboardData()
+      // Refresh subscription status to ensure it's up to date
+      refreshSubscription()
     }
-  }, [user])
+  }, [user, refreshSubscription])
+
+  // Check for payment success and refresh subscription
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const paymentSuccess = urlParams.get('payment_success')
+    
+    if (paymentSuccess === 'true' && user) {
+      // Refresh subscription status after successful payment
+      setTimeout(() => {
+        refreshSubscription()
+        // Remove the parameter from URL
+        const newUrl = new URL(window.location.href)
+        newUrl.searchParams.delete('payment_success')
+        window.history.replaceState({}, '', newUrl.toString())
+      }, 1000)
+    }
+  }, [user, refreshSubscription])
 
   const handleRedditConnect = async () => {
     try {
@@ -472,12 +491,20 @@ export default function Dashboard() {
           <div className="px-4 py-5 sm:p-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium leading-6 text-gray-900">Recent Activity</h3>
-              <button
-                onClick={fetchDashboardData}
-                className="text-sm text-blue-600 hover:text-blue-500"
-              >
-                Refresh
-              </button>
+              <div className="flex space-x-3">
+                <button
+                  onClick={refreshSubscription}
+                  className="text-sm text-green-600 hover:text-green-500"
+                >
+                  Refresh Subscription
+                </button>
+                <button
+                  onClick={fetchDashboardData}
+                  className="text-sm text-blue-600 hover:text-blue-500"
+                >
+                  Refresh Data
+                </button>
+              </div>
             </div>
             <div className="mt-5">
               {activityLoading ? (
