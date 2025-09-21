@@ -48,23 +48,64 @@ export default function PaddleCheckout({
         return
       }
 
-      if (window.Paddle) {
+      if (window.Paddle && window.Paddle.initialize) {
+        console.log('Paddle.js already loaded and available')
         resolve()
         return
       }
 
+      // Remove any existing Paddle scripts
+      const existingScripts = document.querySelectorAll('script[src*="paddle.com"]')
+      existingScripts.forEach(script => script.remove())
+
       const script = document.createElement('script')
+      // Try the official Paddle CDN first
       script.src = 'https://cdn.paddle.com/paddle/v2/paddle.js'
       script.async = true
+      script.defer = true
       
       script.onload = () => {
-        console.log('Paddle.js loaded successfully')
-        resolve()
+        console.log('Paddle.js script loaded, checking for Paddle object...')
+        
+        // Wait a bit for Paddle to initialize
+        setTimeout(() => {
+          if (window.Paddle && typeof window.Paddle.initialize === 'function') {
+            console.log('Paddle.js loaded successfully with initialize function')
+            resolve()
+          } else {
+            console.error('Paddle.js loaded but initialize function not available')
+            console.log('Available Paddle methods:', window.Paddle ? Object.keys(window.Paddle) : 'Paddle object not found')
+            
+            // Try alternative CDN
+            console.log('Trying alternative Paddle CDN...')
+            const altScript = document.createElement('script')
+            altScript.src = 'https://js.paddle.com/paddle.js'
+            altScript.async = true
+            altScript.defer = true
+            
+            altScript.onload = () => {
+              setTimeout(() => {
+                if (window.Paddle && typeof window.Paddle.initialize === 'function') {
+                  console.log('Alternative Paddle.js loaded successfully')
+                  resolve()
+                } else {
+                  reject(new Error('Both Paddle.js CDNs failed to load initialize function'))
+                }
+              }, 100)
+            }
+            
+            altScript.onerror = () => {
+              reject(new Error('Both Paddle.js CDNs failed to load'))
+            }
+            
+            document.head.appendChild(altScript)
+          }
+        }, 100)
       }
       
       script.onerror = () => {
-        console.error('Failed to load Paddle.js')
-        reject(new Error('Failed to load Paddle.js'))
+        console.error('Failed to load Paddle.js script')
+        reject(new Error('Failed to load Paddle.js script'))
       }
       
       document.head.appendChild(script)
@@ -102,6 +143,12 @@ export default function PaddleCheckout({
       }
 
       // Initialize Paddle
+      console.log('Calling window.Paddle.initialize with:', {
+        token: clientToken ? 'Present' : 'Missing',
+        environment: environment,
+        debug: environment === 'sandbox'
+      })
+      
       window.Paddle.initialize({
         token: clientToken,
         environment: environment,
