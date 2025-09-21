@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import AppLayout from '@/components/app-layout'
 import { 
   Users, 
-  Search, 
+  Filter, 
   Filter, 
   ExternalLink, 
   MessageSquare,
@@ -64,7 +64,7 @@ interface Product {
   subreddits: string[]
   status: 'active' | 'paused'
   createdAt: string
-  isSearching?: boolean
+  isFiltering?: boolean
   isUpdating?: boolean // Add loading state for individual products
 }
 
@@ -77,7 +77,7 @@ export default function Leads() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [filter, setFilter] = useState<'all' | 'new' | 'contacted' | 'interested' | 'not_interested'>('all')
   const [typeFilter, setTypeFilter] = useState<'all' | 'post' | 'comment'>('all')
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setFilterTerm] = useState('')
   const [isLoadingProducts, setIsLoadingProducts] = useState(true)
   const [redditConnected, setRedditConnected] = useState(false)
   const [showRedditConnectionModal, setShowRedditConnectionModal] = useState(false)
@@ -212,7 +212,7 @@ export default function Leads() {
     const filteredLeads = leads.filter(lead => {
       const matchesFilter = filter === 'all' || lead.status === filter
       const matchesType = typeFilter === 'all' || lead.leadType === typeFilter
-      const matchesSearch = searchTerm === '' || 
+      const matchesFilter = searchTerm === '' || 
                             lead.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             lead.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             lead.subreddit.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -221,7 +221,7 @@ export default function Leads() {
       // If a product is selected, only show leads for that product
       const matchesProduct = !selectedProduct || lead.productId === selectedProduct.id
       
-      return matchesFilter && matchesType && matchesSearch && matchesProduct
+      return matchesFilter && matchesType && matchesFilter && matchesProduct
     })
 
   const getStatusColor = (status: string) => {
@@ -349,10 +349,10 @@ export default function Leads() {
                 >
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="font-medium text-gray-900 truncate">{product.name}</h3>
-                    {product.isSearching && (
+                    {product.isFiltering && (
                       <div className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                         <Activity className="w-3 h-3" />
-                        Searching
+                        Filtering
                       </div>
                     )}
                   </div>
@@ -394,10 +394,10 @@ export default function Leads() {
                   {selectedProduct.subreddits.length > 3 && ` +${selectedProduct.subreddits.length - 3} more`}
                 </p>
               </div>
-              {selectedProduct.isSearching && (
+              {selectedProduct.isFiltering && (
                 <div className="flex items-center gap-2">
                   <div className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                    🔍 Searching Active
+                    🔍 Filtering Active
                   </div>
                 </div>
               )}
@@ -405,17 +405,17 @@ export default function Leads() {
           </div>
         )}
 
-        {/* Filters and Search */}
+        {/* Filters and Filter */}
         <div className="bg-white shadow rounded-lg p-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
-                  placeholder="Search leads..."
+                  placeholder="Filter leads..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => setFilterTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>

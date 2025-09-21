@@ -2,8 +2,8 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { Search, Eye, EyeOff, CheckCircle } from 'lucide-react'
+import { useRouter, useFilterParams } from 'next/navigation'
+import { Filter, Eye, EyeOff, CheckCircle } from 'lucide-react'
 
 function ResetPasswordForm() {
   const [password, setPassword] = useState('')
@@ -15,7 +15,7 @@ function ResetPasswordForm() {
   const [success, setSuccess] = useState(false)
   
   const router = useRouter()
-  const searchParams = useSearchParams()
+  const searchParams = useFilterParams()
   const token = searchParams.get('token')
   const type = searchParams.get('type')
 
@@ -77,7 +77,7 @@ function ResetPasswordForm() {
           <div className="text-center mb-8">
             <Link href="/" className="inline-flex items-center space-x-2">
               <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <Search className="w-6 h-6 text-white" />
+                <Filter className="w-6 h-6 text-white" />
               </div>
               <span className="text-2xl font-bold text-gray-900">Truleado</span>
             </Link>
@@ -108,7 +108,7 @@ function ResetPasswordForm() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center space-x-2">
             <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <Search className="w-6 h-6 text-white" />
+              <Filter className="w-6 h-6 text-white" />
             </div>
             <span className="text-2xl font-bold text-gray-900">Truleado</span>
           </Link>

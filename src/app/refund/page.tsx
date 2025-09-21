@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search, ArrowLeft } from "lucide-react";
+import { Filter, ArrowLeft } from "lucide-react";
 
 export default function RefundPolicy() {
   return (
@@ -11,7 +11,7 @@ export default function RefundPolicy() {
             <div className="flex items-center">
               <Link href="/" className="flex items-center">
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <Search className="w-5 h-5 text-white" />
+                  <Filter className="w-5 h-5 text-white" />
                 </div>
                 <span className="ml-2 text-xl font-semibold text-gray-900">Truleado</span>
               </Link>

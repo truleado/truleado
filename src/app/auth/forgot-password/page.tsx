@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Search, ArrowLeft, Mail, CheckCircle } from 'lucide-react'
+import { Filter, ArrowLeft, Mail, CheckCircle } from 'lucide-react'
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
@@ -46,7 +46,7 @@ export default function ForgotPassword() {
           <div className="text-center mb-8">
             <Link href="/" className="inline-flex items-center space-x-2">
               <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <Search className="w-6 h-6 text-white" />
+                <Filter className="w-6 h-6 text-white" />
               </div>
               <span className="text-2xl font-bold text-gray-900">Truleado</span>
             </Link>
@@ -94,7 +94,7 @@ export default function ForgotPassword() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center space-x-2">
             <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <Search className="w-6 h-6 text-white" />
+              <Filter className="w-6 h-6 text-white" />
             </div>
             <span className="text-2xl font-bold text-gray-900">Truleado</span>
           </Link>

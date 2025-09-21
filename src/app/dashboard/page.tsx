@@ -11,7 +11,7 @@ import {
   TrendingUp, 
   Users, 
   Package, 
-  Search, 
+  Filter, 
   Plus,
   ArrowUpRight,
   Activity,
@@ -188,7 +188,7 @@ export default function Dashboard() {
       value: stats.subredditsMonitored.toString(),
       change: stats.subredditsMonitored > 0 ? 'Active' : 'None',
       changeType: stats.subredditsMonitored > 0 ? 'positive' : 'neutral',
-      icon: Search,
+      icon: Filter,
     },
     {
       name: 'This Week',
@@ -326,7 +326,7 @@ export default function Dashboard() {
                   {redditConnected ? (
                     <CheckCircle className="mx-auto h-8 w-8 text-green-600" />
                   ) : (
-                    <Search className="mx-auto h-8 w-8 text-gray-400" />
+                    <Filter className="mx-auto h-8 w-8 text-gray-400" />
                   )}
                 </div>
                 <span className="mt-2 block text-sm font-medium text-gray-900">

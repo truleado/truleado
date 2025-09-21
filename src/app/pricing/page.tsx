@@ -1,7 +1,7 @@
 'use client'
 
 import Link from "next/link";
-import { Check, ArrowRight, Search, Zap, Target, Users } from "lucide-react";
+import { Check, ArrowRight, Filter, Zap, Target, Users } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -21,7 +21,7 @@ export default function Pricing() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <Search className="w-5 h-5 text-white" />
+            <Filter className="w-5 h-5 text-white" />
           </div>
           <p className="text-gray-600">Loading...</p>
         </div>
@@ -42,7 +42,7 @@ export default function Pricing() {
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center">
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <Search className="w-5 h-5 text-white" />
+                  <Filter className="w-5 h-5 text-white" />
                 </div>
                 <span className="ml-2 text-xl font-semibold text-gray-900">Truleado</span>
               </div>
@@ -344,7 +344,7 @@ export default function Pricing() {
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center mb-4">
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <Search className="w-5 h-5 text-white" />
+                  <Filter className="w-5 h-5 text-white" />
                 </div>
                 <span className="ml-2 text-xl font-semibold text-white">Truleado</span>
               </div>
