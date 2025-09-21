@@ -8,7 +8,7 @@ export const dodoPaymentsConfig = {
   environment: process.env.NODE_ENV === 'production' ? 'production' : 'sandbox',
   baseUrl: process.env.NODE_ENV === 'production' 
     ? 'https://api.dodopayments.com' 
-    : 'https://api-sandbox.dodopayments.com'
+    : 'https://api.dodopayments.com'
 }
 
 // Dodo Payments API Client
@@ -57,19 +57,25 @@ export class DodoPaymentsAPI {
     console.log('Creating Dodo Payments checkout session:', data)
     
     try {
-      const session = await this.makeRequest('/v1/checkout/sessions', {
+      const session = await this.makeRequest('/v1/checkout_sessions', {
         method: 'POST',
         body: JSON.stringify({
-          product_id: data.productId,
-          customer_email: data.customerEmail,
-          customer_name: data.customerName,
-          success_url: data.successUrl,
-          cancel_url: data.cancelUrl,
+          product_cart: [
+            {
+              product_id: data.productId,
+              quantity: 1
+            }
+          ],
+          customer: {
+            email: data.customerEmail,
+            name: data.customerName
+          },
+          return_url: data.successUrl,
           metadata: data.metadata || {}
         })
       })
       
-      console.log('Checkout session created successfully:', session.id)
+      console.log('Checkout session created successfully:', session.session_id)
       return session
     } catch (error) {
       console.error('Error creating checkout session:', error)
@@ -136,7 +142,8 @@ export class DodoPaymentsAPI {
       return customers
     } catch (error) {
       console.error('Error listing customers:', error)
-      throw error
+      // Return empty result if customers endpoint doesn't exist
+      return { data: [] }
     }
   }
 

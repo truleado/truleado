@@ -16,38 +16,15 @@ export async function POST(request: NextRequest) {
 
     console.log('User authenticated:', user.id)
 
-    // Create or get Dodo Payments customer
-    let customer
-    try {
-      // Try to find existing customer by email first
-      console.log('Looking for existing customer with email:', user.email)
-      const customers = await dodoPaymentsAPI.listCustomers({ email: user.email! })
-      
-      if (customers.data && customers.data.length > 0) {
-        customer = customers.data[0]
-        console.log('Found existing customer:', customer.id)
-      } else {
-        console.log('No existing customer found, creating new one for:', user.email)
-        customer = await dodoPaymentsAPI.createCustomer({
-          email: user.email!,
-          name: user.user_metadata?.full_name,
-          metadata: {
-            user_id: user.id,
-            signup_date: new Date().toISOString()
-          }
-        })
-        console.log('Customer created:', customer.id)
-      }
-    } catch (error) {
-      console.error('Error with customer operations:', error)
-      throw error
-    }
+    // For now, we'll skip customer creation and use metadata instead
+    // Dodo Payments handles customer creation automatically
+    console.log('Skipping customer creation, using metadata for user:', user.email)
 
     // Create checkout session
     const successUrl = `${process.env.NEXT_PUBLIC_APP_URL}/billing/success?session_id={CHECKOUT_SESSION_ID}`
     const cancelUrl = `${process.env.NEXT_PUBLIC_APP_URL}/billing/cancel`
     
-    console.log('Creating checkout session for customer:', customer.id, 'with product:', dodoPaymentsConfig.productId)
+    console.log('Creating checkout session for user:', user.id, 'with product:', dodoPaymentsConfig.productId)
     const session = await dodoPaymentsAPI.createCheckoutSession({
       productId: dodoPaymentsConfig.productId,
       customerEmail: user.email!,
@@ -56,17 +33,16 @@ export async function POST(request: NextRequest) {
       cancelUrl,
       metadata: {
         user_id: user.id,
-        customer_id: customer.id
+        user_email: user.email
       }
     })
     
-    console.log('Checkout session created:', session.id)
+    console.log('Checkout session created:', session.session_id)
 
-    // Update user profile with customer ID
+    // Update user profile with session ID
     const { error: updateError } = await supabase
       .from('profiles')
       .update({ 
-        dodo_customer_id: customer.id,
         subscription_status: 'pending'
       })
       .eq('id', user.id)
@@ -78,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       checkout_url: session.checkout_url,
-      session_id: session.id
+      session_id: session.session_id
     })
 
   } catch (error) {
