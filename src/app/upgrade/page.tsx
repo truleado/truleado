@@ -194,7 +194,7 @@ export default function UpgradePage() {
                     }}
                     onError={(error) => {
                       console.error('Checkout error:', error)
-                      alert('Payment failed. Please try again.')
+                      alert(`Payment failed: ${error.message || 'Please try again.'}`)
                     }}
                   >
                     <>

@@ -39,24 +39,43 @@ export default function PaddleCheckout({
 
   useEffect(() => {
     const loadPaddle = async () => {
+      console.log('PaddleCheckout: Loading Paddle with clientToken:', clientToken ? 'present' : 'missing')
+      console.log('PaddleCheckout: Environment:', environment)
+      
+      if (!clientToken) {
+        console.error('PaddleCheckout: No client token provided')
+        if (onError) {
+          onError({ message: 'Paddle client token is required' })
+        }
+        return
+      }
+
       if (typeof window !== 'undefined' && !window.Paddle) {
         const script = document.createElement('script')
         script.src = 'https://cdn.paddle.com/paddle/v2/paddle.js'
         script.async = true
         
         script.onload = () => {
+          console.log('PaddleCheckout: Paddle.js loaded successfully')
           if (window.Paddle && clientToken) {
-            window.Paddle.initialize({
-              token: clientToken,
-              environment: environment
-            })
-            setPaddleLoaded(true)
-            console.log('Paddle initialized with environment:', environment)
+            try {
+              window.Paddle.initialize({
+                token: clientToken,
+                environment: environment
+              })
+              setPaddleLoaded(true)
+              console.log('PaddleCheckout: Paddle initialized with environment:', environment)
+            } catch (error) {
+              console.error('PaddleCheckout: Failed to initialize Paddle:', error)
+              if (onError) {
+                onError({ message: 'Failed to initialize Paddle' })
+              }
+            }
           }
         }
         
         script.onerror = () => {
-          console.error('Failed to load Paddle.js')
+          console.error('PaddleCheckout: Failed to load Paddle.js')
           if (onError) {
             onError({ message: 'Failed to load Paddle.js' })
           }
@@ -65,17 +84,24 @@ export default function PaddleCheckout({
         document.head.appendChild(script)
       } else if (window.Paddle && clientToken) {
         // Paddle already loaded, just initialize
-        window.Paddle.initialize({
-          token: clientToken,
-          environment: environment
-        })
-        setPaddleLoaded(true)
-        console.log('Paddle re-initialized with environment:', environment)
+        try {
+          window.Paddle.initialize({
+            token: clientToken,
+            environment: environment
+          })
+          setPaddleLoaded(true)
+          console.log('PaddleCheckout: Paddle re-initialized with environment:', environment)
+        } catch (error) {
+          console.error('PaddleCheckout: Failed to re-initialize Paddle:', error)
+          if (onError) {
+            onError({ message: 'Failed to re-initialize Paddle' })
+          }
+        }
       }
     }
 
     loadPaddle()
-  }, [clientToken, environment])
+  }, [clientToken, environment, onError])
 
   const handleCheckout = async () => {
     if (!paddleLoaded || !window.Paddle) {
@@ -171,7 +197,7 @@ export default function PaddleCheckout({
         className={`inline-flex items-center gap-2 ${className}`}
       >
         <Loader2 className="h-4 w-4 animate-spin" />
-        Loading...
+        {!clientToken ? 'Missing Paddle Config' : 'Loading Paddle...'}
       </button>
     )
   }
