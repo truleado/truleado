@@ -7,8 +7,8 @@ export const dodoPaymentsConfig = {
   productId: process.env.DODO_PAYMENTS_PRODUCT_ID!,
   environment: process.env.NODE_ENV === 'production' ? 'production' : 'sandbox',
   baseUrl: process.env.NODE_ENV === 'production' 
-    ? 'https://api.dodopayments.com' 
-    : 'https://api.dodopayments.com'
+    ? 'https://checkout.dodopayments.com' 
+    : 'https://checkout.dodopayments.com'
 }
 
 // Dodo Payments API Client
