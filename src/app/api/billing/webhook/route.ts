@@ -1,294 +1,243 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
-import { razorpayConfig, verifyRazorpayWebhook, razorpayAPI } from '@/lib/razorpay-config'
+import { dodoPaymentsAPI, updateUserSubscription } from '@/lib/dodo-payments-config'
 import { trialManager } from '@/lib/trial-manager'
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Dodo Payments webhook received')
+    
     const body = await request.text()
-    const signature = request.headers.get('x-razorpay-signature')
+    const signature = request.headers.get('dodo-signature') || ''
     
     // Verify webhook signature
-    if (!signature) {
-      console.error('Missing Razorpay signature')
-      return NextResponse.json({ error: 'Missing signature' }, { status: 400 })
-    }
-
-    // Verify webhook signature
-    const isValid = verifyRazorpayWebhook(body, signature, razorpayConfig.webhookSecret)
-    if (!isValid) {
+    if (!dodoPaymentsAPI.verifyWebhookSignature(body, signature)) {
       console.error('Invalid webhook signature')
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
 
     const event = JSON.parse(body)
-    console.log('Razorpay webhook received:', event.event)
+    console.log('Webhook event:', event.type, event.id)
 
     const supabase = createClient()
 
-    switch (event.event) {
-      case 'payment.captured':
-        await handlePaymentCaptured(event, supabase)
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object
+        console.log('Checkout session completed:', session.id)
+        
+        // Find user by customer ID
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('dodo_customer_id', session.customer)
+          .single()
+
+        if (profileError || !profile) {
+          console.error('Error finding user profile:', profileError)
+          return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        }
+
+        // Update subscription status
+        await updateUserSubscription(profile.id, {
+          subscription_status: 'active',
+          subscription_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
+        })
+
+        // Log subscription change
+        await trialManager.logSubscriptionChange(
+          profile.id,
+          'active',
+          'trial',
+          'subscription_activated',
+          `webhook_${event.id}`,
+          { 
+            session_id: session.id,
+            customer_id: session.customer,
+            amount: session.amount_total
+          }
+        )
+
+        console.log('Subscription activated for user:', profile.id)
         break
-      
-      case 'subscription.created':
-        await handleSubscriptionCreated(event, supabase)
+      }
+
+      case 'customer.subscription.created': {
+        const subscription = event.data.object
+        console.log('Subscription created:', subscription.id)
+        
+        // Find user by customer ID
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('dodo_customer_id', subscription.customer)
+          .single()
+
+        if (profileError || !profile) {
+          console.error('Error finding user profile:', profileError)
+          return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        }
+
+        // Update user with subscription ID
+        await updateUserSubscription(profile.id, {
+          subscription_status: 'active',
+          dodo_subscription_id: subscription.id,
+          subscription_ends_at: new Date(subscription.current_period_end * 1000).toISOString()
+        })
+
+        console.log('Subscription created for user:', profile.id)
         break
-      
-      case 'subscription.updated':
-        await handleSubscriptionUpdated(event, supabase)
+      }
+
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object
+        console.log('Subscription updated:', subscription.id)
+        
+        // Find user by subscription ID
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('dodo_subscription_id', subscription.id)
+          .single()
+
+        if (profileError || !profile) {
+          console.error('Error finding user profile:', profileError)
+          return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        }
+
+        // Update subscription status based on subscription status
+        const subscriptionStatus = subscription.status === 'active' ? 'active' : 'cancelled'
+        
+        await updateUserSubscription(profile.id, {
+          subscription_status: subscriptionStatus,
+          subscription_ends_at: subscription.current_period_end 
+            ? new Date(subscription.current_period_end * 1000).toISOString()
+            : undefined
+        })
+
+        // Log subscription change
+        await trialManager.logSubscriptionChange(
+          profile.id,
+          subscriptionStatus,
+          'active',
+          'subscription_updated',
+          `webhook_${event.id}`,
+          { 
+            subscription_id: subscription.id,
+            status: subscription.status
+          }
+        )
+
+        console.log('Subscription updated for user:', profile.id, 'Status:', subscriptionStatus)
         break
-      
-      case 'subscription.cancelled':
-        await handleSubscriptionCancelled(event, supabase)
+      }
+
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object
+        console.log('Subscription cancelled:', subscription.id)
+        
+        // Find user by subscription ID
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('dodo_subscription_id', subscription.id)
+          .single()
+
+        if (profileError || !profile) {
+          console.error('Error finding user profile:', profileError)
+          return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        }
+
+        // Update subscription status to cancelled
+        await updateUserSubscription(profile.id, {
+          subscription_status: 'cancelled'
+        })
+
+        // Log subscription change
+        await trialManager.logSubscriptionChange(
+          profile.id,
+          'cancelled',
+          'active',
+          'subscription_cancelled',
+          `webhook_${event.id}`,
+          { 
+            subscription_id: subscription.id
+          }
+        )
+
+        console.log('Subscription cancelled for user:', profile.id)
         break
-      
-      case 'subscription.paused':
-        await handleSubscriptionPaused(event, supabase)
+      }
+
+      case 'invoice.payment_succeeded': {
+        const invoice = event.data.object
+        console.log('Payment succeeded:', invoice.id)
+        
+        // Find user by customer ID
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('dodo_customer_id', invoice.customer)
+          .single()
+
+        if (profileError || !profile) {
+          console.error('Error finding user profile:', profileError)
+          return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        }
+
+        // Ensure subscription is active
+        await updateUserSubscription(profile.id, {
+          subscription_status: 'active',
+          subscription_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
+        })
+
+        console.log('Payment processed for user:', profile.id)
         break
-      
-      case 'subscription.resumed':
-        await handleSubscriptionResumed(event, supabase)
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object
+        console.log('Payment failed:', invoice.id)
+        
+        // Find user by customer ID
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('dodo_customer_id', invoice.customer)
+          .single()
+
+        if (profileError || !profile) {
+          console.error('Error finding user profile:', profileError)
+          return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        }
+
+        // Log payment failure
+        await trialManager.logSubscriptionChange(
+          profile.id,
+          'payment_failed',
+          'active',
+          'payment_failed',
+          `webhook_${event.id}`,
+          { 
+            invoice_id: invoice.id,
+            amount: invoice.amount_due
+          }
+        )
+
+        console.log('Payment failed for user:', profile.id)
         break
-      
+      }
+
       default:
-        console.log('Unhandled webhook event:', event.event)
+        console.log('Unhandled webhook event type:', event.type)
     }
 
     return NextResponse.json({ received: true })
+
   } catch (error) {
     console.error('Webhook error:', error)
     return NextResponse.json({ 
       error: error instanceof Error ? error.message : 'Webhook processing failed'
     }, { status: 500 })
-  }
-}
-
-async function handlePaymentCaptured(event: any, supabase: any) {
-  const payment = event.payload.payment.entity
-  const customerId = payment.notes?.user_id
-  
-  if (!customerId) {
-    console.error('No user ID in payment data')
-    return
-  }
-
-  try {
-    // Get full payment details from Razorpay API
-    const fullPayment = await razorpayAPI.getPayment(payment.id)
-    
-    // Update user subscription status
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        subscription_status: 'active',
-        razorpay_customer_id: payment.customer_id,
-        subscription_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
-      })
-      .eq('id', customerId)
-
-    if (error) {
-      console.error('Error updating user subscription:', error)
-    } else {
-      await trialManager.logSubscriptionChange(
-        customerId,
-        'active',
-        'trial',
-        'payment_captured',
-        event.id,
-        { 
-          payment_id: payment.id,
-          amount: fullPayment.amount,
-          currency: fullPayment.currency
-        }
-      )
-    }
-  } catch (apiError) {
-    console.error('Error fetching payment details from Razorpay API:', apiError)
-    // Fallback to basic update without API call
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        subscription_status: 'active',
-        razorpay_customer_id: payment.customer_id,
-        subscription_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-      })
-      .eq('id', customerId)
-
-    if (error) {
-      console.error('Error updating user subscription (fallback):', error)
-    }
-  }
-}
-
-async function handleSubscriptionCreated(event: any, supabase: any) {
-  const subscription = event.payload.subscription.entity
-  const customerId = subscription.notes?.user_id
-  
-  if (!customerId) {
-    console.error('No user ID in subscription data')
-    return
-  }
-
-  try {
-    // Get full subscription details from Razorpay API
-    const fullSubscription = await razorpayAPI.getSubscription(subscription.id)
-    
-    // Update user with subscription ID
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        razorpay_subscription_id: subscription.id,
-        subscription_ends_at: new Date(subscription.current_end).toISOString(),
-        subscription_status: 'active'
-      })
-      .eq('id', customerId)
-
-    if (error) {
-      console.error('Error updating user subscription ID:', error)
-    } else {
-      await trialManager.logSubscriptionChange(
-        customerId,
-        'active',
-        'trial',
-        'subscription_created',
-        event.id,
-        { 
-          subscription_id: subscription.id,
-          plan_id: fullSubscription.plan_id,
-          billing_cycle: (fullSubscription as any).billing_cycle
-        }
-      )
-    }
-  } catch (apiError) {
-    console.error('Error fetching subscription details from Razorpay API:', apiError)
-    // Fallback to basic update
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        razorpay_subscription_id: subscription.id,
-        subscription_ends_at: new Date(subscription.current_end).toISOString(),
-        subscription_status: 'active'
-      })
-      .eq('id', customerId)
-
-    if (error) {
-      console.error('Error updating user subscription ID (fallback):', error)
-    }
-  }
-}
-
-async function handleSubscriptionUpdated(event: any, supabase: any) {
-  const subscription = event.payload.subscription.entity
-  const customerId = subscription.notes?.user_id
-  
-  if (!customerId) {
-    console.error('No user ID in subscription data')
-    return
-  }
-
-  // Update subscription end date
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      subscription_ends_at: new Date(subscription.current_end).toISOString()
-    })
-    .eq('id', customerId)
-
-  if (error) {
-    console.error('Error updating subscription:', error)
-  }
-}
-
-async function handleSubscriptionCancelled(event: any, supabase: any) {
-  const subscription = event.payload.subscription.entity
-  const customerId = subscription.notes?.user_id
-  
-  if (!customerId) {
-    console.error('No user ID in subscription data')
-    return
-  }
-
-  // Update user subscription status
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      subscription_status: 'cancelled'
-    })
-    .eq('id', customerId)
-
-  if (error) {
-    console.error('Error cancelling subscription:', error)
-  } else {
-    await trialManager.logSubscriptionChange(
-      customerId,
-      'cancelled',
-      'active',
-      'subscription_cancelled',
-      event.id,
-      { subscription_id: subscription.id }
-    )
-  }
-}
-
-async function handleSubscriptionPaused(event: any, supabase: any) {
-  const subscription = event.payload.subscription.entity
-  const customerId = subscription.notes?.user_id
-  
-  if (!customerId) {
-    console.error('No user ID in subscription data')
-    return
-  }
-
-  // Update user subscription status
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      subscription_status: 'paused'
-    })
-    .eq('id', customerId)
-
-  if (error) {
-    console.error('Error updating subscription to paused:', error)
-  } else {
-    await trialManager.logSubscriptionChange(
-      customerId,
-      'paused',
-      'active',
-      'subscription_paused',
-      event.id,
-      { subscription_id: subscription.id }
-    )
-  }
-}
-
-async function handleSubscriptionResumed(event: any, supabase: any) {
-  const subscription = event.payload.subscription.entity
-  const customerId = subscription.notes?.user_id
-  
-  if (!customerId) {
-    console.error('No user ID in subscription data')
-    return
-  }
-
-  // Update user subscription status
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      subscription_status: 'active'
-    })
-    .eq('id', customerId)
-
-  if (error) {
-    console.error('Error updating subscription to active:', error)
-  } else {
-    await trialManager.logSubscriptionChange(
-      customerId,
-      'active',
-      'paused',
-      'subscription_resumed',
-      event.id,
-      { subscription_id: subscription.id }
-    )
   }
 }

@@ -1,92 +1,56 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
-import { razorpayAPI } from '@/lib/razorpay-config'
+import { dodoPaymentsAPI } from '@/lib/dodo-payments-config'
 import { trialManager } from '@/lib/trial-manager'
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('Cancel subscription API called')
     const supabase = await createClient()
-    
-    // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+
     if (authError || !user) {
-      console.error('Auth error:', authError)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    console.log('User authenticated:', user.id)
-
-    // Get user's current subscription details
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('razorpay_subscription_id, subscription_status')
+      .select('dodo_subscription_id')
       .eq('id', user.id)
       .single()
 
-    if (profileError || !profile) {
-      console.error('Error fetching user profile:', profileError)
-      return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
+    if (profileError || !profile?.dodo_subscription_id) {
+      console.error('Error fetching subscription ID or no subscription found:', profileError)
+      return NextResponse.json({ error: 'No active subscription found to cancel' }, { status: 404 })
     }
 
-    if (!profile.razorpay_subscription_id) {
-      return NextResponse.json({ error: 'No active subscription found' }, { status: 400 })
-    }
+    const subscriptionId = profile.dodo_subscription_id
+    console.log(`Attempting to cancel Dodo Payments subscription: ${subscriptionId} for user: ${user.id}`)
 
-    // Cancel the subscription in Razorpay
-    try {
-      console.log('Cancelling subscription:', profile.razorpay_subscription_id)
-      const cancelledSubscription = await razorpayAPI.cancelSubscription(profile.razorpay_subscription_id)
-      console.log('Subscription cancelled successfully:', cancelledSubscription.id)
-    } catch (error) {
-      console.error('Error cancelling subscription in Razorpay:', error)
-      // Continue with database update even if Razorpay call fails
-    }
+    const cancelledSubscription = await dodoPaymentsAPI.cancelSubscription(subscriptionId)
+    console.log('Dodo Payments subscription cancelled:', cancelledSubscription.id)
 
-    // Update user's subscription status in database
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({
-        subscription_status: 'cancelled',
-        subscription_ends_at: new Date().toISOString(), // Immediate cancellation
-        razorpay_subscription_id: null
-      })
+      .update({ subscription_status: 'cancelled' })
       .eq('id', user.id)
 
     if (updateError) {
-      console.error('Error updating user subscription status:', updateError)
-      return NextResponse.json({ error: 'Failed to update subscription status' }, { status: 500 })
+      console.error('Error updating user profile subscription status:', updateError)
+      return NextResponse.json({ error: 'Failed to update subscription status in database' }, { status: 500 })
     }
 
-    // Log the subscription change
-    try {
-      await trialManager.logSubscriptionChange(
-        user.id,
-        'cancelled',
-        'active',
-        'user_cancelled',
-        'manual_cancellation',
-        { 
-          subscription_id: profile.razorpay_subscription_id,
-          cancelled_at: new Date().toISOString()
-        }
-      )
-    } catch (error) {
-      console.warn('Failed to log subscription change:', error)
-    }
+    await trialManager.logSubscriptionChange(
+      user.id,
+      'cancelled',
+      'active', // Assuming it was active before cancellation
+      'subscription_cancelled_by_user',
+      `webhook_manual_cancel_${Date.now()}`, // Unique ID for manual cancellation
+      { subscription_id: subscriptionId }
+    )
 
-    return NextResponse.json({
-      success: true,
-      message: 'Subscription cancelled successfully',
-      subscription_status: 'cancelled'
-    })
+    return NextResponse.json({ message: 'Subscription cancelled successfully', subscriptionId: cancelledSubscription.id })
   } catch (error) {
-    console.error('Cancel subscription error:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      error: error
-    })
+    console.error('Error in subscription cancellation API:', error)
     return NextResponse.json({ 
       error: error instanceof Error ? error.message : 'Failed to cancel subscription'
     }, { status: 500 })

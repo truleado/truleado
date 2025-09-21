@@ -32,7 +32,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     if (!authUser) return
 
     try {
-      const response = await fetch('/api/billing/status')
+      const response = await fetch('/api/debug/subscription')
       if (response.ok) {
         const data = await response.json()
         setUser({ ...authUser, ...data })

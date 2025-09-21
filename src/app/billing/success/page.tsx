@@ -1,57 +1,31 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { AppLayout } from '@/components/app-layout'
 import { CheckCircle, ArrowRight, Loader2 } from 'lucide-react'
-import AppLayout from '@/components/app-layout'
 
-function BillingSuccessContent() {
-  const searchParams = useSearchParams()
+export default function BillingSuccess() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  
-  const paymentId = searchParams.get('payment_id')
-  const subscriptionId = searchParams.get('subscription_id')
+  const [sessionId, setSessionId] = useState<string | null>(null)
 
   useEffect(() => {
-    // Simulate processing time
-    const timer = setTimeout(() => {
-      setLoading(false)
-    }, 2000)
-
-    return () => clearTimeout(timer)
-  }, [])
+    const sessionIdParam = searchParams.get('session_id')
+    if (sessionIdParam) {
+      setSessionId(sessionIdParam)
+    }
+    setLoading(false)
+  }, [searchParams])
 
   if (loading) {
     return (
       <AppLayout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <Loader2 className="w-16 h-16 animate-spin text-blue-600 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Processing Payment</h1>
-            <p className="text-gray-600">Please wait while we confirm your subscription...</p>
-          </div>
-        </div>
-      </AppLayout>
-    )
-  }
-
-  if (error) {
-    return (
-      <AppLayout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-red-600 text-6xl mb-4">⚠️</div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Payment Error</h1>
-            <p className="text-gray-600 mb-4">{error}</p>
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-            >
-              Return to Dashboard
-            </button>
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Processing your payment...</p>
           </div>
         </div>
       </AppLayout>
@@ -62,27 +36,28 @@ function BillingSuccessContent() {
     <AppLayout>
       <div className="min-h-screen flex items-center justify-center">
         <div className="max-w-md mx-auto text-center">
-          <CheckCircle className="w-20 h-20 text-green-600 mx-auto mb-6" />
-          
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Payment Successful!
-          </h1>
-          
-          <p className="text-gray-600 mb-6">
-            Welcome to Truleado Pro! Your subscription is now active and you have access to all premium features.
-          </p>
+          <div className="mb-8">
+            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Payment Successful!
+            </h1>
+            <p className="text-gray-600">
+              Thank you for upgrading to Pro. Your subscription is now active.
+            </p>
+          </div>
 
-          {paymentId && (
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <p className="text-sm text-gray-500 mb-1">Payment ID</p>
-              <p className="font-mono text-sm text-gray-900">{paymentId}</p>
+          {sessionId && (
+            <div className="bg-gray-50 rounded-lg p-4 mb-8">
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">Session ID:</span> {sessionId}
+              </p>
             </div>
           )}
 
           <div className="space-y-4">
             <button
               onClick={() => router.push('/dashboard?payment_success=true')}
-              className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 flex items-center justify-center"
+              className="w-full bg-[#148cfc] text-white px-6 py-3 rounded-lg hover:bg-[#0d7ce8] flex items-center justify-center"
             >
               Go to Dashboard
               <ArrowRight className="w-4 h-4 ml-2" />
@@ -97,28 +72,18 @@ function BillingSuccessContent() {
           </div>
 
           <div className="mt-8 text-sm text-gray-500">
-            <p>You can manage your subscription in the settings page.</p>
+            <p>
+              You can manage your subscription in{' '}
+              <button
+                onClick={() => router.push('/settings?tab=billing')}
+                className="text-[#148cfc] hover:underline"
+              >
+                Settings → Billing
+              </button>
+            </p>
           </div>
         </div>
       </div>
     </AppLayout>
-  )
-}
-
-export default function BillingSuccessPage() {
-  return (
-    <Suspense fallback={
-      <AppLayout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="w-16 h-16 animate-spin text-blue-600 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Loading...</h1>
-            <p className="text-gray-600">Please wait...</p>
-          </div>
-        </div>
-      </AppLayout>
-    }>
-      <BillingSuccessContent />
-    </Suspense>
   )
 }

@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     // Get user's subscription details
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('subscription_status, subscription_ends_at, razorpay_subscription_id, razorpay_customer_id')
+      .select('subscription_status, subscription_ends_at, trial_ends_at, trial_count, last_trial_at, dodo_subscription_id, dodo_customer_id')
       .eq('id', user.id)
       .single()
 
@@ -29,8 +29,11 @@ export async function GET(request: NextRequest) {
       email: user.email,
       subscription_status: profile.subscription_status || 'free',
       subscription_ends_at: profile.subscription_ends_at,
-      razorpay_subscription_id: profile.razorpay_subscription_id,
-      razorpay_customer_id: profile.razorpay_customer_id,
+      trial_ends_at: profile.trial_ends_at,
+      trial_count: profile.trial_count || 0,
+      last_trial_at: profile.last_trial_at,
+      dodo_subscription_id: profile.dodo_subscription_id,
+      dodo_customer_id: profile.dodo_customer_id,
       timestamp: new Date().toISOString()
     })
   } catch (error) {
