@@ -40,6 +40,8 @@ export async function GET(request: NextRequest) {
       subscription_ends_at: profile.subscription_ends_at,
       trial_count: profile.trial_count,
       last_trial_at: profile.last_trial_at,
+      paddle_customer_id: profile.paddle_customer_id,
+      paddle_subscription_id: profile.paddle_subscription_id,
     })
   } catch (error) {
     console.error('Billing status error:', error)

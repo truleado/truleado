@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     // Get user's subscription details
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('subscription_status, subscription_ends_at, trial_ends_at, trial_count, last_trial_at')
+      .select('subscription_status, subscription_ends_at, trial_ends_at, trial_count, last_trial_at, paddle_customer_id, paddle_subscription_id')
       .eq('id', user.id)
       .single()
 
@@ -32,6 +32,8 @@ export async function GET(request: NextRequest) {
       trial_ends_at: profile.trial_ends_at,
       trial_count: profile.trial_count || 0,
       last_trial_at: profile.last_trial_at,
+      paddle_customer_id: profile.paddle_customer_id,
+      paddle_subscription_id: profile.paddle_subscription_id,
       timestamp: new Date().toISOString()
     })
   } catch (error) {
