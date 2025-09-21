@@ -3,9 +3,9 @@ import { createClient } from '@supabase/supabase-js'
 // Paddle Configuration
 export const paddleConfig = {
   apiKey: process.env.PADDLE_API_KEY || '',
-  clientToken: process.env.PADDLE_CLIENT_TOKEN || '',
+  clientToken: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN || '',
   webhookSecret: process.env.PADDLE_WEBHOOK_SECRET || '',
-  priceId: process.env.PADDLE_PRICE_ID || '',
+  priceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID || process.env.PADDLE_PRICE_ID || '',
   environment: process.env.NODE_ENV === 'production' ? 'production' : 'sandbox',
   baseUrl: process.env.NODE_ENV === 'production' 
     ? 'https://api.paddle.com' 

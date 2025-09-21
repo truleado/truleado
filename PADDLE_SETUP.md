@@ -18,10 +18,11 @@ This guide will help you set up Paddle Payments integration for your Truleado ap
 
 ### Sandbox Environment
 1. Log into your Paddle dashboard
-2. Go to **Developer Tools > Authentication**
-3. Create a new **API key** for server-side operations (starts with `sandbox_`)
-4. Create a new **Client Token** for client-side Paddle.js (starts with `live_` for production or different format for sandbox)
-5. Copy both credentials
+2. **Switch to Sandbox mode** (toggle in top right corner)
+3. Go to **Developer Tools > Authentication**
+4. Create a new **API key** for server-side operations (starts with `sandbox_`)
+5. Create a new **Client Token** for client-side Paddle.js (starts with `live_` for sandbox)
+6. Copy both credentials
 
 ### Live Environment
 1. Switch to live mode in your Paddle dashboard
@@ -118,8 +119,10 @@ This will add the necessary Paddle fields to your profiles table.
 Use these test card numbers in sandbox mode:
 - **Success**: `4000 0000 0000 0002`
 - **Decline**: `4000 0000 0000 0005`
-- **CVV**: Any 3 digits
-- **Expiry**: Any future date
+- **CVV**: Any 3 digits (e.g., `123`)
+- **Expiry**: Any future date (e.g., `12/25`)
+- **Name**: Any name
+- **Email**: Any valid email format
 
 ## Step 8: Go Live
 

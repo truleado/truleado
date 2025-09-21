@@ -261,7 +261,7 @@ export default function Dashboard() {
               <PaddleCheckout
                 priceId={process.env.NEXT_PUBLIC_PADDLE_PRICE_ID}
                 clientToken={process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN}
-                environment={process.env.NODE_ENV === 'production' ? 'production' : 'sandbox'}
+                environment="sandbox"
                 customerEmail={user?.email}
                 customData={{
                   user_id: user?.id,
