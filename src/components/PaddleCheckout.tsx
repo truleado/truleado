@@ -3,16 +3,23 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, CreditCard, AlertCircle } from 'lucide-react'
-import { initializePaddle } from '@paddle/paddle-js'
+import {
+  initializePaddle,
+  type Paddle,
+  type Environments,
+  type PaddleEventData,
+  type CheckoutOpenOptions,
+  CheckoutEventNames,
+} from '@paddle/paddle-js'
 
 interface PaddleCheckoutProps {
   priceId?: string
   clientToken?: string
-  environment?: 'sandbox' | 'production'
+  environment?: Environments
   customerEmail?: string
-  customData?: Record<string, any>
-  onSuccess?: (data: any) => void
-  onError?: (error: any) => void
+  customData?: Record<string, unknown>
+  onSuccess?: (event: PaddleEventData) => void
+  onError?: (error: unknown) => void
   className?: string
   children?: React.ReactNode
 }
@@ -31,10 +38,9 @@ export default function PaddleCheckout({
   const [isLoading, setIsLoading] = useState(false)
   const [paddleLoaded, setPaddleLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [paddleInstance, setPaddleInstance] = useState<any>(null)
+  const [paddleInstance, setPaddleInstance] = useState<Paddle | undefined>(undefined)
   const router = useRouter()
 
-  // Initialize Paddle using the official npm package
   const initializePaddleInstance = useCallback(async () => {
     try {
       console.log('Initializing Paddle with npm package...')
@@ -50,44 +56,54 @@ export default function PaddleCheckout({
         throw new Error('Paddle price ID is required')
       }
 
-      // Initialize Paddle using the official npm package
       const paddle = await initializePaddle({
         token: clientToken,
         environment: environment,
-        debug: environment === 'sandbox'
+        debug: environment === 'sandbox',
+        eventCallback: (event: PaddleEventData) => {
+          if (event.name === CheckoutEventNames.CHECKOUT_COMPLETED) {
+            console.log('Checkout completed:', event)
+            setIsLoading(false)
+            onSuccess?.(event)
+            const transactionId = event.data?.transaction_id
+            if (transactionId) {
+              router.push(`/billing/success?session_id=${transactionId}`)
+            }
+          } else if (event.name === CheckoutEventNames.CHECKOUT_CLOSED) {
+            console.log('Checkout closed:', event)
+            setIsLoading(false)
+          } else if (event.name === CheckoutEventNames.CHECKOUT_ERROR || event.name === CheckoutEventNames.CHECKOUT_FAILED) {
+            console.error('Checkout error:', event)
+            setIsLoading(false)
+            setError(event.error?.detail || 'Checkout failed')
+            onError?.(event.error || event)
+          }
+        },
       })
 
       console.log('Paddle initialized successfully with npm package')
       setPaddleInstance(paddle)
-      setPaddleLoaded(true)
+      setPaddleLoaded(Boolean(paddle))
       setError(null)
-      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to initialize Paddle'
       console.error('Paddle initialization error:', errorMessage)
       setError(errorMessage)
       setPaddleLoaded(false)
-      
-      if (onError) {
-        onError({ message: errorMessage })
-      }
+      onError?.({ message: errorMessage })
     }
-  }, [clientToken, environment, priceId, onError])
+  }, [clientToken, environment, priceId, onSuccess, onError, router])
 
-  // Initialize on mount
   useEffect(() => {
     initializePaddleInstance()
   }, [initializePaddleInstance])
 
-  // Handle checkout
   const handleCheckout = useCallback(async () => {
     if (!paddleLoaded || !paddleInstance) {
       const errorMsg = 'Paddle is not loaded'
       console.error(errorMsg)
       setError(errorMsg)
-      if (onError) {
-        onError({ message: errorMsg })
-      }
+      onError?.({ message: errorMsg })
       return
     }
 
@@ -95,9 +111,7 @@ export default function PaddleCheckout({
       const errorMsg = 'Price ID is required'
       console.error(errorMsg)
       setError(errorMsg)
-      if (onError) {
-        onError({ message: errorMsg })
-      }
+      onError?.({ message: errorMsg })
       return
     }
 
@@ -105,24 +119,24 @@ export default function PaddleCheckout({
     setError(null)
 
     try {
-      const checkoutData: any = {
+      const checkoutData: CheckoutOpenOptions = {
         items: [
           {
             priceId: priceId,
-            quantity: 1
-          }
+            quantity: 1,
+          },
         ],
         settings: {
           displayMode: 'overlay',
           theme: 'light',
           locale: 'en',
-          allowLogout: false
-        }
+          allowLogout: false,
+        },
       }
 
       if (customerEmail) {
         checkoutData.customer = {
-          email: customerEmail
+          email: customerEmail,
         }
       }
 
@@ -131,55 +145,20 @@ export default function PaddleCheckout({
       }
 
       console.log('Opening Paddle checkout with data:', checkoutData)
-
-      // Set up event listeners before opening checkout
-      paddleInstance.Checkout.onComplete((data: any) => {
-        console.log('Checkout completed:', data)
-        setIsLoading(false)
-        
-        if (onSuccess) {
-          onSuccess(data)
-        } else {
-          // Default success behavior
-          router.push(`/billing/success?session_id=${data.transactionId || data.id}`)
-        }
-      })
-
-      paddleInstance.Checkout.onClose((data: any) => {
-        console.log('Checkout closed:', data)
-        setIsLoading(false)
-      })
-
-      paddleInstance.Checkout.onError((error: any) => {
-        console.error('Checkout error:', error)
-        setIsLoading(false)
-        setError(error.message || 'Checkout failed')
-        
-        if (onError) {
-          onError(error)
-        }
-      })
-
-      // Open checkout
       paddleInstance.Checkout.open(checkoutData)
-
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to open checkout'
       console.error('Checkout error:', errorMessage)
       setIsLoading(false)
       setError(errorMessage)
-      
-      if (onError) {
-        onError({ message: errorMessage })
-      }
+      onError?.({ message: errorMessage })
     }
-  }, [paddleLoaded, paddleInstance, priceId, customerEmail, customData, onSuccess, onError, router])
+  }, [paddleLoaded, paddleInstance, priceId, customerEmail, customData, onError])
 
-  // Show error state
   if (error) {
     return (
-      <button 
-        disabled 
+      <button
+        disabled
         className={`inline-flex items-center gap-2 ${className}`}
       >
         <AlertCircle className="h-4 w-4" />
@@ -188,11 +167,10 @@ export default function PaddleCheckout({
     )
   }
 
-  // Show loading state
   if (!paddleLoaded) {
     return (
-      <button 
-        disabled 
+      <button
+        disabled
         className={`inline-flex items-center gap-2 ${className}`}
       >
         <Loader2 className="h-4 w-4 animate-spin" />
@@ -201,7 +179,6 @@ export default function PaddleCheckout({
     )
   }
 
-  // Show checkout button
   return (
     <button
       onClick={handleCheckout}
