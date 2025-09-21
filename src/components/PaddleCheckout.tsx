@@ -7,6 +7,7 @@ import { Loader2, CreditCard } from 'lucide-react'
 declare global {
   interface Window {
     Paddle: any
+    paddleInitialized?: boolean
   }
 }
 
@@ -63,6 +64,7 @@ export default function PaddleCheckout({
                 token: clientToken,
                 environment: environment
               })
+              window.paddleInitialized = true
               setPaddleLoaded(true)
               console.log('PaddleCheckout: Paddle initialized with environment:', environment)
             } catch (error) {
@@ -83,18 +85,26 @@ export default function PaddleCheckout({
         
         document.head.appendChild(script)
       } else if (window.Paddle && clientToken) {
-        // Paddle already loaded, just initialize
+        // Paddle already loaded, check if already initialized
         try {
-          window.Paddle.initialize({
-            token: clientToken,
-            environment: environment
-          })
-          setPaddleLoaded(true)
-          console.log('PaddleCheckout: Paddle re-initialized with environment:', environment)
+          // Check if Paddle is already initialized using our global flag
+          if (window.paddleInitialized || window.Paddle.Checkout) {
+            console.log('PaddleCheckout: Paddle already initialized, skipping re-initialization')
+            setPaddleLoaded(true)
+          } else {
+            // Initialize if not already done
+            window.Paddle.initialize({
+              token: clientToken,
+              environment: environment
+            })
+            window.paddleInitialized = true
+            setPaddleLoaded(true)
+            console.log('PaddleCheckout: Paddle initialized with environment:', environment)
+          }
         } catch (error) {
-          console.error('PaddleCheckout: Failed to re-initialize Paddle:', error)
+          console.error('PaddleCheckout: Failed to initialize Paddle:', error)
           if (onError) {
-            onError({ message: 'Failed to re-initialize Paddle' })
+            onError({ message: 'Failed to initialize Paddle' })
           }
         }
       }
