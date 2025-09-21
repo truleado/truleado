@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter, useFilterParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Filter, Eye, EyeOff, CheckCircle } from 'lucide-react'
 
 function ResetPasswordForm() {
@@ -15,7 +15,7 @@ function ResetPasswordForm() {
   const [success, setSuccess] = useState(false)
   
   const router = useRouter()
-  const searchParams = useFilterParams()
+  const searchParams = useSearchParams()
   const token = searchParams.get('token')
   const type = searchParams.get('type')
 
