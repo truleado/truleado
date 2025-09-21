@@ -6,6 +6,7 @@ import { useSubscription } from '@/lib/subscription-context'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import AppLayout from '@/components/app-layout'
+import PaddleCheckout from '@/components/PaddleCheckout'
 import Link from 'next/link'
 import { 
   TrendingUp, 
@@ -257,13 +258,30 @@ export default function Dashboard() {
                   </p>
                 </div>
               </div>
-              <Link
-                href="/upgrade"
+              <PaddleCheckout
+                priceId={process.env.NEXT_PUBLIC_PADDLE_PRICE_ID}
+                clientToken={process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN}
+                environment={process.env.NODE_ENV === 'production' ? 'production' : 'sandbox'}
+                customerEmail={user?.email}
+                customData={{
+                  user_id: user?.id,
+                  user_email: user?.email
+                }}
                 className="inline-flex items-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
+                onSuccess={(data) => {
+                  console.log('Checkout success:', data)
+                  window.location.href = `/billing/success?session_id=${data.transactionId}`
+                }}
+                onError={(error) => {
+                  console.error('Checkout error:', error)
+                  alert('Payment failed. Please try again.')
+                }}
               >
-                <ArrowUpRight className="w-4 h-4 mr-2" />
-                Upgrade to Pro
-              </Link>
+                <>
+                  <ArrowUpRight className="w-4 h-4 mr-2" />
+                  Upgrade to Pro
+                </>
+              </PaddleCheckout>
             </div>
           </div>
         )}

@@ -20,9 +20,9 @@ export async function POST(request: NextRequest) {
     const successUrl = `${process.env.NEXT_PUBLIC_APP_URL}/billing/success?session_id={CHECKOUT_SESSION_ID}`
     const cancelUrl = `${process.env.NEXT_PUBLIC_APP_URL}/billing/cancel`
     
-    console.log('Creating checkout session for user:', user.id, 'with product:', paddleConfig.productId)
+    console.log('Creating checkout session for user:', user.id, 'with price:', paddleConfig.priceId)
     const session = await paddleAPI.createCheckoutSession({
-      productId: paddleConfig.productId,
+      priceId: paddleConfig.priceId,
       customerEmail: user.email!,
       customerName: user.user_metadata?.full_name,
       successUrl,

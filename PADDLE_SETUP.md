@@ -19,13 +19,15 @@ This guide will help you set up Paddle Payments integration for your Truleado ap
 ### Sandbox Environment
 1. Log into your Paddle dashboard
 2. Go to **Developer Tools > Authentication**
-3. Create a new API key for sandbox testing
-4. Copy the API key (starts with `sandbox_`)
+3. Create a new **API key** for server-side operations (starts with `sandbox_`)
+4. Create a new **Client Token** for client-side Paddle.js (starts with `live_` for production or different format for sandbox)
+5. Copy both credentials
 
 ### Live Environment
 1. Switch to live mode in your Paddle dashboard
-2. Create a new API key for production
-3. Copy the API key (starts with `live_`)
+2. Create a new **API key** for server-side operations (starts with `live_`)
+3. Create a new **Client Token** for client-side Paddle.js
+4. Copy both credentials
 
 ## Step 3: Create Products and Prices
 
@@ -65,10 +67,14 @@ This guide will help you set up Paddle Payments integration for your Truleado ap
 3. Add these variables:
 
 ```env
-# Paddle Configuration
+# Paddle Configuration (Server-side)
 PADDLE_API_KEY=your_api_key_here
 PADDLE_WEBHOOK_SECRET=your_webhook_secret_here
-PADDLE_PRODUCT_ID=your_price_id_here
+PADDLE_PRICE_ID=your_price_id_here
+
+# Paddle Configuration (Client-side)
+NEXT_PUBLIC_PADDLE_CLIENT_TOKEN=your_client_token_here
+NEXT_PUBLIC_PADDLE_PRICE_ID=your_price_id_here
 
 # App Configuration
 NEXT_PUBLIC_APP_URL=https://www.truleado.com
@@ -76,10 +82,14 @@ NEXT_PUBLIC_APP_URL=https://www.truleado.com
 
 ### In your local .env.local file:
 ```env
-# Paddle Configuration (Sandbox)
+# Paddle Configuration (Server-side - Sandbox)
 PADDLE_API_KEY=sandbox_your_api_key_here
 PADDLE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
-PADDLE_PRODUCT_ID=pri_your_price_id_here
+PADDLE_PRICE_ID=pri_your_price_id_here
+
+# Paddle Configuration (Client-side - Sandbox)
+NEXT_PUBLIC_PADDLE_CLIENT_TOKEN=your_sandbox_client_token_here
+NEXT_PUBLIC_PADDLE_PRICE_ID=pri_your_price_id_here
 
 # App Configuration
 NEXT_PUBLIC_APP_URL=http://localhost:3000

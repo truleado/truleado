@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { useSubscription } from '@/lib/subscription-context'
 import AppLayout from '@/components/app-layout'
+import PaddleCheckout from '@/components/PaddleCheckout'
 import { Check, ArrowRight, Loader2, CreditCard, Clock, CheckCircle } from 'lucide-react'
 
 export default function UpgradePage() {
@@ -177,24 +178,31 @@ export default function UpgradePage() {
                     Active Subscription
                   </div>
                 ) : (
-                  <button
-                    onClick={handleUpgrade}
-                    disabled={isLoading}
-                    className="w-full bg-blue-600 text-white px-6 py-3 rounded-md text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  <PaddleCheckout
+                    priceId={process.env.NEXT_PUBLIC_PADDLE_PRICE_ID}
+                    clientToken={process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN}
+                    environment={process.env.NODE_ENV === 'production' ? 'production' : 'sandbox'}
+                    customerEmail={user?.email}
+                    customData={{
+                      user_id: user?.id,
+                      user_email: user?.email
+                    }}
+                    className="w-full bg-blue-600 text-white px-6 py-3 rounded-md text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onSuccess={(data) => {
+                      console.log('Checkout success:', data)
+                      window.location.href = `/billing/success?session_id=${data.transactionId}`
+                    }}
+                    onError={(error) => {
+                      console.error('Checkout error:', error)
+                      alert('Payment failed. Please try again.')
+                    }}
                   >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <CreditCard className="w-4 h-4 mr-2" />
-                        Upgrade to Pro
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </>
-                    )}
-                  </button>
+                    <>
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      Upgrade to Pro
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </>
+                  </PaddleCheckout>
                 )}
               </div>
             </div>

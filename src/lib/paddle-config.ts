@@ -3,8 +3,9 @@ import { createClient } from '@supabase/supabase-js'
 // Paddle Configuration
 export const paddleConfig = {
   apiKey: process.env.PADDLE_API_KEY || '',
+  clientToken: process.env.PADDLE_CLIENT_TOKEN || '',
   webhookSecret: process.env.PADDLE_WEBHOOK_SECRET || '',
-  productId: process.env.PADDLE_PRODUCT_ID || '',
+  priceId: process.env.PADDLE_PRICE_ID || '',
   environment: process.env.NODE_ENV === 'production' ? 'production' : 'sandbox',
   baseUrl: process.env.NODE_ENV === 'production' 
     ? 'https://api.paddle.com' 
@@ -47,7 +48,7 @@ export class PaddleAPI {
 
   // Create a checkout session
   async createCheckoutSession(data: {
-    productId: string
+    priceId: string
     customerEmail: string
     customerName?: string
     successUrl: string
@@ -62,7 +63,7 @@ export class PaddleAPI {
         body: JSON.stringify({
           items: [
             {
-              price_id: data.productId,
+              price_id: data.priceId,
               quantity: 1
             }
           ],
@@ -149,7 +150,7 @@ export class PaddleAPI {
   // Create a subscription
   async createSubscription(data: {
     customerId: string
-    productId: string
+    priceId: string
     customData?: Record<string, any>
   }) {
     console.log('Creating Paddle subscription:', data)
@@ -161,7 +162,7 @@ export class PaddleAPI {
           customer_id: data.customerId,
           items: [
             {
-              price_id: data.productId,
+              price_id: data.priceId,
               quantity: 1
             }
           ],
