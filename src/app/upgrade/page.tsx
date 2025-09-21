@@ -190,7 +190,7 @@ export default function UpgradePage() {
                     className="w-full bg-blue-600 text-white px-6 py-3 rounded-md text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     onSuccess={(data) => {
                       console.log('Checkout success:', data)
-                      window.location.href = `/billing/success?session_id=${data.transactionId}`
+                      window.location.href = `/billing/success?session_id=${data.transactionId || data.id}`
                     }}
                     onError={(error) => {
                       console.error('Checkout error:', error)

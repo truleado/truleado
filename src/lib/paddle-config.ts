@@ -29,6 +29,8 @@ export class PaddleAPI {
     
     const url = `${this.baseUrl}${endpoint}`
     
+    console.log(`Making Paddle API request to: ${url}`)
+    
     const response = await fetch(url, {
       ...options,
       headers: {
@@ -40,10 +42,17 @@ export class PaddleAPI {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
+      console.error('Paddle API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData
+      })
       throw new Error(`Paddle API Error: ${response.status} - ${errorData.error?.detail || response.statusText}`)
     }
 
-    return response.json()
+    const data = await response.json()
+    console.log('Paddle API Response:', data)
+    return data
   }
 
   // Create a checkout session

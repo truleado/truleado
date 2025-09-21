@@ -55,9 +55,8 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
 # Paddle Configuration
 NEXT_PUBLIC_PADDLE_CLIENT_TOKEN=your_paddle_client_token
+NEXT_PUBLIC_PADDLE_PRICE_ID=your_paddle_price_id
 PADDLE_API_KEY=your_paddle_api_key
-PADDLE_VENDOR_ID=your_paddle_vendor_id
-PADDLE_PRODUCT_ID=your_paddle_product_id
 PADDLE_PRICE_ID=your_paddle_price_id
 PADDLE_WEBHOOK_SECRET=your_paddle_webhook_secret
 
