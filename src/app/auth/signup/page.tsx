@@ -92,23 +92,23 @@ export default function SignUp() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#e6f4ff] via-white to-purple-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#e6f4ff] via-white to-purple-50 flex items-center justify-center px-4 py-8">
       <div className="max-w-md w-full">
         {/* Logo */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 sm:mb-8">
           <Link href="/" className="inline-flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-r from-[#148cfc] to-[#0d7ce8] rounded-lg flex items-center justify-center">
-              <Filter className="w-6 h-6 text-white" />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-[#148cfc] to-[#0d7ce8] rounded-lg flex items-center justify-center">
+              <Filter className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <span className="text-2xl font-bold text-gray-900">Truleado</span>
+            <span className="text-xl sm:text-2xl font-bold text-gray-900">Truleado</span>
           </Link>
         </div>
 
         {/* Sign Up Form */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">Create your account</h1>
-            <p className="text-gray-600 mt-2">Start finding customers on Reddit today</p>
+        <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+          <div className="text-center mb-4 sm:mb-6">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Create your account</h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-2">Start finding customers on Reddit today</p>
           </div>
 
           {error && (

@@ -46,19 +46,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Mobile sidebar */}
         <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
           <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-          <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white shadow-xl">
-            <div className="flex h-16 items-center justify-between px-4">
+          <div className="fixed inset-y-0 left-0 flex w-64 sm:w-72 flex-col bg-white shadow-xl">
+            <div className="flex h-14 sm:h-16 items-center justify-between px-4">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-[#148cfc] rounded-lg flex items-center justify-center">
-                  <Filter className="w-5 h-5 text-white" />
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#148cfc] rounded-lg flex items-center justify-center">
+                  <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <span className="text-xl font-semibold text-gray-900">Truleado</span>
+                <span className="text-lg sm:text-xl font-semibold text-gray-900">Truleado</span>
               </div>
               <button
                 onClick={() => setSidebarOpen(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
             </div>
             <nav className="flex-1 px-4 py-4 space-y-2">
@@ -120,35 +120,35 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <div className="lg:pl-64">
         {/* Top bar */}
-        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+        <div className="sticky top-0 z-40 flex h-14 sm:h-16 shrink-0 items-center gap-x-3 sm:gap-x-4 border-b border-gray-200 bg-white px-3 sm:px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
           <button
             type="button"
-            className="-m-2.5 p-2.5 text-gray-700 lg:hidden"
+            className="-m-2 p-2 sm:-m-2.5 sm:p-2.5 text-gray-700 lg:hidden"
             onClick={() => setSidebarOpen(true)}
           >
-            <Menu className="h-6 w-6" />
+            <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
           </button>
 
-          <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+          <div className="flex flex-1 gap-x-3 sm:gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1" />
-            <div className="flex items-center gap-x-4 lg:gap-x-6">
+            <div className="flex items-center gap-x-3 sm:gap-x-4 lg:gap-x-6">
               {/* User menu */}
               <div className="relative">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                    <User className="w-5 h-5 text-gray-600" />
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
                   </div>
-                  <div className="hidden lg:block">
-                    <p className="text-sm font-medium text-gray-900">
+                  <div className="hidden sm:block">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900 truncate max-w-32 sm:max-w-none">
                       {user?.email}
                     </p>
                   </div>
                   <button
                     onClick={handleSignOut}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    className="text-gray-400 hover:text-gray-600 transition-colors p-1"
                     title="Sign out"
                   >
-                    <LogOut className="w-5 h-5" />
+                    <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 </div>
               </div>
@@ -157,8 +157,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Page content */}
-        <main className="py-6">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <main className="py-4 sm:py-6">
+          <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-8">
             {children}
           </div>
         </main>

@@ -37,31 +37,31 @@ export default function Home() {
       {/* Navigation */}
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-14 sm:h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center">
-                <div className="w-8 h-8 bg-[#148cfc] rounded-lg flex items-center justify-center">
-                  <Filter className="w-5 h-5 text-white" />
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#148cfc] rounded-lg flex items-center justify-center">
+                  <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <span className="ml-2 text-xl font-semibold text-gray-900">Truleado</span>
+                <span className="ml-2 text-lg sm:text-xl font-semibold text-gray-900">Truleado</span>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <Link 
                 href="/pricing" 
-                className="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium"
+                className="text-gray-500 hover:text-gray-900 px-2 sm:px-3 py-2 text-sm font-medium hidden sm:block"
               >
                 Pricing
               </Link>
               <Link 
                 href="/auth/signin" 
-                className="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium"
+                className="text-gray-500 hover:text-gray-900 px-2 sm:px-3 py-2 text-sm font-medium"
               >
                 Sign In
               </Link>
               <Link 
                 href="/auth/signup" 
-                className="bg-[#148cfc] text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-[#0d7ce8]"
+                className="bg-[#148cfc] text-white px-3 sm:px-4 py-2 rounded-md text-sm font-medium hover:bg-[#0d7ce8]"
               >
                 Get Started
               </Link>
@@ -71,19 +71,19 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="bg-white py-20">
+      <section className="bg-white py-12 sm:py-16 lg:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-gray-900">
               Find Your Next Customers on Reddit
             </h1>
-            <p className="mt-6 text-lg leading-8 text-gray-600 max-w-3xl mx-auto">
+            <p className="mt-4 sm:mt-6 text-base sm:text-lg leading-7 sm:leading-8 text-gray-600 max-w-3xl mx-auto px-4">
               Stop cold emailing strangers. Discover relevant Reddit discussions where people are actively seeking solutions your SaaS product provides.
             </p>
-            <div className="mt-10 flex items-center justify-center">
+            <div className="mt-8 sm:mt-10 flex items-center justify-center">
               <Link 
                 href="/auth/signup" 
-                className="bg-[#148cfc] text-white px-6 py-3 rounded-md text-sm font-semibold hover:bg-[#0d7ce8] flex items-center"
+                className="bg-[#148cfc] text-white px-5 sm:px-6 py-3 rounded-md text-sm font-semibold hover:bg-[#0d7ce8] flex items-center"
               >
                 Start Finding Leads
                 <ArrowRight className="ml-2 w-4 h-4" />
@@ -94,44 +94,44 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="bg-gray-50 py-20">
+      <section className="bg-gray-50 py-12 sm:py-16 lg:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-gray-900">
               How Truleado Works
             </h2>
-            <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="mt-3 sm:mt-4 text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">
               Our AI-powered platform monitors Reddit conversations to find the perfect opportunities for your SaaS product.
             </p>
           </div>
           
-          <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-12 sm:mt-16 grid grid-cols-1 gap-6 sm:gap-8 sm:grid-cols-2 lg:grid-cols-3">
             <div className="text-center">
-              <div className="w-16 h-16 bg-[#148cfc] rounded-lg flex items-center justify-center mx-auto">
-                <Target className="w-8 h-8 text-white" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#148cfc] rounded-lg flex items-center justify-center mx-auto">
+                <Target className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <h3 className="mt-6 text-lg font-semibold text-gray-900">Define Your Product</h3>
-              <p className="mt-2 text-gray-600">
+              <h3 className="mt-4 sm:mt-6 text-base sm:text-lg font-semibold text-gray-900">Define Your Product</h3>
+              <p className="mt-2 text-sm sm:text-base text-gray-600">
                 Add your SaaS product details and let our AI understand what problems you solve.
               </p>
             </div>
             
             <div className="text-center">
-              <div className="w-16 h-16 bg-[#148cfc] rounded-lg flex items-center justify-center mx-auto">
-                <Filter className="w-8 h-8 text-white" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#148cfc] rounded-lg flex items-center justify-center mx-auto">
+                <Filter className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <h3 className="mt-6 text-lg font-semibold text-gray-900">Monitor Reddit</h3>
-              <p className="mt-2 text-gray-600">
+              <h3 className="mt-4 sm:mt-6 text-base sm:text-lg font-semibold text-gray-900">Monitor Reddit</h3>
+              <p className="mt-2 text-sm sm:text-base text-gray-600">
                 We scan all relevant subreddits to find discussions where people need your solution.
               </p>
             </div>
             
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#148cfc] rounded-lg flex items-center justify-center mx-auto">
-                <Zap className="w-8 h-8 text-white" />
+            <div className="text-center sm:col-span-2 lg:col-span-1">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#148cfc] rounded-lg flex items-center justify-center mx-auto">
+                <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <h3 className="mt-6 text-lg font-semibold text-gray-900">Get Quality Leads</h3>
-              <p className="mt-2 text-gray-600">
+              <h3 className="mt-4 sm:mt-6 text-base sm:text-lg font-semibold text-gray-900">Get Quality Leads</h3>
+              <p className="mt-2 text-sm sm:text-base text-gray-600">
                 Receive high-intent leads with full context from the original Reddit conversations.
               </p>
             </div>

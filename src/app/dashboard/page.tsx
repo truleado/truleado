@@ -245,15 +245,15 @@ export default function Dashboard() {
 
         {/* Trial Status - Only show for trial users */}
         {subscriptionStatus === 'trial' && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center justify-between">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <Clock className="h-5 w-5 text-blue-600" />
+                  <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                 </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-blue-800">Free Trial Active</h3>
-                  <p className="text-sm text-blue-700">
+                <div className="ml-2 sm:ml-3">
+                  <h3 className="text-xs sm:text-sm font-medium text-blue-800">Free Trial Active</h3>
+                  <p className="text-xs sm:text-sm text-blue-700">
                     {trialTimeRemaining} remaining. Upgrade to Pro for unlimited access.
                   </p>
                 </div>
@@ -267,7 +267,7 @@ export default function Dashboard() {
                   user_id: user?.id,
                   user_email: user?.email
                 }}
-                className="inline-flex items-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
+                className="inline-flex items-center rounded-md bg-green-600 px-3 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 w-full sm:w-auto justify-center"
                 onSuccess={(data) => {
                   console.log('Checkout success:', data)
                   window.location.href = `/billing/success?session_id=${data.transactionId || data.id}`
@@ -278,7 +278,7 @@ export default function Dashboard() {
                 }}
               >
                 <>
-                  <ArrowUpRight className="w-4 h-4 mr-2" />
+                  <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                   Upgrade to Pro
                 </>
               </PaddleCheckout>
@@ -304,28 +304,28 @@ export default function Dashboard() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {statsCards.map((stat) => (
             <div
               key={stat.name}
-              className="relative overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:px-6 sm:py-6"
+              className="relative overflow-hidden rounded-lg bg-white px-3 py-4 shadow sm:px-4 sm:py-5 lg:px-6 lg:py-6"
             >
               <dt>
-                <div className="absolute rounded-md bg-blue-500 p-3">
-                  <stat.icon className="h-6 w-6 text-white" aria-hidden="true" />
+                <div className="absolute rounded-md bg-blue-500 p-2 sm:p-3">
+                  <stat.icon className="h-4 w-4 sm:h-6 sm:w-6 text-white" aria-hidden="true" />
                 </div>
-                <p className="ml-16 truncate text-sm font-medium text-gray-500">{stat.name}</p>
+                <p className="ml-12 sm:ml-16 truncate text-xs sm:text-sm font-medium text-gray-500">{stat.name}</p>
               </dt>
-              <dd className="ml-16 flex items-baseline">
+              <dd className="ml-12 sm:ml-16 flex items-baseline">
                 {statsLoading ? (
-                  <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                  <div className="animate-pulse bg-gray-200 h-6 w-12 sm:h-8 sm:w-16 rounded"></div>
                 ) : (
-                  <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
+                  <p className="text-lg sm:text-2xl font-semibold text-gray-900">{stat.value}</p>
                 )}
                 {statsLoading ? (
-                  <div className="ml-2 animate-pulse bg-gray-200 h-4 w-20 rounded"></div>
+                  <div className="ml-2 animate-pulse bg-gray-200 h-3 w-16 sm:h-4 sm:w-20 rounded"></div>
                 ) : (
-                  <p className={`ml-2 flex items-baseline text-sm font-semibold ${
+                  <p className={`ml-2 flex items-baseline text-xs sm:text-sm font-semibold ${
                     stat.changeType === 'positive' ? 'text-green-600' : 
                     stat.changeType === 'negative' ? 'text-red-600' : 'text-gray-500'
                   }`}>
@@ -339,9 +339,9 @@ export default function Dashboard() {
 
         {/* Let's get started quick */}
         <div className="bg-white shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg font-medium leading-6 text-gray-900">Let's get started quick</h3>
-            <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="px-3 py-4 sm:px-4 sm:py-5 lg:px-6 lg:py-6">
+            <h3 className="text-base sm:text-lg font-medium leading-6 text-gray-900">Let's get started quick</h3>
+            <div className="mt-4 sm:mt-5 grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {/* Step 1: Connect Reddit */}
               <div className={`relative block w-full rounded-lg border-2 p-6 text-center transition-all duration-200 ${
                 redditConnected 
