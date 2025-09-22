@@ -108,7 +108,7 @@ export default function SignUp() {
         <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
           <div className="text-center mb-4 sm:mb-6">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Create your account</h1>
-            <p className="text-sm sm:text-base text-gray-600 mt-2">Start finding customers on Reddit today</p>
+            <p className="text-sm sm:text-base text-gray-600 mt-2">Start engaging with your audience on Reddit today</p>
           </div>
 
           {error && (

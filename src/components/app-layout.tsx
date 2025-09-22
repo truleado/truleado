@@ -22,7 +22,7 @@ import { TrialBanner } from './TrialBanner'
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, description: 'Overview & analytics' },
   { name: 'Products', href: '/products', icon: Package, description: 'Manage your products' },
-  { name: 'Leads', href: '/leads', icon: Users, description: 'Discover new leads' },
+  { name: 'Leads', href: '/leads', icon: Users, description: 'Discover new opportunities' },
   { name: 'Promote', href: '/promote', icon: Megaphone, description: 'Generate promotional posts' },
   { name: 'Settings', href: '/settings', icon: Settings, description: 'Account & preferences' },
 ]

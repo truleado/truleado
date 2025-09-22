@@ -62,7 +62,7 @@ export default function SignIn() {
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-gray-900">Welcome back</h1>
-            <p className="text-gray-600 mt-2">Sign in to your account to continue</p>
+            <p className="text-gray-600 mt-2">Sign in to continue engaging with your audience</p>
           </div>
 
           {error && (

@@ -1,15 +1,15 @@
-# Truleado - Reddit Lead Discovery SaaS
+# Truleado - Social Media Engagement Tool
 
-Find your next customers on Reddit with AI-powered lead discovery. Stop cold emailing strangers and start connecting with people who are actively discussing problems your SaaS product solves.
+Engage with your audience on Reddit with AI-powered social media engagement. Stop cold emailing strangers and start connecting with people who are actively discussing problems your SaaS product solves.
 
 ## 🚀 Features
 
-- **Reddit-First Lead Generation**: Monitor relevant subreddits for SaaS opportunities
-- **AI-Powered Analysis**: Use OpenAI to analyze posts and comments for lead potential
+- **Reddit-First Engagement**: Monitor relevant subreddits for SaaS opportunities
+- **AI-Powered Analysis**: Use OpenAI to analyze posts and comments for engagement potential
 - **Real Conversation Context**: Get the exact Reddit post that proves they're interested
-- **Continuous Monitoring**: Background jobs that run 24/7 to find new leads
+- **Continuous Monitoring**: Background jobs that run 24/7 to find new opportunities
 - **Product Management**: Define your SaaS product and get relevant subreddit suggestions
-- **Lead Storage**: Persistent storage with deduplication and lead management
+- **Opportunity Storage**: Persistent storage with deduplication and engagement management
 - **Modern UI**: Beautiful, responsive interface built with Next.js 15 and Tailwind CSS
 
 ## 🛠️ Tech Stack
@@ -134,7 +134,7 @@ src/
 
 1. **Define Your Product**: Add your SaaS product details and target subreddits
 2. **AI Analysis**: Our AI scans Reddit posts and comments for relevant discussions
-3. **Lead Generation**: Find people actively seeking solutions your product provides
+3. **Opportunity Discovery**: Find people actively seeking solutions your product provides
 4. **Context & Contact**: Get the original Reddit post plus contact details
 5. **Continuous Monitoring**: Background jobs run hourly to find new opportunities
 

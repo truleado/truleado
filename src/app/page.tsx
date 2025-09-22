@@ -75,7 +75,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-gray-900">
-              Find Your Next Customers on Reddit
+              Engage with Your Audience on Reddit
             </h1>
             <p className="mt-4 sm:mt-6 text-base sm:text-lg leading-7 sm:leading-8 text-gray-600 max-w-3xl mx-auto px-4">
               Stop cold emailing strangers. Discover relevant Reddit discussions where people are actively seeking solutions your SaaS product provides.
@@ -85,7 +85,7 @@ export default function Home() {
                 href="/auth/signup" 
                 className="bg-[#148cfc] text-white px-5 sm:px-6 py-3 rounded-md text-sm font-semibold hover:bg-[#0d7ce8] flex items-center"
               >
-                Start Finding Leads
+                Start Engaging
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
             </div>
@@ -101,7 +101,7 @@ export default function Home() {
               How Truleado Works
             </h2>
             <p className="mt-3 sm:mt-4 text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">
-              Our AI-powered platform monitors Reddit conversations to find the perfect opportunities for your SaaS product.
+              Our AI-powered social media engagement tool monitors Reddit conversations to find the perfect opportunities for your SaaS product.
             </p>
           </div>
           
@@ -130,9 +130,9 @@ export default function Home() {
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#148cfc] rounded-lg flex items-center justify-center mx-auto">
                 <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <h3 className="mt-4 sm:mt-6 text-base sm:text-lg font-semibold text-gray-900">Get Quality Leads</h3>
+              <h3 className="mt-4 sm:mt-6 text-base sm:text-lg font-semibold text-gray-900">Engage & Convert</h3>
               <p className="mt-2 text-sm sm:text-base text-gray-600">
-                Receive high-intent leads with full context from the original Reddit conversations.
+                Connect with high-intent prospects with full context from the original Reddit conversations.
               </p>
             </div>
           </div>
