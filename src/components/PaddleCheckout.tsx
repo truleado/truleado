@@ -54,7 +54,32 @@ export default function PaddleCheckout({
       const paddle = await initializePaddle({
         token: clientToken,
         environment: environment,
-        debug: environment === 'sandbox'
+        debug: environment === 'sandbox',
+        eventCallback: (data: any) => {
+          console.log('Paddle event received:', data)
+          if (data.event === 'checkout.completed') {
+            console.log('Checkout completed via event callback:', data)
+            setIsLoading(false)
+            
+            if (onSuccess) {
+              onSuccess(data)
+            } else {
+              // Default success behavior
+              router.push(`/billing/success?session_id=${data.transactionId || data.id}`)
+            }
+          } else if (data.event === 'checkout.closed') {
+            console.log('Checkout closed via event callback:', data)
+            setIsLoading(false)
+          } else if (data.event === 'checkout.error') {
+            console.error('Checkout error via event callback:', data)
+            setIsLoading(false)
+            setError(data.error?.message || 'Checkout failed')
+            
+            if (onError) {
+              onError(data.error || { message: 'Checkout failed' })
+            }
+          }
+        }
       })
 
       console.log('Paddle initialized successfully with npm package')
@@ -137,41 +162,10 @@ export default function PaddleCheckout({
       console.log('Paddle instance before checkout:', paddleInstance)
       console.log('Paddle.Checkout methods:', Object.keys(paddleInstance?.Checkout || {}))
 
-      // Check if onComplete method exists
-      if (typeof paddleInstance?.Checkout?.onComplete !== 'function') {
-        throw new Error('Paddle.Checkout.onComplete is not a function. Available methods: ' + Object.keys(paddleInstance?.Checkout || {}).join(', '))
-      }
-
-      // Set up global event listeners first
-      paddleInstance?.Checkout?.onComplete((data: any) => {
-        console.log('Checkout completed:', data)
-        setIsLoading(false)
-        
-        if (onSuccess) {
-          onSuccess(data)
-        } else {
-          // Default success behavior
-          router.push(`/billing/success?session_id=${data.transactionId || data.id}`)
-        }
-      })
-
-      paddleInstance?.Checkout?.onClose((data: any) => {
-        console.log('Checkout closed:', data)
-        setIsLoading(false)
-      })
-
-      paddleInstance?.Checkout?.onError((error: any) => {
-        console.error('Checkout error:', error)
-        setIsLoading(false)
-        setError(error.message || 'Checkout failed')
-        
-        if (onError) {
-          onError(error)
-        }
-      })
-
-      // Open checkout
+      // Open checkout - events are handled via the global eventCallback
       await paddleInstance?.Checkout?.open(checkoutData)
+      
+      console.log('Checkout opened successfully')
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to open checkout'
