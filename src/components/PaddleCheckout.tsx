@@ -58,6 +58,9 @@ export default function PaddleCheckout({
       })
 
       console.log('Paddle initialized successfully with npm package')
+      console.log('Paddle instance:', paddle)
+      console.log('Paddle.Checkout:', paddle.Checkout)
+      console.log('Available methods:', Object.keys(paddle.Checkout || {}))
       setPaddleInstance(paddle)
       setPaddleLoaded(true)
       setError(null)
@@ -131,8 +134,15 @@ export default function PaddleCheckout({
       }
 
       console.log('Opening Paddle checkout with data:', checkoutData)
+      console.log('Paddle instance before checkout:', paddleInstance)
+      console.log('Paddle.Checkout methods:', Object.keys(paddleInstance.Checkout || {}))
 
-      // Set up event listeners before opening checkout
+      // Check if onComplete method exists
+      if (typeof paddleInstance.Checkout.onComplete !== 'function') {
+        throw new Error('Paddle.Checkout.onComplete is not a function. Available methods: ' + Object.keys(paddleInstance.Checkout || {}).join(', '))
+      }
+
+      // Set up global event listeners first
       paddleInstance.Checkout.onComplete((data: any) => {
         console.log('Checkout completed:', data)
         setIsLoading(false)
@@ -161,7 +171,7 @@ export default function PaddleCheckout({
       })
 
       // Open checkout
-      paddleInstance.Checkout.open(checkoutData)
+      await paddleInstance.Checkout.open(checkoutData)
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to open checkout'
