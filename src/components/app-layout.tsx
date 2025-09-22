@@ -43,46 +43,46 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Trial Banner */}
       <TrialBanner />
         
-        {/* Mobile sidebar */}
-        <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-          <div className="fixed inset-y-0 left-0 flex w-64 sm:w-72 flex-col bg-white shadow-xl">
-            <div className="flex h-14 sm:h-16 items-center justify-between px-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#148cfc] rounded-lg flex items-center justify-center">
-                  <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </div>
-                <span className="text-lg sm:text-xl font-semibold text-gray-900">Truleado</span>
+      {/* Mobile sidebar */}
+      <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-y-0 left-0 flex w-64 sm:w-72 flex-col bg-white shadow-xl">
+          <div className="flex h-14 sm:h-16 items-center justify-between px-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#148cfc] rounded-lg flex items-center justify-center">
+                <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5 sm:w-6 sm:h-6" />
-              </button>
+              <span className="text-lg sm:text-xl font-semibold text-gray-900">Truleado</span>
             </div>
-            <nav className="flex-1 px-4 py-4 space-y-2">
-              {navigation.map((item) => {
-                const isActive = pathname === item.href
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive
-                        ? 'bg-[#e6f4ff] text-[#0c6bc7]'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <item.icon className="w-5 h-5" />
-                    <span>{item.name}</span>
-                  </Link>
-                )
-              })}
-            </nav>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
           </div>
+          <nav className="flex-1 px-4 py-4 space-y-2">
+            {navigation.map((item) => {
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-[#e6f4ff] text-[#0c6bc7]'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span>{item.name}</span>
+                </Link>
+              )
+            })}
+          </nav>
         </div>
+      </div>
 
       {/* Desktop sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">

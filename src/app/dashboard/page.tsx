@@ -243,48 +243,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Trial Status - Only show for trial users */}
-        {subscriptionStatus === 'trial' && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3 sm:p-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-                </div>
-                <div className="ml-2 sm:ml-3">
-                  <h3 className="text-xs sm:text-sm font-medium text-blue-800">Free Trial Active</h3>
-                  <p className="text-xs sm:text-sm text-blue-700">
-                    {trialTimeRemaining} remaining. Upgrade to Pro for unlimited access.
-                  </p>
-                </div>
-              </div>
-              <PaddleCheckout
-                priceId={process.env.NEXT_PUBLIC_PADDLE_PRICE_ID}
-                clientToken={process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN}
-                environment="sandbox"
-                customerEmail={user?.email}
-                customData={{
-                  user_id: user?.id,
-                  user_email: user?.email
-                }}
-                className="inline-flex items-center rounded-md bg-green-600 px-3 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 w-full sm:w-auto justify-center"
-                onSuccess={(data) => {
-                  console.log('Checkout success:', data)
-                  window.location.href = `/billing/success?session_id=${data.transactionId || data.id}`
-                }}
-                onError={(error) => {
-                  console.error('Checkout error:', error)
-                  alert(`Payment failed: ${error.message || 'Please try again.'}`)
-                }}
-              >
-                <>
-                  <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                  Upgrade to Pro
-                </>
-              </PaddleCheckout>
-            </div>
-          </div>
-        )}
 
         {/* Pro Plan Status - Only show for active subscribers */}
         {subscriptionStatus === 'active' && (
