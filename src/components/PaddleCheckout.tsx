@@ -59,8 +59,8 @@ export default function PaddleCheckout({
 
       console.log('Paddle initialized successfully with npm package')
       console.log('Paddle instance:', paddle)
-      console.log('Paddle.Checkout:', paddle.Checkout)
-      console.log('Available methods:', Object.keys(paddle.Checkout || {}))
+      console.log('Paddle.Checkout:', paddle?.Checkout)
+      console.log('Available methods:', Object.keys(paddle?.Checkout || {}))
       setPaddleInstance(paddle)
       setPaddleLoaded(true)
       setError(null)
@@ -135,15 +135,15 @@ export default function PaddleCheckout({
 
       console.log('Opening Paddle checkout with data:', checkoutData)
       console.log('Paddle instance before checkout:', paddleInstance)
-      console.log('Paddle.Checkout methods:', Object.keys(paddleInstance.Checkout || {}))
+      console.log('Paddle.Checkout methods:', Object.keys(paddleInstance?.Checkout || {}))
 
       // Check if onComplete method exists
-      if (typeof paddleInstance.Checkout.onComplete !== 'function') {
-        throw new Error('Paddle.Checkout.onComplete is not a function. Available methods: ' + Object.keys(paddleInstance.Checkout || {}).join(', '))
+      if (typeof paddleInstance?.Checkout?.onComplete !== 'function') {
+        throw new Error('Paddle.Checkout.onComplete is not a function. Available methods: ' + Object.keys(paddleInstance?.Checkout || {}).join(', '))
       }
 
       // Set up global event listeners first
-      paddleInstance.Checkout.onComplete((data: any) => {
+      paddleInstance?.Checkout?.onComplete((data: any) => {
         console.log('Checkout completed:', data)
         setIsLoading(false)
         
@@ -155,12 +155,12 @@ export default function PaddleCheckout({
         }
       })
 
-      paddleInstance.Checkout.onClose((data: any) => {
+      paddleInstance?.Checkout?.onClose((data: any) => {
         console.log('Checkout closed:', data)
         setIsLoading(false)
       })
 
-      paddleInstance.Checkout.onError((error: any) => {
+      paddleInstance?.Checkout?.onError((error: any) => {
         console.error('Checkout error:', error)
         setIsLoading(false)
         setError(error.message || 'Checkout failed')
@@ -171,7 +171,7 @@ export default function PaddleCheckout({
       })
 
       // Open checkout
-      await paddleInstance.Checkout.open(checkoutData)
+      await paddleInstance?.Checkout?.open(checkoutData)
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to open checkout'
