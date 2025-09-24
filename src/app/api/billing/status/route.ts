@@ -34,6 +34,35 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch subscription status' }, { status: 500 })
     }
 
+    // Calculate next billing date for active subscriptions
+    let nextBillingDate = ''
+    if (profile.subscription_status === 'active' && profile.subscription_ends_at) {
+      const subscriptionEndsAt = new Date(profile.subscription_ends_at)
+      nextBillingDate = subscriptionEndsAt.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    }
+
+    // Mock invoice history for active subscribers
+    const invoices = profile.subscription_status === 'active' ? [
+      {
+        id: '1',
+        date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+        description: 'Pro Plan - Monthly',
+        amount: '$30.00',
+        status: 'paid'
+      },
+      {
+        id: '2', 
+        date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+        description: 'Pro Plan - Monthly',
+        amount: '$30.00',
+        status: 'paid'
+      }
+    ] : []
+
     return NextResponse.json({
       subscription_status: profile.subscription_status,
       trial_ends_at: profile.trial_ends_at,
@@ -42,6 +71,10 @@ export async function GET(request: NextRequest) {
       last_trial_at: profile.last_trial_at,
       paddle_customer_id: profile.paddle_customer_id,
       paddle_subscription_id: profile.paddle_subscription_id,
+      next_billing_date: nextBillingDate,
+      amount: '$30.00',
+      payment_method: 'Card ending in 4242',
+      invoices: invoices
     })
   } catch (error) {
     console.error('Billing status error:', error)

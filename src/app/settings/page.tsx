@@ -20,7 +20,13 @@ import {
   Clock,
   Star,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  Calendar,
+  DollarSign,
+  RefreshCw,
+  Download,
+  Shield,
+  Zap
 } from 'lucide-react'
 
 export default function Settings() {
@@ -36,6 +42,13 @@ export default function Settings() {
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [isCancelling, setIsCancelling] = useState(false)
   const [subscriptionStatus, setSubscriptionStatus] = useState('')
+  const [billingInfo, setBillingInfo] = useState({
+    nextBillingDate: '',
+    amount: '',
+    paymentMethod: '',
+    invoiceHistory: []
+  })
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
     currentPassword: '',
@@ -65,9 +78,41 @@ export default function Settings() {
       if (response.ok) {
         const data = await response.json()
         setSubscriptionStatus(data.subscription_status || 'free')
+        
+        // Fetch billing info if user has active subscription
+        if (data.subscription_status === 'active') {
+          await fetchBillingInfo()
+        }
       }
     } catch (error) {
       console.error('Error fetching subscription status:', error)
+    }
+  }
+
+  const fetchBillingInfo = async () => {
+    try {
+      const response = await fetch('/api/billing/status')
+      if (response.ok) {
+        const data = await response.json()
+        setBillingInfo({
+          nextBillingDate: data.next_billing_date || '',
+          amount: data.amount || '$30',
+          paymentMethod: data.payment_method || 'Card ending in ****',
+          invoiceHistory: data.invoices || []
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching billing info:', error)
+    }
+  }
+
+  const handleRefreshBilling = async () => {
+    setIsRefreshing(true)
+    try {
+      await fetchSubscriptionStatus()
+      await fetchBillingInfo()
+    } finally {
+      setIsRefreshing(false)
     }
   }
 
@@ -530,91 +575,257 @@ export default function Settings() {
             {/* Billing Tab */}
             {activeTab === 'billing' && (
               <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900">Billing & Subscription</h3>
-                  <p className="text-sm text-gray-500">Manage your subscription and billing information.</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">Billing & Subscription</h3>
+                    <p className="text-sm text-gray-500">Manage your subscription and billing information.</p>
+                  </div>
+                  <button
+                    onClick={handleRefreshBilling}
+                    disabled={isRefreshing}
+                    className="inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </button>
                 </div>
 
                 {/* Current Plan Status */}
-                <div className="bg-gray-50 rounded-lg p-6">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-lg font-medium text-gray-900">
-                        {subscriptionStatus === 'active' ? 'Pro Plan' : 
-                         subscriptionStatus === 'cancelled' ? 'Cancelled Plan' :
-                         accessLevel === 'full' ? 'Trial Plan' : 'Free Plan'}
-                      </h4>
-                      <p className="text-sm text-gray-500">
-                        {subscriptionStatus === 'active' ? 'Your subscription is active' :
-                         subscriptionStatus === 'cancelled' ? 'Your subscription has been cancelled' :
-                         accessLevel === 'full' 
-                          ? `Trial ends in ${trialTimeRemaining}`
-                          : 'You\'re currently on the free plan'
-                        }
-                      </p>
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <Star className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="text-xl font-semibold text-gray-900">
+                          {subscriptionStatus === 'active' ? 'Pro Plan Active' : 
+                           subscriptionStatus === 'cancelled' ? 'Plan Cancelled' :
+                           accessLevel === 'full' ? 'Free Trial' : 'Free Plan'}
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          {subscriptionStatus === 'active' ? 'Full access to all features' :
+                           subscriptionStatus === 'cancelled' ? 'Limited access - subscription cancelled' :
+                           accessLevel === 'full' 
+                            ? `Trial ends in ${trialTimeRemaining}`
+                            : 'Limited features available'}
+                        </p>
+                      </div>
                     </div>
-                    {subscriptionStatus !== 'active' && (
-                      <button 
-                        onClick={handleUpgrade}
-                        className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-                      >
-                        <Star className="w-4 h-4 mr-2" />
-                        Upgrade Plan
-                      </button>
-                    )}
+                    <div className="text-right">
+                      {subscriptionStatus === 'active' && (
+                        <div className="text-sm text-gray-600">
+                          <p className="font-medium text-gray-900">$30/month</p>
+                          <p>Next billing: {billingInfo.nextBillingDate || 'N/A'}</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* Subscription Management */}
+                {/* Billing Information - Only show for active subscribers */}
                 {subscriptionStatus === 'active' && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-                    <div className="flex items-start">
-                      <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 mr-3" />
-                      <div className="flex-1">
-                        <h4 className="text-lg font-medium text-red-900">Cancel Subscription</h4>
-                        <p className="text-sm text-red-700 mt-1">
-                          Cancelling your subscription will immediately revoke access to all premium features. 
-                          You can resubscribe at any time.
-                        </p>
-                        <div className="mt-4">
-                          <button
-                            onClick={() => setShowCancelModal(true)}
-                            className="inline-flex items-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
-                          >
-                            <XCircle className="w-4 h-4 mr-2" />
-                            Cancel Subscription
-                          </button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Payment Method */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-lg font-medium text-gray-900">Payment Method</h4>
+                        <CreditCard className="w-5 h-5 text-gray-400" />
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">Card</span>
+                          <span className="text-sm font-medium text-gray-900">{billingInfo.paymentMethod}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">Amount</span>
+                          <span className="text-sm font-medium text-gray-900">{billingInfo.amount}/month</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">Next billing</span>
+                          <span className="text-sm font-medium text-gray-900">{billingInfo.nextBillingDate || 'N/A'}</span>
                         </div>
                       </div>
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                          Update Payment Method
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Billing History */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-lg font-medium text-gray-900">Billing History</h4>
+                        <Download className="w-5 h-5 text-gray-400" />
+                      </div>
+                      <div className="space-y-3">
+                        {billingInfo.invoiceHistory.length > 0 ? (
+                          billingInfo.invoiceHistory.slice(0, 3).map((invoice: any, index: number) => (
+                            <div key={index} className="flex items-center justify-between py-2">
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">{invoice.date}</p>
+                                <p className="text-xs text-gray-500">{invoice.description}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-medium text-gray-900">{invoice.amount}</p>
+                                <button className="text-xs text-blue-600 hover:text-blue-800">Download</button>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-4">
+                            <Calendar className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                            <p className="text-sm text-gray-500">No billing history yet</p>
+                          </div>
+                        )}
+                      </div>
+                      {billingInfo.invoiceHistory.length > 3 && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                            View All Invoices
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
 
-                {/* Cancelled Subscription Info */}
-                {subscriptionStatus === 'cancelled' && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-                    <div className="flex items-start">
-                      <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 mr-3" />
-                      <div className="flex-1">
-                        <h4 className="text-lg font-medium text-yellow-900">Subscription Cancelled</h4>
-                        <p className="text-sm text-yellow-700 mt-1">
-                          Your subscription has been cancelled. You now have limited access to features. 
-                          Upgrade again to regain full access.
-                        </p>
-                        <div className="mt-4">
-                          <button
-                            onClick={handleUpgrade}
-                            className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-                          >
-                            <Star className="w-4 h-4 mr-2" />
-                            Resubscribe
-                          </button>
+                {/* Subscription Management */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Upgrade/Downgrade */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-lg font-medium text-gray-900">Plan Management</h4>
+                      <Zap className="w-5 h-5 text-gray-400" />
+                    </div>
+                    
+                    {subscriptionStatus === 'active' ? (
+                      <div className="space-y-4">
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                          <div className="flex items-center">
+                            <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
+                            <span className="text-sm font-medium text-green-800">Pro Plan Active</span>
+                          </div>
+                          <p className="text-xs text-green-700 mt-1">You have full access to all features</p>
+                        </div>
+                        <button
+                          onClick={() => setShowCancelModal(true)}
+                          className="w-full inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500"
+                        >
+                          <XCircle className="w-4 h-4 mr-2" />
+                          Cancel Subscription
+                        </button>
+                      </div>
+                    ) : subscriptionStatus === 'cancelled' ? (
+                      <div className="space-y-4">
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                          <div className="flex items-center">
+                            <AlertCircle className="w-5 h-5 text-yellow-500 mr-2" />
+                            <span className="text-sm font-medium text-yellow-800">Subscription Cancelled</span>
+                          </div>
+                          <p className="text-xs text-yellow-700 mt-1">Limited access to features</p>
+                        </div>
+                        <button
+                          onClick={handleUpgrade}
+                          className="w-full inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
+                        >
+                          <Star className="w-4 h-4 mr-2" />
+                          Resubscribe
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <div className="flex items-center">
+                            <Clock className="w-5 h-5 text-blue-500 mr-2" />
+                            <span className="text-sm font-medium text-blue-800">
+                              {accessLevel === 'full' ? 'Free Trial' : 'Free Plan'}
+                            </span>
+                          </div>
+                          <p className="text-xs text-blue-700 mt-1">
+                            {accessLevel === 'full' 
+                              ? `Trial ends in ${trialTimeRemaining}`
+                              : 'Limited features available'
+                            }
+                          </p>
+                        </div>
+                        <button
+                          onClick={handleUpgrade}
+                          className="w-full inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
+                        >
+                          <Star className="w-4 h-4 mr-2" />
+                          Upgrade to Pro
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Refund Policy */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-lg font-medium text-gray-900">Refund Policy</h4>
+                      <Shield className="w-5 h-5 text-gray-400" />
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-start">
+                        <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">14-Day Money Back Guarantee</p>
+                          <p className="text-xs text-gray-600">Full refund within 14 days, no questions asked</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">Cancel Anytime</p>
+                          <p className="text-xs text-gray-600">No long-term contracts or commitments</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">Instant Access</p>
+                          <p className="text-xs text-gray-600">Resubscribe anytime to regain full access</p>
                         </div>
                       </div>
                     </div>
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <a 
+                        href="/refund" 
+                        className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                      >
+                        View Full Refund Policy →
+                      </a>
+                    </div>
                   </div>
-                )}
+                </div>
 
+                {/* Support Section */}
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-lg font-medium text-gray-900">Need Help?</h4>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Have questions about billing or need assistance with your subscription?
+                      </p>
+                    </div>
+                    <div className="flex space-x-3">
+                      <a 
+                        href="mailto:support@truleado.com"
+                        className="inline-flex items-center rounded-md bg-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
+                      >
+                        Contact Support
+                      </a>
+                      <a 
+                        href="/support"
+                        className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
+                      >
+                        Help Center
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
