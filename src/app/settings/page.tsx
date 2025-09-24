@@ -49,6 +49,7 @@ export default function Settings() {
     invoiceHistory: []
   })
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isUpgrading, setIsUpgrading] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
     currentPassword: '',
@@ -151,6 +152,7 @@ export default function Settings() {
   }
 
   const handleUpgrade = async () => {
+    setIsUpgrading(true)
     try {
       const response = await fetch('/api/billing/checkout', {
         method: 'POST',
@@ -163,10 +165,15 @@ export default function Settings() {
         const data = await response.json()
         window.location.href = data.checkout_url
       } else {
-        console.error('Failed to create checkout session')
+        const errorData = await response.json()
+        console.error('Failed to create checkout session:', errorData.error)
+        alert('Failed to create checkout session. Please try again.')
       }
     } catch (error) {
       console.error('Error creating checkout session:', error)
+      alert('Error creating checkout session. Please try again.')
+    } finally {
+      setIsUpgrading(false)
     }
   }
 
@@ -607,7 +614,7 @@ export default function Settings() {
                           {subscriptionStatus === 'active' ? 'Full access to all features' :
                            subscriptionStatus === 'cancelled' ? 'Limited access - subscription cancelled' :
                            accessLevel === 'full' 
-                            ? `Trial ends in ${trialTimeRemaining}`
+                            ? (trialTimeRemaining === 'Trial expired' ? 'Trial has ended - upgrade to continue' : `Trial ends in ${trialTimeRemaining}`)
                             : 'Limited features available'}
                         </p>
                       </div>
@@ -728,10 +735,20 @@ export default function Settings() {
                         </div>
                         <button
                           onClick={handleUpgrade}
-                          className="w-full inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
+                          disabled={isUpgrading}
+                          className="w-full inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <Star className="w-4 h-4 mr-2" />
-                          Resubscribe
+                          {isUpgrading ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <Star className="w-4 h-4 mr-2" />
+                              Resubscribe
+                            </>
+                          )}
                         </button>
                       </div>
                     ) : (
@@ -745,17 +762,27 @@ export default function Settings() {
                           </div>
                           <p className="text-xs text-blue-700 mt-1">
                             {accessLevel === 'full' 
-                              ? `Trial ends in ${trialTimeRemaining}`
+                              ? (trialTimeRemaining === 'Trial expired' ? 'Trial has ended - upgrade to continue' : `Trial ends in ${trialTimeRemaining}`)
                               : 'Limited features available'
                             }
                           </p>
                         </div>
                         <button
                           onClick={handleUpgrade}
-                          className="w-full inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
+                          disabled={isUpgrading}
+                          className="w-full inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <Star className="w-4 h-4 mr-2" />
-                          Upgrade to Pro
+                          {isUpgrading ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <Star className="w-4 h-4 mr-2" />
+                              Upgrade to Pro
+                            </>
+                          )}
                         </button>
                       </div>
                     )}

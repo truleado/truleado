@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { Source_Sans_3 } from "next/font/google";
+import { Lato } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/auth-context";
 import { SubscriptionProvider } from "@/lib/subscription-context";
 
-const sourceSansPro = Source_Sans_3({
-  variable: "--font-source-sans-pro",
+const lato = Lato({
+  variable: "--font-lato",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["300", "400", "700", "900"],
 });
 
 export const metadata: Metadata = {
@@ -53,7 +53,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         {/* End Google tag (gtag.js) */}
       </head>
       <body
-        className={`${sourceSansPro.variable} antialiased`}
+        className={`${lato.variable} antialiased`}
       >
         {/* Google Tag Manager (noscript) */}
         <noscript>
