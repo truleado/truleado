@@ -42,7 +42,7 @@ export default function RefundPolicy() {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. General Refund Policy</h2>
               <p className="text-gray-600 leading-relaxed">
-                Truleado operates on a subscription-based model with a 1-day free trial. All subscription fees are generally non-refundable. However, we understand that exceptional circumstances may arise, and we will consider refund requests on a case-by-case basis.
+                Truleado offers a 14-day refund policy for all paid subscriptions. If you're not satisfied with our service, you can request a full refund within 14 days of your initial payment. No questions asked.
               </p>
             </section>
 
@@ -56,14 +56,12 @@ export default function RefundPolicy() {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. Refund Eligibility</h2>
               <p className="text-gray-600 leading-relaxed mb-4">
-                Refunds may be considered in the following circumstances:
+                You are eligible for a full refund if:
               </p>
               <ul className="list-disc list-inside text-gray-600 space-y-2">
-                <li>Technical issues that prevent you from using the service</li>
-                <li>Billing errors on our part</li>
-                <li>Duplicate charges</li>
-                <li>Service outages lasting more than 24 hours</li>
-                <li>Other exceptional circumstances at our discretion</li>
+                <li>You request the refund within 14 days of your initial payment</li>
+                <li>You have not used the service extensively (more than 10 hours of active usage)</li>
+                <li>You have not violated our terms of service</li>
               </ul>
             </section>
 
@@ -73,31 +71,30 @@ export default function RefundPolicy() {
                 The following are not eligible for refunds:
               </p>
               <ul className="list-disc list-inside text-gray-600 space-y-2">
-                <li>Subscription fees after the free trial period</li>
-                <li>Charges for services already rendered</li>
-                <li>Refunds requested more than 30 days after payment</li>
-                <li>Refunds due to user error or misunderstanding</li>
-                <li>Refunds for unused portions of subscription periods</li>
+                <li>Refunds requested more than 14 days after initial payment</li>
+                <li>Accounts with more than 10 hours of active usage</li>
+                <li>Accounts that have violated our terms of service</li>
+                <li>Duplicate refund requests</li>
               </ul>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. How to Request a Refund</h2>
               <p className="text-gray-600 leading-relaxed mb-4">
-                To request a refund, please:
+                To request a refund, simply:
               </p>
               <ol className="list-decimal list-inside text-gray-600 space-y-2">
-                <li>Contact our support team at support@truleado.com</li>
-                <li>Provide your account email and order details</li>
-                <li>Explain the reason for your refund request</li>
-                <li>Include any relevant documentation or screenshots</li>
+                <li>Email us at support@truleado.com</li>
+                <li>Include your account email</li>
+                <li>Mention "refund request" in the subject line</li>
+                <li>We'll process your refund within 24 hours</li>
               </ol>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Refund Processing</h2>
               <p className="text-gray-600 leading-relaxed">
-                If your refund request is approved, we will process the refund within 5-10 business days. Refunds will be issued to the original payment method used for the purchase. Processing times may vary depending on your payment provider.
+                We process refunds within 24 hours of your request. Refunds will be issued to the original payment method used for the purchase. Processing times may vary depending on your payment provider, but typically take 3-5 business days to appear in your account.
               </p>
             </section>
 
@@ -115,35 +112,21 @@ export default function RefundPolicy() {
               </p>
             </section>
 
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Service Credits</h2>
-              <p className="text-gray-600 leading-relaxed">
-                In some cases, we may offer service credits instead of refunds. Service credits can be applied to future subscription periods and do not expire.
-              </p>
-            </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Dispute Resolution</h2>
-              <p className="text-gray-600 leading-relaxed">
-                If you are not satisfied with our refund decision, you may contact us to discuss the matter further. We are committed to resolving disputes fairly and promptly.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Changes to This Policy</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Changes to This Policy</h2>
               <p className="text-gray-600 leading-relaxed">
                 We may update this refund policy from time to time. Any changes will be posted on this page with an updated revision date. Continued use of our service after changes constitutes acceptance of the new policy.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Contact Information</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Contact Information</h2>
               <p className="text-gray-600 leading-relaxed">
                 For refund requests or questions about this policy, please contact us at:
               </p>
               <p className="text-gray-600 leading-relaxed mt-2">
-                Email: support@truleado.com<br />
-                Address: [Your Business Address]
+                Email: support@truleado.com
               </p>
             </section>
           </div>
