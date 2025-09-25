@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     console.log('Paddle Configuration:', config)
     
     // Test API connectivity
-    let apiTest = { success: false, error: null }
+    let apiTest: { success: boolean; error: string | null } = { success: false, error: null }
     if (paddleConfig.apiKey) {
       try {
         const response = await fetch(`${paddleConfig.baseUrl}/customers?per_page=1`, {
