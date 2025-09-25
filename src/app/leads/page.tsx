@@ -116,12 +116,46 @@ function LeadsContent() {
   // Handle payment success parameter
   useEffect(() => {
     const paymentSuccess = searchParams.get('payment_success')
-    if (paymentSuccess === 'true' && user) {
-      // Refresh subscription status after successful payment
-      refreshSubscription()
-      // Remove the parameter from URL
+    const sessionId = searchParams.get('session_id')
+    
+    if (paymentSuccess === 'true' && user && sessionId) {
+      // Check payment status and update subscription
+      const checkPaymentStatus = async () => {
+        try {
+          console.log('Checking payment status for session:', sessionId)
+          const response = await fetch('/api/billing/check-payment-status', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              sessionId,
+              userId: user.id
+            })
+          })
+          
+          if (response.ok) {
+            const result = await response.json()
+            console.log('Payment status check result:', result)
+            
+            if (result.success) {
+              // Refresh subscription status after successful payment verification
+              await refreshSubscription()
+            }
+          } else {
+            console.error('Failed to check payment status')
+          }
+        } catch (error) {
+          console.error('Error checking payment status:', error)
+        }
+      }
+      
+      checkPaymentStatus()
+      
+      // Remove the parameters from URL
       const url = new URL(window.location.href)
       url.searchParams.delete('payment_success')
+      url.searchParams.delete('session_id')
       window.history.replaceState({}, '', url.toString())
     }
   }, [searchParams, user, refreshSubscription])

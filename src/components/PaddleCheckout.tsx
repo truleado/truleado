@@ -61,6 +61,35 @@ export default function PaddleCheckout({
             console.log('Checkout completed via event callback:', data)
             setIsLoading(false)
             
+            // Check payment status and update subscription
+            try {
+              const sessionId = data.transactionId || data.id
+              const userId = customData?.user_id
+              
+              if (sessionId && userId) {
+                console.log('Checking payment status for session:', sessionId)
+                const response = await fetch('/api/billing/check-payment-status', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    sessionId,
+                    userId
+                  })
+                })
+                
+                if (response.ok) {
+                  const result = await response.json()
+                  console.log('Payment status check result:', result)
+                } else {
+                  console.error('Failed to check payment status')
+                }
+              }
+            } catch (error) {
+              console.error('Error checking payment status:', error)
+            }
+            
             if (onSuccess) {
               onSuccess(data)
             } else {
