@@ -6,7 +6,7 @@ export const paddleConfig = {
   clientToken: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN || '',
   webhookSecret: process.env.PADDLE_WEBHOOK_SECRET || '',
   priceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID || process.env.PADDLE_PRICE_ID || '',
-  environment: process.env.NODE_ENV === 'production' ? 'production' : 'sandbox',
+  environment: 'sandbox', // Force sandbox for testing
   baseUrl: process.env.NODE_ENV === 'production' 
     ? 'https://api.paddle.com' 
     : 'https://sandbox-api.paddle.com'
