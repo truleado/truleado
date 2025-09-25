@@ -92,9 +92,13 @@ export function UpgradeModal({ isOpen, onClose, feature }: UpgradeModalProps) {
             <div className="text-center">
               <div className="text-3xl font-bold text-gray-900">$30</div>
               <div className="text-sm text-gray-500">per month</div>
-              {trialTimeRemaining !== 'Trial expired' && (
+              {trialTimeRemaining !== 'Trial expired' ? (
                 <div className="mt-2 text-xs text-gray-400">
                   Trial ends in {trialTimeRemaining}
+                </div>
+              ) : (
+                <div className="mt-2 text-xs text-red-500">
+                  Your trial is expired
                 </div>
               )}
             </div>

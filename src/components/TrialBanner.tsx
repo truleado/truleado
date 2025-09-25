@@ -32,7 +32,7 @@ export function TrialBanner() {
           <div className={`mt-1 text-xs sm:text-sm ${isExpired ? 'text-red-700' : 'text-blue-700'}`}>
             <p>
               {isExpired 
-                ? 'Your trial has expired. Upgrade to continue using all features.'
+                ? 'Your trial is expired. Upgrade now to avoid interruption.'
                 : `Your trial ends in ${trialTimeRemaining}. Upgrade now to avoid interruption.`
               }
             </p>
