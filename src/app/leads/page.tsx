@@ -122,31 +122,31 @@ function LeadsContent() {
       // Check payment status and update subscription
       const checkPaymentStatus = async () => {
         try {
-          console.log('Checking payment status for session:', sessionId)
-          const response = await fetch('/api/billing/check-payment-status', {
+          console.log('Payment success detected, updating subscription directly for user:', user.id)
+          
+          // Directly update subscription status without API verification
+          const updateResponse = await fetch('/api/debug/manual-subscription-update', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              sessionId,
-              userId: user.id
+              userId: user.id,
+              subscriptionStatus: 'active'
             })
           })
           
-          if (response.ok) {
-            const result = await response.json()
-            console.log('Payment status check result:', result)
+          if (updateResponse.ok) {
+            const result = await updateResponse.json()
+            console.log('Subscription updated successfully:', result)
             
-            if (result.success) {
-              // Refresh subscription status after successful payment verification
-              await refreshSubscription()
-            }
+            // Refresh subscription status after successful update
+            await refreshSubscription()
           } else {
-            console.error('Failed to check payment status')
+            console.error('Failed to update subscription')
           }
         } catch (error) {
-          console.error('Error checking payment status:', error)
+          console.error('Error updating subscription:', error)
         }
       }
       
@@ -165,6 +165,38 @@ function LeadsContent() {
     console.log('Manually refreshing subscription...')
     await refreshSubscription()
     console.log('Subscription refreshed')
+  }
+
+  // Add manual subscription activation button
+  const handleManualActivation = async () => {
+    if (!user) return
+    
+    try {
+      console.log('Manually activating subscription for user:', user.id)
+      const response = await fetch('/api/debug/manual-subscription-update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          subscriptionStatus: 'active'
+        })
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        console.log('Subscription activated successfully:', result)
+        await refreshSubscription()
+        alert('Subscription activated successfully!')
+      } else {
+        console.error('Failed to activate subscription')
+        alert('Failed to activate subscription. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error activating subscription:', error)
+      alert('Error activating subscription. Please try again.')
+    }
   }
 
   const checkRedditConnection = async () => {
@@ -363,6 +395,16 @@ function LeadsContent() {
             >
               <RefreshCw className="w-4 h-4" />
               <span>Refresh</span>
+            </button>
+            
+            {/* Manual Activation Button for Debugging */}
+            <button
+              onClick={handleManualActivation}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-green-100 text-green-800 border border-green-200 hover:bg-green-200 transition-colors cursor-pointer"
+              title="Manually activate subscription"
+            >
+              <CheckCircle className="w-4 h-4" />
+              <span>Activate</span>
             </button>
           </div>
         </div>

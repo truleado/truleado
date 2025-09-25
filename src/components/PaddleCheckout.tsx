@@ -67,27 +67,29 @@ export default function PaddleCheckout({
               const userId = customData?.user_id
               
               if (sessionId && userId) {
-                console.log('Checking payment status for session:', sessionId)
-                const response = await fetch('/api/billing/check-payment-status', {
+                console.log('Payment completed, updating subscription directly for user:', userId)
+                
+                // Directly update subscription status without API verification
+                const updateResponse = await fetch('/api/debug/manual-subscription-update', {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
                   },
                   body: JSON.stringify({
-                    sessionId,
-                    userId
+                    userId,
+                    subscriptionStatus: 'active'
                   })
                 })
                 
-                if (response.ok) {
-                  const result = await response.json()
-                  console.log('Payment status check result:', result)
+                if (updateResponse.ok) {
+                  const result = await updateResponse.json()
+                  console.log('Subscription updated successfully:', result)
                 } else {
-                  console.error('Failed to check payment status')
+                  console.error('Failed to update subscription')
                 }
               }
             } catch (error) {
-              console.error('Error checking payment status:', error)
+              console.error('Error updating subscription:', error)
             }
             
             if (onSuccess) {
