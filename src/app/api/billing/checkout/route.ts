@@ -17,8 +17,11 @@ export async function POST(request: NextRequest) {
     console.log('User authenticated:', user.id)
 
     // Create checkout session
-    const successUrl = `${process.env.NEXT_PUBLIC_APP_URL}/billing/success?session_id={CHECKOUT_SESSION_ID}`
-    const cancelUrl = `${process.env.NEXT_PUBLIC_APP_URL}/billing/cancel`
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://truleado-ei8uv4wnw-truleados-projects.vercel.app'
+    const successUrl = `${baseUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`
+    const cancelUrl = `${baseUrl}/billing/cancel`
+    
+    console.log('Using URLs:', { baseUrl, successUrl, cancelUrl })
     
     console.log('Creating checkout session for user:', user.id, 'with price:', paddleConfig.priceId)
     const session = await paddleAPI.createCheckoutSession({
