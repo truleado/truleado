@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuth } from '@/contexts/auth-context'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import AppLayout from '@/components/app-layout'
 import { 
@@ -69,8 +69,9 @@ interface Product {
 
 export default function Leads() {
   const { user, loading } = useAuth()
-  const { canAccess } = useSubscription()
+  const { canAccess, refreshSubscription } = useSubscription()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [leads, setLeads] = useState<Lead[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
@@ -110,6 +111,19 @@ export default function Leads() {
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [user, redditConnectionChecked])
+
+  // Handle payment success parameter
+  useEffect(() => {
+    const paymentSuccess = searchParams.get('payment_success')
+    if (paymentSuccess === 'true' && user) {
+      // Refresh subscription status after successful payment
+      refreshSubscription()
+      // Remove the parameter from URL
+      const url = new URL(window.location.href)
+      url.searchParams.delete('payment_success')
+      window.history.replaceState({}, '', url.toString())
+    }
+  }, [searchParams, user, refreshSubscription])
 
   const checkRedditConnection = async () => {
     try {

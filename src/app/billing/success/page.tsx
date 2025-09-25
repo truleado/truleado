@@ -18,8 +18,21 @@ function BillingSuccessContent() {
       setIsLoading(false)
     }, 2000)
 
-    return () => clearTimeout(timer)
-  }, [])
+    // Auto-redirect to leads page after 5 seconds
+    const redirectTimer = setTimeout(() => {
+      router.push('/leads?payment_success=true')
+    }, 5000)
+
+    return () => {
+      clearTimeout(timer)
+      clearTimeout(redirectTimer)
+    }
+  }, [router])
+
+  const handleGoToLeads = () => {
+    // Redirect to leads page with payment success parameter
+    router.push('/leads?payment_success=true')
+  }
 
   const handleGoToDashboard = () => {
     // Redirect to dashboard with payment success parameter
@@ -61,16 +74,23 @@ function BillingSuccessContent() {
 
           <div className="space-y-4">
             <button
-              onClick={handleGoToDashboard}
+              onClick={handleGoToLeads}
               className="w-full bg-[#148cfc] hover:bg-[#0d7ce8] text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+            >
+              Start Finding Leads
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            
+            <button
+              onClick={handleGoToDashboard}
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
             >
               Go to Dashboard
               <ArrowRight className="h-4 w-4" />
             </button>
             
             <p className="text-xs text-gray-500">
-              You can now access all premium features. If you have any questions, 
-              please contact our support team.
+              You can now access all premium features. Redirecting to leads page in 3 seconds...
             </p>
           </div>
         </div>
