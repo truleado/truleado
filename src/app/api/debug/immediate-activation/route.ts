@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +11,10 @@ export async function POST(request: NextRequest) {
 
     console.log('IMMEDIATELY activating subscription for user:', userId)
     
-    const supabase = createClient()
+    const supabase = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
     
     // Immediately update subscription status to active
     const { error } = await supabase
