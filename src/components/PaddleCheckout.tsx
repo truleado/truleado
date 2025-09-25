@@ -55,7 +55,7 @@ export default function PaddleCheckout({
         token: clientToken,
         environment: environment,
         debug: environment === 'sandbox',
-        eventCallback: (data: any) => {
+        eventCallback: async (data: any) => {
           console.log('Paddle event received:', data)
           if (data.event === 'checkout.completed') {
             console.log('Checkout completed via event callback:', data)
