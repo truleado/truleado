@@ -196,20 +196,6 @@ export class PaddleAPI {
     }
   }
 
-  // Get checkout session details
-  async getCheckoutSession(sessionId: string) {
-    console.log('Getting checkout session:', sessionId)
-    
-    try {
-      const session = await this.makeRequest(`/checkout-sessions/${sessionId}`)
-      console.log('Checkout session retrieved:', session.id, session.status)
-      return session
-    } catch (error) {
-      console.error('Error getting checkout session:', error)
-      throw error
-    }
-  }
-
   // Cancel a subscription
   async cancelSubscription(subscriptionId: string) {
     console.log('Cancelling Paddle subscription:', subscriptionId)
