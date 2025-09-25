@@ -64,8 +64,8 @@ export default function PaddleCheckout({
             if (onSuccess) {
               onSuccess(data)
             } else {
-              // Default success behavior
-              router.push(`/billing/success?session_id=${data.transactionId || data.id}`)
+              // Default success behavior - redirect to leads page
+              router.push(`/leads?payment_success=true&session_id=${data.transactionId || data.id}`)
             }
           } else if (data.event === 'checkout.closed') {
             console.log('Checkout closed via event callback:', data)

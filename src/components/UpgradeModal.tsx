@@ -3,6 +3,7 @@
 import React from 'react'
 import { useSubscription } from '@/lib/subscription-context'
 import { X, Check, Star, Zap } from 'lucide-react'
+import PaddleCheckout from './PaddleCheckout'
 
 interface UpgradeModalProps {
   isOpen: boolean
@@ -14,26 +15,6 @@ export function UpgradeModal({ isOpen, onClose, feature }: UpgradeModalProps) {
   const { user, trialTimeRemaining } = useSubscription()
 
   if (!isOpen) return null
-
-  const handleUpgrade = async () => {
-    try {
-      const response = await fetch('/api/billing/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        window.location.href = data.checkout_url
-      } else {
-        console.error('Failed to create checkout session')
-      }
-    } catch (error) {
-      console.error('Error creating checkout session:', error)
-    }
-  }
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -105,14 +86,28 @@ export function UpgradeModal({ isOpen, onClose, feature }: UpgradeModalProps) {
           </div>
           
           <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-            <button
-              type="button"
-              onClick={handleUpgrade}
+            <PaddleCheckout
+              priceId={process.env.NEXT_PUBLIC_PADDLE_PRICE_ID}
+              clientToken={process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN}
+              environment="sandbox"
+              customerEmail={user?.email}
+              customData={{
+                user_id: user?.id,
+                user_email: user?.email
+              }}
+              onSuccess={(data) => {
+                console.log('Upgrade modal checkout success:', data)
+                window.location.href = `/leads?payment_success=true&session_id=${data.transactionId || data.id}`
+              }}
+              onError={(error) => {
+                console.error('Upgrade modal checkout error:', error)
+                alert(`Payment failed: ${error.message || 'Please try again.'}`)
+              }}
               className="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:col-start-2"
             >
               <Zap className="h-4 w-4 mr-2" />
               Upgrade Now
-            </button>
+            </PaddleCheckout>
             <button
               type="button"
               onClick={onClose}
