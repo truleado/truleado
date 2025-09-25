@@ -10,6 +10,17 @@ export const paddleConfig = {
   baseUrl: 'https://sandbox-api.paddle.com' // Force sandbox API without v2
 }
 
+// Log configuration for debugging
+console.log('Paddle Config Loaded:', {
+  hasApiKey: !!paddleConfig.apiKey,
+  hasClientToken: !!paddleConfig.clientToken,
+  hasWebhookSecret: !!paddleConfig.webhookSecret,
+  hasPriceId: !!paddleConfig.priceId,
+  environment: paddleConfig.environment,
+  baseUrl: paddleConfig.baseUrl,
+  priceIdValue: paddleConfig.priceId
+})
+
 // Paddle API Client
 export class PaddleAPI {
   private apiKey: string
@@ -62,25 +73,35 @@ export class PaddleAPI {
     cancelUrl: string
     metadata?: Record<string, any>
   }) {
-    console.log('Creating Paddle checkout session:', data)
+    console.log('Creating Paddle checkout session:', {
+      priceId: data.priceId,
+      customerEmail: data.customerEmail,
+      successUrl: data.successUrl,
+      cancelUrl: data.cancelUrl,
+      baseUrl: this.baseUrl
+    })
     
     try {
+      const requestBody = {
+        items: [
+          {
+            price_id: data.priceId,
+            quantity: 1
+          }
+        ],
+        customer_email: data.customerEmail,
+        custom_data: data.metadata || {},
+        checkout: {
+          url: data.successUrl,
+          cancel_url: data.cancelUrl
+        }
+      }
+      
+      console.log('Paddle API Request Body:', JSON.stringify(requestBody, null, 2))
+      
       const session = await this.makeRequest('/transactions', {
         method: 'POST',
-        body: JSON.stringify({
-          items: [
-            {
-              price_id: data.priceId,
-              quantity: 1
-            }
-          ],
-          customer_email: data.customerEmail,
-          custom_data: data.metadata || {},
-          checkout: {
-            url: data.successUrl,
-            cancel_url: data.cancelUrl
-          }
-        })
+        body: JSON.stringify(requestBody)
       })
       
       console.log('Checkout session created successfully:', session.id)

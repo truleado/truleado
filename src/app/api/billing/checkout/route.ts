@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     console.log('User authenticated:', user.id)
 
     // Create checkout session
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://truleado-ei8uv4wnw-truleados-projects.vercel.app'
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://truleado-aaeyuittr-truleados-projects.vercel.app'
     const successUrl = `${baseUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`
     const cancelUrl = `${baseUrl}/billing/cancel`
     
