@@ -11,6 +11,9 @@ export async function POST(request: NextRequest) {
     const body = await request.text()
     const signature = request.headers.get('paddle-signature') || ''
     
+    console.log('Webhook signature:', signature)
+    console.log('Webhook body length:', body.length)
+    
     // Verify webhook signature
     if (!paddleAPI.verifyWebhookSignature(body, signature)) {
       console.error('Invalid webhook signature')
