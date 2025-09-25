@@ -140,8 +140,10 @@ function LeadsContent() {
             const result = await updateResponse.json()
             console.log('Subscription updated successfully:', result)
             
-            // Refresh subscription status after successful update
-            await refreshSubscription()
+            // Force page reload to ensure subscription status is updated
+            setTimeout(() => {
+              window.location.reload()
+            }, 1000)
           } else {
             console.error('Failed to update subscription')
           }
@@ -187,8 +189,13 @@ function LeadsContent() {
       if (response.ok) {
         const result = await response.json()
         console.log('Subscription activated successfully:', result)
-        await refreshSubscription()
-        alert('Subscription activated successfully!')
+        
+        // Force page reload to ensure subscription status is updated
+        setTimeout(() => {
+          window.location.reload()
+        }, 1000)
+        
+        alert('Subscription activated successfully! Page will reload.')
       } else {
         console.error('Failed to activate subscription')
         alert('Failed to activate subscription. Please try again.')
@@ -196,6 +203,38 @@ function LeadsContent() {
     } catch (error) {
       console.error('Error activating subscription:', error)
       alert('Error activating subscription. Please try again.')
+    }
+  }
+
+  // Emergency immediate activation
+  const handleEmergencyActivation = async () => {
+    if (!user) return
+    
+    try {
+      console.log('EMERGENCY activating subscription for user:', user.id)
+      const response = await fetch('/api/debug/immediate-activation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id
+        })
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        console.log('Subscription EMERGENCY activated:', result)
+        
+        // Force immediate page reload
+        window.location.reload()
+      } else {
+        console.error('Failed to emergency activate subscription')
+        alert('Failed to emergency activate subscription. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error emergency activating subscription:', error)
+      alert('Error emergency activating subscription. Please try again.')
     }
   }
 
@@ -405,6 +444,16 @@ function LeadsContent() {
             >
               <CheckCircle className="w-4 h-4" />
               <span>Activate</span>
+            </button>
+            
+            {/* Emergency Activation Button */}
+            <button
+              onClick={handleEmergencyActivation}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-red-100 text-red-800 border border-red-200 hover:bg-red-200 transition-colors cursor-pointer"
+              title="EMERGENCY: Immediately activate subscription"
+            >
+              <AlertCircle className="w-4 h-4" />
+              <span>EMERGENCY ACTIVATE</span>
             </button>
           </div>
         </div>

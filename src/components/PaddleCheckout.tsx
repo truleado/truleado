@@ -84,6 +84,11 @@ export default function PaddleCheckout({
                 if (updateResponse.ok) {
                   const result = await updateResponse.json()
                   console.log('Subscription updated successfully:', result)
+                  
+                  // Force page reload to ensure subscription status is updated
+                  setTimeout(() => {
+                    window.location.reload()
+                  }, 1000)
                 } else {
                   console.error('Failed to update subscription')
                 }
