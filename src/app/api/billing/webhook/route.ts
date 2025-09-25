@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
 
     const event = JSON.parse(body)
     console.log('Webhook event:', event.event_type, event.event_id)
+    console.log('Event data:', JSON.stringify(event.data, null, 2))
 
     const supabase = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -35,8 +36,16 @@ export async function POST(request: NextRequest) {
         const customData = session.custom_data || {}
         const userId = customData.user_id
 
+        console.log('Checkout session details:', {
+          sessionId: session.id,
+          customerEmail: userEmail,
+          customData,
+          userId
+        })
+
         if (!userId) {
           console.error('No user_id found in checkout session custom data')
+          console.error('Available custom data keys:', Object.keys(customData))
           return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
 
