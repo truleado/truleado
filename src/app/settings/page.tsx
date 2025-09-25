@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/auth-context'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import AppLayout from '@/components/app-layout'
 import { useSubscription } from '@/lib/subscription-context'
 import { 
@@ -29,7 +29,7 @@ import {
   Zap
 } from 'lucide-react'
 
-export default function Settings() {
+function SettingsContent() {
   const { user, loading } = useAuth()
   const { accessLevel, trialTimeRemaining, showUpgradePrompt, refreshSubscription } = useSubscription()
   const router = useRouter()
@@ -956,6 +956,14 @@ export default function Settings() {
         </div>
       )}
     </AppLayout>
+  )
+}
+
+export default function Settings() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SettingsContent />
+    </Suspense>
   )
 }
 
