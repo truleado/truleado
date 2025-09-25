@@ -12,7 +12,7 @@ export function TrialBanner() {
     return null
   }
 
-  const isExpired = accessLevel === 'limited' && user?.subscription_status === 'expired'
+  const isExpired = trialTimeRemaining === 'Trial expired'
   const isExpiringSoon = trialTimeRemaining.includes('m remaining') && !trialTimeRemaining.includes('h')
 
   return (
