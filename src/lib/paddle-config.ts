@@ -7,9 +7,7 @@ export const paddleConfig = {
   webhookSecret: process.env.PADDLE_WEBHOOK_SECRET || '',
   priceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID || process.env.PADDLE_PRICE_ID || '',
   environment: 'sandbox', // Force sandbox for testing
-  baseUrl: process.env.NODE_ENV === 'production' 
-    ? 'https://api.paddle.com' 
-    : 'https://sandbox-api.paddle.com'
+  baseUrl: 'https://sandbox-api.paddle.com' // Force sandbox API
 }
 
 // Paddle API Client
