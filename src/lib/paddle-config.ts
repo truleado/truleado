@@ -7,7 +7,7 @@ export const paddleConfig = {
   webhookSecret: process.env.PADDLE_WEBHOOK_SECRET || '',
   priceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID || process.env.PADDLE_PRICE_ID || '',
   environment: 'sandbox', // Force sandbox for testing
-  baseUrl: 'https://sandbox-api.paddle.com' // Force sandbox API
+  baseUrl: 'https://sandbox-api.paddle.com' // Force sandbox API without v2
 }
 
 // Paddle API Client
@@ -65,7 +65,7 @@ export class PaddleAPI {
     console.log('Creating Paddle checkout session:', data)
     
     try {
-      const session = await this.makeRequest('/checkout_sessions', {
+      const session = await this.makeRequest('/transactions', {
         method: 'POST',
         body: JSON.stringify({
           items: [
@@ -94,7 +94,7 @@ export class PaddleAPI {
   // Retrieve a checkout session
   async getCheckoutSession(sessionId: string) {
     try {
-      const session = await this.makeRequest(`/checkout_sessions/${sessionId}`)
+      const session = await this.makeRequest(`/transactions/${sessionId}`)
       return session
     } catch (error) {
       console.error('Error retrieving checkout session:', error)
