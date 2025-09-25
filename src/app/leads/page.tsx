@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/auth-context'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import AppLayout from '@/components/app-layout'
 import { 
   Users, 
@@ -67,7 +67,7 @@ interface Product {
   isUpdating?: boolean // Add loading state for individual products
 }
 
-export default function Leads() {
+function LeadsContent() {
   const { user, loading } = useAuth()
   const { canAccess, refreshSubscription } = useSubscription()
   const router = useRouter()
@@ -718,5 +718,22 @@ export default function Leads() {
       )}
 
     </AppLayout>
+  )
+}
+
+export default function Leads() {
+  return (
+    <Suspense fallback={
+      <AppLayout>
+        <div className="min-h-screen bg-gradient-to-br from-[#e6f4ff] to-white flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#148cfc] mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading leads...</p>
+          </div>
+        </div>
+      </AppLayout>
+    }>
+      <LeadsContent />
+    </Suspense>
   )
 }
