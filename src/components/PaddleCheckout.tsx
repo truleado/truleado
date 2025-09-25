@@ -84,11 +84,6 @@ export default function PaddleCheckout({
                 if (updateResponse.ok) {
                   const result = await updateResponse.json()
                   console.log('Subscription updated successfully:', result)
-                  
-                  // Force page reload to ensure subscription status is updated
-                  setTimeout(() => {
-                    window.location.reload()
-                  }, 1000)
                 } else {
                   console.error('Failed to update subscription')
                 }
@@ -100,8 +95,8 @@ export default function PaddleCheckout({
             if (onSuccess) {
               onSuccess(data)
             } else {
-              // Default success behavior - redirect to leads page
-              router.push(`/leads?payment_success=true&session_id=${data.transactionId || data.id}`)
+              // Default success behavior - redirect to settings billing
+              router.push(`/settings?tab=billing&payment_success=true&session_id=${data.transactionId || data.id}`)
             }
           } else if (data.event === 'checkout.closed') {
             console.log('Checkout closed via event callback:', data)

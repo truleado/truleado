@@ -2,7 +2,6 @@
 
 import React from 'react'
 import { useSubscription } from '@/lib/subscription-context'
-import { UpgradeModal } from './UpgradeModal'
 import { Lock, AlertTriangle } from 'lucide-react'
 
 interface AccessGuardProps {
@@ -13,7 +12,6 @@ interface AccessGuardProps {
 
 export function AccessGuard({ feature, children, fallback }: AccessGuardProps) {
   const { canAccess, accessLevel } = useSubscription()
-  const [showUpgradeModal, setShowUpgradeModal] = React.useState(false)
 
   if (canAccess(feature)) {
     return <>{children}</>
@@ -24,7 +22,7 @@ export function AccessGuard({ feature, children, fallback }: AccessGuardProps) {
   }
 
   const handleUpgradeClick = () => {
-    setShowUpgradeModal(true)
+    window.location.href = '/settings?tab=billing'
   }
 
   return (
@@ -49,12 +47,6 @@ export function AccessGuard({ feature, children, fallback }: AccessGuardProps) {
           </button>
         </div>
       </div>
-
-      <UpgradeModal
-        isOpen={showUpgradeModal}
-        onClose={() => setShowUpgradeModal(false)}
-        feature={feature}
-      />
     </>
   )
 }
@@ -65,27 +57,18 @@ export function UpgradeButton({ feature, children, className = '' }: {
   className?: string 
 }) {
   const { canAccess } = useSubscription()
-  const [showUpgradeModal, setShowUpgradeModal] = React.useState(false)
 
   if (canAccess(feature)) {
     return <>{children}</>
   }
 
   return (
-    <>
-      <button
-        onClick={() => setShowUpgradeModal(true)}
-        className={`inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 ${className}`}
-      >
-        <Lock className="h-4 w-4 mr-2" />
-        Upgrade Required
-      </button>
-
-      <UpgradeModal
-        isOpen={showUpgradeModal}
-        onClose={() => setShowUpgradeModal(false)}
-        feature={feature}
-      />
-    </>
+    <button
+      onClick={() => window.location.href = '/settings?tab=billing'}
+      className={`inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 ${className}`}
+    >
+      <Lock className="h-4 w-4 mr-2" />
+      Upgrade Required
+    </button>
   )
 }

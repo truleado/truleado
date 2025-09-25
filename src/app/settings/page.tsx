@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuth } from '@/contexts/auth-context'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import AppLayout from '@/components/app-layout'
 import { useSubscription } from '@/lib/subscription-context'
@@ -31,8 +31,9 @@ import {
 
 export default function Settings() {
   const { user, loading } = useAuth()
-  const { accessLevel, trialTimeRemaining, showUpgradePrompt } = useSubscription()
+  const { accessLevel, trialTimeRemaining, showUpgradePrompt, refreshSubscription } = useSubscription()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState('profile')
   const [showPassword, setShowPassword] = useState(false)
   const [redditConnected, setRedditConnected] = useState(false)
@@ -137,6 +138,53 @@ export default function Settings() {
       setTimeout(() => setShowSuccessMessage(false), 5000)
     }
   }, [])
+
+  // Handle payment success parameter
+  useEffect(() => {
+    const paymentSuccess = searchParams.get('payment_success')
+    const sessionId = searchParams.get('session_id')
+    
+    if (paymentSuccess === 'true' && user && sessionId) {
+      // Check payment status and update subscription
+      const checkPaymentStatus = async () => {
+        try {
+          console.log('Payment success detected, updating subscription directly for user:', user.id)
+          
+          // Directly update subscription status without API verification
+          const updateResponse = await fetch('/api/debug/manual-subscription-update', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId: user.id,
+              subscriptionStatus: 'active'
+            })
+          })
+          
+          if (updateResponse.ok) {
+            const result = await updateResponse.json()
+            console.log('Subscription updated successfully:', result)
+            
+            // Refresh subscription status after successful update
+            await refreshSubscription()
+          } else {
+            console.error('Failed to update subscription')
+          }
+        } catch (error) {
+          console.error('Error updating subscription:', error)
+        }
+      }
+      
+      checkPaymentStatus()
+      
+      // Remove the parameters from URL
+      const url = new URL(window.location.href)
+      url.searchParams.delete('payment_success')
+      url.searchParams.delete('session_id')
+      window.history.replaceState({}, '', url.toString())
+    }
+  }, [searchParams, user, refreshSubscription])
 
   const checkRedditConnection = async () => {
     try {

@@ -39,7 +39,7 @@ export function TrialBanner() {
           </div>
           <div className="mt-3 flex flex-col sm:flex-row gap-2 sm:gap-3">
             <button
-              onClick={() => window.location.href = '/upgrade'}
+              onClick={() => window.location.href = '/settings?tab=billing'}
               className={`px-3 py-2 rounded-md text-xs sm:text-sm font-medium ${
                 isExpired 
                   ? 'bg-red-600 text-white hover:bg-red-700' 
