@@ -255,7 +255,25 @@ function SettingsContent() {
           const { initializePaddle } = await import('@paddle/paddle-js')
           const paddle = await initializePaddle({
             environment: pub.environment === 'production' ? 'production' : 'sandbox',
-            token: pub.clientToken
+            token: pub.clientToken,
+            eventCallback: async (event: any) => {
+              try {
+                if (event?.name === 'checkout.completed') {
+                  // Mark success and refresh subscription immediately
+                  try { localStorage.setItem('payment_success', 'true') } catch {}
+                  await fetch('/api/debug/manual-subscription-update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: user?.id, subscriptionStatus: 'active' })
+                  })
+                  await refreshSubscription()
+                  // Bring user to Billing tab updated
+                  window.location.href = '/settings?tab=billing&payment_success=true'
+                }
+              } catch (e) {
+                console.error('Checkout event handling failed', e)
+              }
+            }
           })
           if (!paddle || !paddle.Checkout) {
             throw new Error('Paddle initialization failed')
