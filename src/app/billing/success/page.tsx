@@ -37,16 +37,16 @@ function BillingSuccessContent() {
       setIsLoading(false)
     }, 2000)
 
-    // Auto-redirect to leads page after 5 seconds
+    // Auto-redirect back to Settings → Billing to reflect upgraded status
     const redirectTimer = setTimeout(() => {
-      router.push('/leads?payment_success=true')
-    }, 5000)
+      router.push('/settings?tab=billing&payment_success=true')
+    }, 2500)
 
     return () => {
       clearTimeout(timer)
       clearTimeout(redirectTimer)
     }
-  }, [router])
+  }, [router, sessionId])
 
   const handleGoToLeads = () => {
     // Redirect to leads page with payment success parameter
@@ -93,10 +93,10 @@ function BillingSuccessContent() {
 
           <div className="space-y-4">
             <button
-              onClick={handleGoToLeads}
+              onClick={() => router.push('/settings?tab=billing&payment_success=true')}
               className="w-full bg-[#148cfc] hover:bg-[#0d7ce8] text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
             >
-              Start Finding Leads
+              Go to Billing Settings
               <ArrowRight className="h-4 w-4" />
             </button>
             
@@ -109,7 +109,7 @@ function BillingSuccessContent() {
             </button>
             
             <p className="text-xs text-gray-500">
-              You can now access all premium features. Redirecting to leads page in 3 seconds...
+              You can now access all premium features. Redirecting to Billing in a moment...
             </p>
           </div>
         </div>

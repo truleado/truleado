@@ -130,6 +130,7 @@ function SettingsContent() {
     // Check for success/error parameters from OAuth redirect
     const success = urlParams.get('success')
     const error = urlParams.get('error')
+    const paymentSuccess = urlParams.get('payment_success')
     
     if (success === 'reddit_connected') {
       // Refresh Reddit connection status after successful OAuth
@@ -137,6 +138,20 @@ function SettingsContent() {
       setShowSuccessMessage(true)
       // Hide success message after 5 seconds
       setTimeout(() => setShowSuccessMessage(false), 5000)
+    }
+
+    // If returned from billing success, refresh and clean URL
+    if (paymentSuccess === 'true') {
+      ;(async () => {
+        try {
+          await fetchSubscriptionStatus()
+          await fetchBillingInfo()
+        } finally {
+          const url = new URL(window.location.href)
+          url.searchParams.delete('payment_success')
+          window.history.replaceState({}, '', url.toString())
+        }
+      })()
     }
   }, [])
 
@@ -256,6 +271,9 @@ function SettingsContent() {
             environment: pub.environment === 'production' ? 'production' : 'sandbox',
             token: pub.clientToken
           })
+          if (!paddle || !paddle.Checkout) {
+            throw new Error('Paddle initialization failed')
+          }
           // Start polling in background while overlay is open
           startUpgradePolling()
           await paddle.Checkout.open({
