@@ -292,6 +292,44 @@ export async function POST(request: NextRequest) {
         break
       }
 
+      case 'subscription.payment_failed': {
+        const subscription = event.data
+        console.log('Recurring payment failed:', subscription.id)
+        
+        // Find user by subscription ID
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('paddle_subscription_id', subscription.id)
+          .single()
+
+        if (profileError || !profile) {
+          console.error('Error finding user profile:', profileError)
+          return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        }
+
+        // Update subscription status to past_due (Paddle will retry)
+        await updateUserSubscription(profile.id, {
+          subscription_status: 'past_due'
+        })
+
+        // Log failed recurring payment
+        await trialManager.logSubscriptionChange(
+          profile.id,
+          'past_due',
+          'active',
+          'recurring_payment_failed',
+          `webhook_${event.event_id}`,
+          { 
+            subscription_id: subscription.id,
+            next_retry_at: subscription.next_billed_at
+          }
+        )
+
+        console.log('Recurring payment failed for user:', profile.id)
+        break
+      }
+
       default:
         console.log('Unhandled webhook event type:', event.event_type)
     }

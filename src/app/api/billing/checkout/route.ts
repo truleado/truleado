@@ -38,7 +38,19 @@ export async function POST(request: NextRequest) {
     
     console.log('Validating Paddle price:', paddleConfig.priceId)
     try {
-      await paddleAPI.getPrice(paddleConfig.priceId)
+      const price = await paddleAPI.getPrice(paddleConfig.priceId)
+      console.log('Price details:', {
+        id: price.id,
+        billing_cycle: price.billing_cycle,
+        interval: price.interval,
+        type: price.type
+      })
+      
+      // Ensure this is a recurring price
+      if (price.type !== 'recurring' && !price.billing_cycle) {
+        console.error('Price is not configured for recurring billing:', price)
+        return NextResponse.json({ error: 'Price not configured for recurring billing. Please contact support.' }, { status: 500 })
+      }
     } catch (e) {
       console.error('Invalid or inaccessible price ID:', paddleConfig.priceId, e)
       return NextResponse.json({ error: 'Billing configuration error. Please contact support.' }, { status: 500 })
@@ -54,10 +66,6 @@ export async function POST(request: NextRequest) {
       metadata: {
         user_id: user.id,
         user_email: user.email
-      },
-      // Ensure this creates a recurring subscription, not one-time payment
-      subscription: {
-        interval: 'monthly'
       }
     })
     
