@@ -41,15 +41,15 @@ export async function POST(request: NextRequest) {
           const price = await paddleAPI.getPrice(paddleConfig.priceId)
           console.log('Price details:', price)
 
-          // Handle both API v1 and v2 response formats
-          const priceData = price.data || price
-          const priceType = priceData.type || priceData.billing_cycle?.interval_unit
-          const isRecurring = priceType === 'recurring' || priceData.billing_cycle?.interval_unit
+          // Handle SDK response format
+          const priceData = price
+          const priceType = priceData.type
+          const isRecurring = priceType === 'recurring' || priceData.billingCycle?.interval
 
           console.log('Price validation:', {
             id: priceData.id,
             type: priceType,
-            billing_cycle: priceData.billing_cycle,
+            billingCycle: priceData.billingCycle,
             isRecurring
           })
 
