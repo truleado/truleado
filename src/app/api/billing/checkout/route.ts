@@ -16,6 +16,15 @@ export async function POST(request: NextRequest) {
 
     console.log('User authenticated:', user.id)
 
+    if (!paddleConfig.priceId) {
+      console.error('Missing Paddle price ID')
+      return NextResponse.json({ error: 'Billing is temporarily unavailable. Missing price configuration.' }, { status: 500 })
+    }
+    if (!paddleConfig.apiKey) {
+      console.error('Missing Paddle API key')
+      return NextResponse.json({ error: 'Billing is temporarily unavailable. Missing payment configuration.' }, { status: 500 })
+    }
+
     // Create checkout session
     const originHeader = request.headers.get('origin') || request.headers.get('x-forwarded-host') || ''
     const protocol = request.headers.get('x-forwarded-proto') || 'https'
@@ -46,6 +55,7 @@ export async function POST(request: NextRequest) {
       session?.redirect_url ||
       session?.data?.checkout_url ||
       session?.data?.attributes?.url ||
+      session?.data?.attributes?.checkout_url ||
       session?.links?.checkout ||
       session?.links?.self
 
@@ -75,17 +85,27 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to create checkout session'
     console.error('Checkout error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
+      message,
       stack: error instanceof Error ? error.stack : undefined,
       hasApiKey: !!paddleConfig.apiKey,
       hasPriceId: !!paddleConfig.priceId,
       environment: paddleConfig.environment,
       error
     })
-    
+
+    // Normalize common Paddle errors into user-friendly responses
+    const isAuthError = typeof message === 'string' && /401|unauthorized|api key/i.test(message)
+    const isConfigError = !paddleConfig.apiKey || !paddleConfig.priceId
+    const clientMessage = isConfigError
+      ? 'Billing is temporarily unavailable. Please try again later.'
+      : isAuthError
+        ? 'Payment service authorization failed. Please try again shortly.'
+        : 'Failed to create checkout session. Please try again.'
+
     return NextResponse.json({ 
-      error: error instanceof Error ? error.message : 'Failed to create checkout session'
+      error: clientMessage
     }, { status: 500 })
   }
 }
