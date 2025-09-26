@@ -1,14 +1,7 @@
 import type { Metadata } from "next";
-import { Roboto } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/auth-context";
 import { SubscriptionProvider } from "@/lib/subscription-context";
-
-const roboto = Roboto({
-  variable: "--font-roboto",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "700", "900"],
-});
 
 export const metadata: Metadata = {
   title: "Truleado - Find Your Next Customers on Reddit",
@@ -53,7 +46,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         {/* End Google tag (gtag.js) */}
       </head>
       <body
-        className={`${roboto.variable} antialiased`}
+        className="antialiased"
       >
         {/* Google Tag Manager (noscript) */}
         <noscript>
