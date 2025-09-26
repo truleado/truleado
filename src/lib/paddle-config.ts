@@ -257,10 +257,11 @@ export class PaddleAPI {
     priceId: string
     customData?: Record<string, any>
   }) {
-    console.log('Creating Paddle subscription using SDK:', data)
+    console.log('Creating Paddle subscription via transaction:', data)
     
     try {
-      const subscription = await this.paddle.subscriptions.create({
+      // In Paddle, subscriptions are created via transactions with recurring items
+      const transaction = await this.paddle.transactions.create({
         customerId: data.customerId,
         items: [
           {
@@ -271,10 +272,18 @@ export class PaddleAPI {
         customData: data.customData || {}
       })
       
-      console.log('Subscription created successfully:', subscription.id)
-      return subscription
+      console.log('Transaction created successfully:', transaction.id)
+      
+      // The transaction should contain subscription information
+      return {
+        id: transaction.id,
+        status: transaction.status,
+        nextBilledAt: transaction.nextBilledAt,
+        billingCycle: transaction.billingCycle,
+        subscriptionId: transaction.subscriptionId
+      }
     } catch (error) {
-      console.error('Error creating subscription:', error)
+      console.error('Error creating subscription transaction:', error)
       throw error
     }
   }
