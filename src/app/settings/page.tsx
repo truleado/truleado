@@ -213,9 +213,31 @@ function SettingsContent() {
         const data = await response.json()
         window.location.href = data.checkout_url
       } else {
-        const errorData = await response.json()
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
         console.error('Failed to create checkout session:', errorData.error)
-        alert('Failed to create checkout session. Please try again.')
+        
+        // Fallback: try client-side Paddle checkout
+        try {
+          const pubRes = await fetch('/api/billing/public-config')
+          const pub = await pubRes.json()
+          if (!pub.clientToken || !pub.priceId) {
+            throw new Error('Missing public billing configuration')
+          }
+          const { initializePaddle } = await import('@paddle/paddle-js')
+          const paddle = await initializePaddle({
+            environment: pub.environment === 'production' ? 'production' : 'sandbox',
+            token: pub.clientToken
+          })
+          await paddle.Checkout.open({
+            items: [{ priceId: pub.priceId, quantity: 1 }],
+            settings: { displayMode: 'overlay' },
+            customer: user?.email ? { email: user.email } : undefined,
+            customData: user ? { user_id: user.id, user_email: user.email } : undefined
+          })
+        } catch (fallbackErr) {
+          console.error('Client-side Paddle checkout failed:', fallbackErr)
+          alert('Billing is temporarily unavailable. Please try again soon.')
+        }
       }
     } catch (error) {
       console.error('Error creating checkout session:', error)
