@@ -51,6 +51,7 @@ function SettingsContent() {
   })
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isUpgrading, setIsUpgrading] = useState(false)
+  const [isPollingUpgrade, setIsPollingUpgrade] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
     currentPassword: '',
@@ -202,6 +203,32 @@ function SettingsContent() {
   const handleUpgrade = async () => {
     setIsUpgrading(true)
     try {
+      const startUpgradePolling = () => {
+        if (isPollingUpgrade) return
+        setIsPollingUpgrade(true)
+        const startedAt = Date.now()
+        const poll = async () => {
+          try {
+            const res = await fetch('/api/debug/subscription')
+            if (res.ok) {
+              const data = await res.json()
+              if (data.subscription_status === 'active') {
+                setSubscriptionStatus('active')
+                await fetchBillingInfo()
+                setIsPollingUpgrade(false)
+                return
+              }
+            }
+          } catch {}
+          if (Date.now() - startedAt < 3 * 60 * 1000) {
+            setTimeout(poll, 5000)
+          } else {
+            setIsPollingUpgrade(false)
+          }
+        }
+        setTimeout(poll, 5000)
+      }
+
       const response = await fetch('/api/billing/checkout', {
         method: 'POST',
         headers: {
@@ -211,6 +238,7 @@ function SettingsContent() {
 
       if (response.ok) {
         const data = await response.json()
+        // Navigate to Paddle-hosted checkout in same tab
         window.location.href = data.checkout_url
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
@@ -228,6 +256,8 @@ function SettingsContent() {
             environment: pub.environment === 'production' ? 'production' : 'sandbox',
             token: pub.clientToken
           })
+          // Start polling in background while overlay is open
+          startUpgradePolling()
           await paddle.Checkout.open({
             items: [{ priceId: pub.priceId, quantity: 1 }],
             settings: { displayMode: 'overlay' },
