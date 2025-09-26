@@ -109,11 +109,23 @@ export class PaddleAPI {
       
       console.log('Paddle API Request Body:', JSON.stringify(requestBody, null, 2))
       
-      // Use transactions endpoint - the recurring nature comes from the price configuration
-      const session = await this.makeRequest('/transactions', {
-        method: 'POST',
-        body: JSON.stringify(requestBody)
-      })
+      // Try checkout sessions endpoint first (preferred for recurring)
+      let session
+      try {
+        session = await this.makeRequest('/checkout-sessions', {
+          method: 'POST',
+          body: JSON.stringify(requestBody)
+        })
+        console.log('Created checkout session via /checkout-sessions endpoint')
+      } catch (checkoutError) {
+        console.log('Checkout sessions endpoint failed, falling back to transactions:', checkoutError)
+        // Fallback to transactions endpoint
+        session = await this.makeRequest('/transactions', {
+          method: 'POST',
+          body: JSON.stringify(requestBody)
+        })
+        console.log('Created checkout session via /transactions endpoint')
+      }
       
       console.log('Checkout session created successfully:', session.id)
       return session
