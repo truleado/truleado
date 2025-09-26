@@ -244,28 +244,13 @@ function SettingsContent() {
         setTimeout(poll, 5000)
       }
 
-      const response = await fetch('/api/billing/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        // Navigate to Paddle-hosted checkout in same tab
-        window.location.href = data.checkout_url
-      } else {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        console.error('Failed to create checkout session:', errorData.error)
-        
-        // Fallback: try client-side Paddle checkout
-        try {
-          const pubRes = await fetch('/api/billing/public-config')
-          const pub = await pubRes.json()
-          if (!pub.clientToken || !pub.priceId) {
-            throw new Error('Missing public billing configuration')
-          }
+      // Try client-side Paddle first (works even if server API key is misconfigured)
+      let clientTried = false
+      try {
+        const pubRes = await fetch('/api/billing/public-config')
+        const pub = await pubRes.json()
+        if (pub?.clientToken && pub?.priceId) {
+          clientTried = true
           const { initializePaddle } = await import('@paddle/paddle-js')
           const paddle = await initializePaddle({
             environment: pub.environment === 'production' ? 'production' : 'sandbox',
@@ -282,8 +267,24 @@ function SettingsContent() {
             customer: user?.email ? { email: user.email } : undefined,
             customData: user ? { user_id: user.id, user_email: user.email } : undefined
           })
-        } catch (fallbackErr) {
-          console.error('Client-side Paddle checkout failed:', fallbackErr)
+          // If user closes overlay without paying, fall back to server flow below
+        }
+      } catch (e) {
+        console.error('Client Paddle checkout attempt failed:', e)
+      }
+
+      // If client-side wasn't attempted or didn’t open, use server-side session
+      if (!clientTried) {
+        const response = await fetch('/api/billing/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        })
+        if (response.ok) {
+          const data = await response.json()
+          window.location.href = data.checkout_url
+        } else {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+          console.error('Failed to create checkout session:', errorData.error)
           alert('Billing is temporarily unavailable. Please try again soon.')
         }
       }
