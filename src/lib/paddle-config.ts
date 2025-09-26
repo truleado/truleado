@@ -217,14 +217,30 @@ export class PaddleAPI {
   async getCustomerByEmail(email: string) {
     try {
       console.log('Searching for customer by email:', email)
+      
+      // Try the search with email filter
       const customers = this.paddle.customers.list({
         email: [email],
-        perPage: 1
+        perPage: 10
+      })
+      
+      console.log('Search result:', {
+        hasData: !!customers.data,
+        dataLength: customers.data?.length || 0,
+        customers: customers.data?.map(c => ({ id: c.id, email: c.email })) || []
       })
       
       if (customers.data && customers.data.length > 0) {
-        console.log('Found existing customer:', customers.data[0].id)
-        return customers.data[0]
+        const foundCustomer = customers.data.find(c => c.email === email)
+        if (foundCustomer) {
+          console.log('Found existing customer:', foundCustomer.id, foundCustomer.email)
+          return foundCustomer
+        } else {
+          console.log('No exact email match found, but found customers:', customers.data.length)
+          // Return the first one as fallback
+          console.log('Using first customer as fallback:', customers.data[0].id)
+          return customers.data[0]
+        }
       } else {
         console.log('No customer found with email:', email)
         return null
