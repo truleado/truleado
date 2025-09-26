@@ -36,17 +36,28 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Price validation passed - recurring billing configured')
 
-    // Step 2: Create a test customer
-    const customer = await paddleAPI.createCustomer({
-      email: user.email!,
-      name: user.user_metadata?.full_name,
-      customData: {
-        user_id: user.id,
-        user_email: user.email,
-        test_customer: true
+    // Step 2: Create or find existing customer
+    let customer = await paddleAPI.getCustomerByEmail(user.email!)
+    
+    if (!customer) {
+      try {
+        customer = await paddleAPI.createCustomer({
+          email: user.email!,
+          name: user.user_metadata?.full_name,
+          customData: {
+            user_id: user.id,
+            user_email: user.email,
+            test_customer: true
+          }
+        })
+        console.log('Test customer created:', customer.id)
+      } catch (customerError) {
+        console.error('Failed to create customer:', customerError)
+        throw customerError
       }
-    })
-    console.log('Test customer created:', customer.id)
+    } else {
+      console.log('Using existing customer:', customer.id)
+    }
 
     // Step 3: Create a test subscription
     const subscription = await paddleAPI.createSubscription({

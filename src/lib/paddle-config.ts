@@ -200,15 +200,38 @@ export class PaddleAPI {
   // List customers
   async listCustomers(options: { email?: string; limit?: number } = {}) {
     try {
-      const params = new URLSearchParams()
-      if (options.email) params.append('email', options.email)
-      if (options.limit) params.append('per_page', options.limit.toString())
-      
-      const customers = await this.makeRequest(`/customers?${params.toString()}`)
+      console.log('Listing customers with options:', options)
+      const customers = await this.paddle.customers.list({
+        email: options.email,
+        perPage: options.limit || 10
+      })
+      console.log('Customers found:', customers.data?.length || 0)
       return customers
     } catch (error) {
       console.error('Error listing customers:', error)
       return { data: [] }
+    }
+  }
+
+  // Get customer by email
+  async getCustomerByEmail(email: string) {
+    try {
+      console.log('Searching for customer by email:', email)
+      const customers = await this.paddle.customers.list({
+        email: email,
+        perPage: 1
+      })
+      
+      if (customers.data && customers.data.length > 0) {
+        console.log('Found existing customer:', customers.data[0].id)
+        return customers.data[0]
+      } else {
+        console.log('No customer found with email:', email)
+        return null
+      }
+    } catch (error) {
+      console.error('Error searching for customer by email:', error)
+      return null
     }
   }
 
