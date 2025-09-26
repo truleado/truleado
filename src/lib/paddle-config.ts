@@ -142,6 +142,17 @@ export class PaddleAPI {
     }
   }
 
+  // Retrieve a transaction by id (alias for checkout session)
+  async getTransaction(transactionId: string) {
+    try {
+      const transaction = await this.makeRequest(`/transactions/${transactionId}`)
+      return transaction
+    } catch (error) {
+      console.error('Error retrieving transaction:', error)
+      throw error
+    }
+  }
+
   // Create a customer
   async createCustomer(data: {
     email: string
