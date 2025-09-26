@@ -11,7 +11,7 @@ function BillingSuccessContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
-  const sessionId = searchParams.get('session_id')
+  const sessionId = searchParams.get('session_id') || searchParams.get('transaction_id') || searchParams.get('checkout_id')
 
   useEffect(() => {
     const verifyAndActivate = async () => {

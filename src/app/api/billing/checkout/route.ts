@@ -30,7 +30,8 @@ export async function POST(request: NextRequest) {
     const protocol = request.headers.get('x-forwarded-proto') || 'https'
     const host = originHeader && !originHeader.includes('http') ? `${protocol}://${originHeader}` : originHeader
     const baseUrl = host || process.env.NEXT_PUBLIC_APP_URL || ''
-    const successUrl = `${baseUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`
+    // Include multiple possible placeholders so success page can activate reliably
+    const successUrl = `${baseUrl}/billing/success?transaction_id={transaction_id}&session_id={transaction_id}&checkout_id={checkout_id}`
     const cancelUrl = `${baseUrl}/billing/cancel`
     
     console.log('Using URLs:', { baseUrl, successUrl, cancelUrl })
