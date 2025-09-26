@@ -53,7 +53,20 @@ export async function POST(request: NextRequest) {
         console.log('Test customer created:', customer.id)
       } catch (customerError) {
         console.error('Failed to create customer:', customerError)
-        throw customerError
+        
+        // If customer creation fails due to email conflict, try to find them
+        if (customerError instanceof Error && customerError.message.includes('email conflicts')) {
+          console.log('Customer email conflict detected, trying to find existing customer...')
+          customer = await paddleAPI.getCustomerByEmail(user.email!)
+          
+          if (!customer) {
+            console.error('Could not find existing customer despite email conflict')
+            throw customerError
+          }
+          console.log('Found existing customer after conflict:', customer.id)
+        } else {
+          throw customerError
+        }
       }
     } else {
       console.log('Using existing customer:', customer.id)
