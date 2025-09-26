@@ -29,13 +29,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
     }
 
-    if (!profile.paddle_subscription_id) {
-      return NextResponse.json({ error: 'No active subscription found' }, { status: 400 })
+    // Cancel subscription with Paddle (if we have a subscription ID)
+    if (profile.paddle_subscription_id) {
+      console.log('Cancelling subscription with Paddle:', profile.paddle_subscription_id)
+      try {
+        await paddleAPI.cancelSubscription(profile.paddle_subscription_id)
+      } catch (paddleError) {
+        console.error('Paddle cancellation failed, continuing with local cancellation:', paddleError)
+        // Continue with local cancellation even if Paddle fails
+      }
+    } else {
+      console.log('No Paddle subscription ID found, cancelling locally only')
     }
-
-    // Cancel subscription with Paddle
-    console.log('Cancelling subscription:', profile.paddle_subscription_id)
-    await paddleAPI.cancelSubscription(profile.paddle_subscription_id)
 
     // Update user profile
     const { error: updateError } = await supabase
