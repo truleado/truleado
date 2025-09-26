@@ -54,6 +54,10 @@ export async function POST(request: NextRequest) {
       metadata: {
         user_id: user.id,
         user_email: user.email
+      },
+      // Ensure this creates a recurring subscription, not one-time payment
+      subscription: {
+        interval: 'monthly'
       }
     })
     

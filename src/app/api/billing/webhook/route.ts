@@ -52,11 +52,14 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
 
-        // Update subscription status
+        // Update subscription status - use Paddle's actual billing cycle
+        const nextBillingDate = session.next_billed_at || session.details?.next_billed_at
         await updateUserSubscription(userId, {
           subscription_status: 'active',
           paddle_customer_id: session.customer_id,
-          subscription_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
+          subscription_ends_at: nextBillingDate 
+            ? new Date(nextBillingDate).toISOString()
+            : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // fallback to 30 days
         })
 
         // Log subscription change
@@ -202,10 +205,13 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
 
-        // Ensure subscription is active
+        // Ensure subscription is active - use Paddle's actual billing cycle
+        const nextBillingDate = transaction.next_billed_at || transaction.details?.next_billed_at
         await updateUserSubscription(profile.id, {
           subscription_status: 'active',
-          subscription_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
+          subscription_ends_at: nextBillingDate 
+            ? new Date(nextBillingDate).toISOString()
+            : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // fallback to 30 days
         })
 
         console.log('Payment processed for user:', profile.id)
@@ -242,6 +248,47 @@ export async function POST(request: NextRequest) {
         )
 
         console.log('Payment failed for user:', profile.id)
+        break
+      }
+
+      case 'subscription.payment_succeeded': {
+        const subscription = event.data
+        console.log('Recurring payment succeeded:', subscription.id)
+        
+        // Find user by subscription ID
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('paddle_subscription_id', subscription.id)
+          .single()
+
+        if (profileError || !profile) {
+          console.error('Error finding user profile:', profileError)
+          return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        }
+
+        // Update subscription with new billing date
+        await updateUserSubscription(profile.id, {
+          subscription_status: 'active',
+          subscription_ends_at: subscription.next_billed_at 
+            ? new Date(subscription.next_billed_at).toISOString()
+            : undefined
+        })
+
+        // Log successful recurring payment
+        await trialManager.logSubscriptionChange(
+          profile.id,
+          'active',
+          'active',
+          'recurring_payment_succeeded',
+          `webhook_${event.event_id}`,
+          { 
+            subscription_id: subscription.id,
+            next_billed_at: subscription.next_billed_at
+          }
+        )
+
+        console.log('Recurring payment processed for user:', profile.id)
         break
       }
 

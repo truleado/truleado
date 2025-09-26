@@ -80,6 +80,7 @@ export class PaddleAPI {
     successUrl: string
     cancelUrl: string
     metadata?: Record<string, any>
+    subscription?: { interval: string }
   }) {
     console.log('Creating Paddle checkout session:', {
       priceId: data.priceId,
@@ -102,7 +103,11 @@ export class PaddleAPI {
         checkout: {
           return_url: data.successUrl,
           cancel_url: data.cancelUrl
-        }
+        },
+        // Ensure recurring subscription is created
+        subscription: data.subscription ? {
+          interval: data.subscription.interval
+        } : undefined
       }
       
       console.log('Paddle API Request Body:', JSON.stringify(requestBody, null, 2))
