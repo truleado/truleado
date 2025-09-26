@@ -49,6 +49,20 @@ export default function SignUp() {
       setError(error.message)
     } else {
       setSuccess(true)
+      
+      // Send welcome email in the background
+      try {
+        await fetch('/api/send-welcome-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+      } catch (emailError) {
+        console.warn('Failed to send welcome email:', emailError)
+        // Don't fail the signup if email fails
+      }
+      
       setTimeout(() => {
         router.push('/dashboard')
       }, 2000)
