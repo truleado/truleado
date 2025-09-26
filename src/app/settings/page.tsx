@@ -130,7 +130,7 @@ function SettingsContent() {
     // Check for success/error parameters from OAuth redirect
     const success = urlParams.get('success')
     const error = urlParams.get('error')
-    const paymentSuccess = urlParams.get('payment_success')
+    const paymentSuccess = urlParams.get('payment_success') || (typeof window !== 'undefined' ? localStorage.getItem('payment_success') : null)
     
     if (success === 'reddit_connected') {
       // Refresh Reddit connection status after successful OAuth
@@ -150,6 +150,7 @@ function SettingsContent() {
           const url = new URL(window.location.href)
           url.searchParams.delete('payment_success')
           window.history.replaceState({}, '', url.toString())
+          try { localStorage.removeItem('payment_success') } catch {}
         }
       })()
     }

@@ -50,6 +50,9 @@ function BillingSuccessContent() {
 
     // Auto-redirect back to Settings → Billing to reflect upgraded status
     const redirectTimer = setTimeout(() => {
+      try {
+        localStorage.setItem('payment_success', 'true')
+      } catch {}
       router.push('/settings?tab=billing&payment_success=true')
     }, 2500)
 
