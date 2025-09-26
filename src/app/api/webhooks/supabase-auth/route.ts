@@ -37,9 +37,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Welcome email already sent' })
     }
 
-    // Calculate trial end date (14 days from now)
+    // Calculate trial end date (1 day from now)
     const trialEndDate = new Date()
-    trialEndDate.setDate(trialEndDate.getDate() + 14)
+    trialEndDate.setDate(trialEndDate.getDate() + 1)
 
     // Send welcome email
     const emailResult = await EmailService.sendWelcomeEmail({

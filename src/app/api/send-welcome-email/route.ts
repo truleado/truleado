@@ -31,9 +31,9 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Calculate trial end date (14 days from now)
+    // Calculate trial end date (1 day from now)
     const trialEndDate = new Date()
-    trialEndDate.setDate(trialEndDate.getDate() + 14)
+    trialEndDate.setDate(trialEndDate.getDate() + 1)
 
     // Send welcome email
     const emailResult = await EmailService.sendWelcomeEmail({

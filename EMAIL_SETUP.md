@@ -60,9 +60,15 @@ For Google OAuth signups, set up a webhook:
 - **Frequency**: Once per user
 
 ### Trial Reminder Email
-- **Trigger**: 3 days before trial expires
+- **Trigger**: 12 hours before trial expires
 - **Content**: Reminder to upgrade, upgrade button
 - **Template**: Clean, conversion-focused design
+- **Frequency**: Once per user
+
+### Trial Expired Email
+- **Trigger**: After trial expires (within 2 hours)
+- **Content**: Trial expired message, upgrade button
+- **Template**: Urgent, conversion-focused design
 - **Frequency**: Once per user
 
 ## 🧪 Testing
@@ -101,11 +107,15 @@ Templates are in `src/lib/email-service.ts`:
 ## 🔄 Automation
 
 ### Cron Jobs
-Set up a cron job to send trial reminders:
+Set up cron jobs for trial reminders and expired trials:
 
 ```bash
-# Run every day at 9 AM
-0 9 * * * curl -X GET https://yourdomain.com/api/cron/send-trial-reminders \
+# Run every 6 hours to catch 12-hour reminders
+0 */6 * * * curl -X GET https://yourdomain.com/api/cron/send-trial-reminders \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
+
+# Run every 2 hours to catch expired trials
+0 */2 * * * curl -X GET https://yourdomain.com/api/cron/send-expired-trial-emails \
   -H "Authorization: Bearer YOUR_CRON_SECRET"
 ```
 
@@ -117,7 +127,11 @@ Add to `vercel.json`:
   "crons": [
     {
       "path": "/api/cron/send-trial-reminders",
-      "schedule": "0 9 * * *"
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/send-expired-trial-emails",
+      "schedule": "0 */2 * * *"
     }
   ]
 }

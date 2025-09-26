@@ -151,7 +151,7 @@ export class EmailService {
                   <div class="trial-details">
                     <strong>Started:</strong> ${new Date(data.signupDate).toLocaleDateString()}<br>
                     <strong>Expires:</strong> ${new Date(data.trialEndDate).toLocaleDateString()}<br>
-                    <strong>Duration:</strong> 14 days of full access
+                    <strong>Duration:</strong> 1 day of full access
                   </div>
                 </div>
 
@@ -253,7 +253,7 @@ export class EmailService {
       const { data: emailData, error } = await resend.emails.send({
         from: 'Truleado <onboarding@truleado.com>',
         to: [data.userEmail],
-        subject: `⏰ ${data.daysLeft} days left in your Truleado trial`,
+        subject: `⏰ ${data.daysLeft > 0 ? `${data.daysLeft} days left` : 'Trial expired'} - Your Truleado trial`,
         html: `
           <!DOCTYPE html>
           <html>
@@ -318,9 +318,9 @@ export class EmailService {
               <div class="container">
                 <div class="header">
                   <div class="logo">Truleado</div>
-                  <h1 class="reminder-title">⏰ ${data.daysLeft} days left in your trial!</h1>
+                  <h1 class="reminder-title">⏰ ${data.daysLeft > 0 ? `${data.daysLeft} days left in your trial!` : 'Your trial has expired!'}</h1>
                   <p style="font-size: 18px; color: #6b7280;">
-                    Hi${data.userName ? ` ${data.userName}` : ''}, don't miss out on continuing your lead generation success!
+                    Hi${data.userName ? ` ${data.userName}` : ''}, ${data.daysLeft > 0 ? 'don\'t miss out on continuing your lead generation success!' : 'continue your lead generation success with Pro!'}
                   </p>
                 </div>
 

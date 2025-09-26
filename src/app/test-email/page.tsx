@@ -94,9 +94,10 @@ export default function TestEmailPage() {
               <ul className="text-yellow-700 text-sm space-y-1 list-disc list-inside">
                 <li>✅ Welcome email on signup (both regular and Google OAuth)</li>
                 <li>✅ Beautiful HTML email templates with SF Pro font</li>
-                <li>✅ Trial reminder emails (3 days before expiry)</li>
+                <li>✅ Trial reminder emails (12 hours before expiry)</li>
+                <li>✅ Trial expired emails (after expiry)</li>
                 <li>✅ Database tracking to prevent duplicate emails</li>
-                <li>✅ Cron job endpoint for automated reminders</li>
+                <li>✅ Cron job endpoints for automated reminders</li>
                 <li>✅ Error handling and logging</li>
               </ul>
             </div>

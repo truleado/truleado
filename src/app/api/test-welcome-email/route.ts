@@ -11,9 +11,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Calculate trial end date (14 days from now)
+    // Calculate trial end date (1 day from now)
     const trialEndDate = new Date()
-    trialEndDate.setDate(trialEndDate.getDate() + 14)
+    trialEndDate.setDate(trialEndDate.getDate() + 1)
 
     // Send test welcome email
     const emailResult = await EmailService.sendWelcomeEmail({
