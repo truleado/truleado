@@ -17,19 +17,24 @@ export async function POST(request: NextRequest) {
     const price = await paddleAPI.getPrice(paddleConfig.priceId)
     console.log('Price details:', price)
 
-    if (price.type !== 'recurring') {
+    // Check for recurring billing (Paddle uses "standard" type with billingCycle for recurring)
+    const hasBillingCycle = price.billingCycle && price.billingCycle.interval
+    const isRecurring = hasBillingCycle || price.type === 'recurring'
+
+    if (!isRecurring) {
       return NextResponse.json({
         success: false,
         error: 'Price is not configured for recurring billing',
         price: {
           id: price.id,
           type: price.type,
-          billing_cycle: price.billing_cycle,
-          interval: price.interval
+          billingCycle: price.billingCycle
         },
         recommendation: 'Configure this price as recurring in Paddle Dashboard'
       })
     }
+
+    console.log('✅ Price validation passed - recurring billing configured')
 
     // Step 2: Create a test customer
     const customer = await paddleAPI.createCustomer({

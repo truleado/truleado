@@ -44,20 +44,33 @@ export async function POST(request: NextRequest) {
           // Handle SDK response format
           const priceData = price
           const priceType = priceData.type
-          const isRecurring = priceType === 'recurring' || priceData.billingCycle?.interval
+          const hasBillingCycle = priceData.billingCycle && priceData.billingCycle.interval
+          // Paddle uses "standard" type for recurring prices with billing cycles
+          const isRecurring = hasBillingCycle || priceType === 'recurring'
 
           console.log('Price validation:', {
             id: priceData.id,
             type: priceType,
             billingCycle: priceData.billingCycle,
+            hasBillingCycle,
             isRecurring
           })
 
-          // Ensure this is a recurring price
+          // Ensure this is a recurring price (check for billing cycle)
           if (!isRecurring) {
             console.error('Price is not configured for recurring billing:', priceData)
-            return NextResponse.json({ error: 'Price not configured for recurring billing. Please contact support.' }, { status: 500 })
+            return NextResponse.json({ 
+              error: 'Price not configured for recurring billing. Please contact support.',
+              price: {
+                id: priceData.id,
+                type: priceData.type,
+                billingCycle: priceData.billingCycle
+              },
+              recommendation: 'Configure this price as recurring in Paddle Dashboard'
+            }, { status: 500 })
           }
+
+          console.log('✅ Price validation passed - recurring billing configured')
         } catch (e) {
           console.error('Invalid or inaccessible price ID:', paddleConfig.priceId, e)
           return NextResponse.json({ error: 'Billing configuration error. Please contact support.' }, { status: 500 })
