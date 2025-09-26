@@ -17,7 +17,10 @@ export async function POST(request: NextRequest) {
     console.log('User authenticated:', user.id)
 
     // Create checkout session
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://truleado-aaeyuittr-truleados-projects.vercel.app'
+    const originHeader = request.headers.get('origin') || request.headers.get('x-forwarded-host') || ''
+    const protocol = request.headers.get('x-forwarded-proto') || 'https'
+    const host = originHeader && !originHeader.includes('http') ? `${protocol}://${originHeader}` : originHeader
+    const baseUrl = host || process.env.NEXT_PUBLIC_APP_URL || ''
     const successUrl = `${baseUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`
     const cancelUrl = `${baseUrl}/billing/cancel`
     
@@ -36,7 +39,22 @@ export async function POST(request: NextRequest) {
       }
     })
     
-    console.log('Checkout session created:', session.id)
+    const sessionId = session?.id || session?.data?.id
+    const checkoutUrl = 
+      session?.checkout_url ||
+      session?.url ||
+      session?.redirect_url ||
+      session?.data?.checkout_url ||
+      session?.data?.attributes?.url ||
+      session?.links?.checkout ||
+      session?.links?.self
+
+    console.log('Checkout session created:', { sessionId, checkoutUrl })
+
+    if (!checkoutUrl) {
+      console.error('No checkout URL returned from Paddle. Raw session:', JSON.stringify(session))
+      throw new Error('Checkout URL missing from Paddle response')
+    }
 
     // Update user profile with session ID
     const { error: updateError } = await supabase
@@ -52,14 +70,17 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      checkout_url: session.checkout_url,
-      session_id: session.id
+      checkout_url: checkoutUrl,
+      session_id: sessionId
     })
 
   } catch (error) {
     console.error('Checkout error details:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
+      hasApiKey: !!paddleConfig.apiKey,
+      hasPriceId: !!paddleConfig.priceId,
+      environment: paddleConfig.environment,
       error
     })
     

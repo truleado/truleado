@@ -1,13 +1,19 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Paddle Configuration
+const resolvedEnvironment = (process.env.NEXT_PUBLIC_PADDLE_ENV || process.env.PADDLE_ENV || (process.env.NODE_ENV === 'production' ? 'production' : 'sandbox')) as 'sandbox' | 'production'
+
+const resolvedBaseUrl = resolvedEnvironment === 'production'
+  ? 'https://api.paddle.com'
+  : 'https://api.sandbox.paddle.com'
+
 export const paddleConfig = {
   apiKey: process.env.PADDLE_API_KEY || '',
   clientToken: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN || '',
   webhookSecret: process.env.PADDLE_WEBHOOK_SECRET || '',
   priceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID || process.env.PADDLE_PRICE_ID || '',
-  environment: 'sandbox', // Force sandbox for testing
-  baseUrl: 'https://sandbox-api.paddle.com' // Force sandbox API without v2
+  environment: resolvedEnvironment,
+  baseUrl: resolvedBaseUrl
 }
 
 // Log configuration for debugging
@@ -45,6 +51,8 @@ export class PaddleAPI {
       headers: {
         'Authorization': `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Paddle-Version': '2023-10-01',
         ...options.headers,
       },
     })
@@ -92,7 +100,7 @@ export class PaddleAPI {
         customer_email: data.customerEmail,
         custom_data: data.metadata || {},
         checkout: {
-          url: data.successUrl,
+          return_url: data.successUrl,
           cancel_url: data.cancelUrl
         }
       }
