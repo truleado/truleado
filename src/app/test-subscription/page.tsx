@@ -13,7 +13,7 @@ export default function TestSubscriptionPage() {
     setResult(null)
 
     try {
-      const response = await fetch('/api/debug/fresh-subscription', {
+      const response = await fetch('/api/debug/subscription-debug', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -69,6 +69,20 @@ export default function TestSubscriptionPage() {
               <div className="text-green-700">
                 <p className="mb-2"><strong>Message:</strong> {result.message}</p>
                 
+                {result.steps && (
+                  <div className="mt-4">
+                    <h4 className="font-medium mb-2">Debug Steps:</h4>
+                    <div className="space-y-2">
+                      {Object.entries(result.steps).map(([step, data]: [string, any]) => (
+                        <div key={step} className={`p-2 rounded text-sm ${data.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                          <strong>{step}:</strong> {data.success ? '✅ Success' : '❌ Failed'}
+                          {data.error && <div className="mt-1 text-xs">{data.error}</div>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {result.results && (
                   <div className="mt-4">
                     <h4 className="font-medium mb-2">Results:</h4>
@@ -86,6 +100,20 @@ export default function TestSubscriptionPage() {
                         <div>
                           <strong>Next Billing:</strong> {new Date(result.results.subscription.nextBilledAt).toLocaleDateString()}
                         </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {result.summary && (
+                  <div className="mt-4">
+                    <h4 className="font-medium mb-2">Summary:</h4>
+                    <div className="bg-blue-50 p-3 rounded border">
+                      <div className="mb-1"><strong>Customer ID:</strong> {result.summary.customer}</div>
+                      <div className="mb-1"><strong>Price ID:</strong> {result.summary.price}</div>
+                      <div className="mb-1"><strong>Subscription ID:</strong> {result.summary.subscription}</div>
+                      {result.summary.nextBilling && (
+                        <div><strong>Next Billing:</strong> {new Date(result.summary.nextBilling).toLocaleDateString()}</div>
                       )}
                     </div>
                   </div>
