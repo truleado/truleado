@@ -13,7 +13,7 @@ export default function TestSubscriptionPage() {
     setResult(null)
 
     try {
-      const response = await fetch('/api/debug/create-subscription', {
+      const response = await fetch('/api/debug/fresh-subscription', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -44,7 +44,7 @@ export default function TestSubscriptionPage() {
           
           <div className="mb-6">
             <p className="text-gray-600 mb-4">
-              This will create a recurring subscription using the valid customer ID we found.
+              This will create a fresh customer and recurring subscription to test the billing system.
             </p>
             
             <button
