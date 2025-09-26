@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
-import { Filter, Eye, EyeOff, CheckCircle } from 'lucide-react'
+import { Filter, Eye, EyeOff } from 'lucide-react'
 
 export default function SignUp() {
   const [name, setName] = useState('')
@@ -15,7 +15,6 @@ export default function SignUp() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
   
   const { signUp, signInWithGoogle } = useAuth()
   const router = useRouter()
@@ -48,8 +47,6 @@ export default function SignUp() {
     if (error) {
       setError(error.message)
     } else {
-      setSuccess(true)
-      
       // Send welcome email in the background
       try {
         await fetch('/api/send-welcome-email', {
@@ -63,9 +60,8 @@ export default function SignUp() {
         // Don't fail the signup if email fails
       }
       
-      setTimeout(() => {
-        router.push('/dashboard')
-      }, 2000)
+      // Redirect immediately to dashboard
+      router.push('/dashboard')
     }
     
     setLoading(false)
@@ -84,26 +80,6 @@ export default function SignUp() {
     // Note: Google OAuth will redirect automatically, so we don't need to handle success here
   }
 
-  if (success) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#e6f4ff] via-white to-purple-50 flex items-center justify-center px-4">
-        <div className="max-w-md w-full">
-          <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-green-600" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Account Created!</h1>
-            <p className="text-gray-600 mb-4">
-              Please check your email to verify your account.
-            </p>
-            <p className="text-sm text-gray-500">
-              Redirecting to dashboard...
-            </p>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#e6f4ff] via-white to-purple-50 flex items-center justify-center px-4 py-8">
