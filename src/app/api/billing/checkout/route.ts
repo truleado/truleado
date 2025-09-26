@@ -35,6 +35,14 @@ export async function POST(request: NextRequest) {
     
     console.log('Using URLs:', { baseUrl, successUrl, cancelUrl })
     
+    console.log('Validating Paddle price:', paddleConfig.priceId)
+    try {
+      await paddleAPI.getPrice(paddleConfig.priceId)
+    } catch (e) {
+      console.error('Invalid or inaccessible price ID:', paddleConfig.priceId, e)
+      return NextResponse.json({ error: 'Billing configuration error. Please contact support.' }, { status: 500 })
+    }
+
     console.log('Creating checkout session for user:', user.id, 'with price:', paddleConfig.priceId)
     const session = await paddleAPI.createCheckoutSession({
       priceId: paddleConfig.priceId,

@@ -120,6 +120,17 @@ export class PaddleAPI {
     }
   }
 
+  // Retrieve a price by ID (helps validate configuration)
+  async getPrice(priceId: string) {
+    try {
+      const price = await this.makeRequest(`/prices/${priceId}`)
+      return price
+    } catch (error) {
+      console.error('Error retrieving price:', error)
+      throw error
+    }
+  }
+
   // Retrieve a checkout session
   async getCheckoutSession(sessionId: string) {
     try {
