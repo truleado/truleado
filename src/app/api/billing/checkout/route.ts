@@ -36,25 +36,32 @@ export async function POST(request: NextRequest) {
     
     console.log('Using URLs:', { baseUrl, successUrl, cancelUrl })
     
-    console.log('Validating Paddle price:', paddleConfig.priceId)
-    try {
-      const price = await paddleAPI.getPrice(paddleConfig.priceId)
-      console.log('Price details:', {
-        id: price.id,
-        billing_cycle: price.billing_cycle,
-        interval: price.interval,
-        type: price.type
-      })
-      
-      // Ensure this is a recurring price
-      if (price.type !== 'recurring' && !price.billing_cycle) {
-        console.error('Price is not configured for recurring billing:', price)
-        return NextResponse.json({ error: 'Price not configured for recurring billing. Please contact support.' }, { status: 500 })
-      }
-    } catch (e) {
-      console.error('Invalid or inaccessible price ID:', paddleConfig.priceId, e)
-      return NextResponse.json({ error: 'Billing configuration error. Please contact support.' }, { status: 500 })
-    }
+        console.log('Validating Paddle price:', paddleConfig.priceId)
+        try {
+          const price = await paddleAPI.getPrice(paddleConfig.priceId)
+          console.log('Price details:', price)
+
+          // Handle both API v1 and v2 response formats
+          const priceData = price.data || price
+          const priceType = priceData.type || priceData.billing_cycle?.interval_unit
+          const isRecurring = priceType === 'recurring' || priceData.billing_cycle?.interval_unit
+
+          console.log('Price validation:', {
+            id: priceData.id,
+            type: priceType,
+            billing_cycle: priceData.billing_cycle,
+            isRecurring
+          })
+
+          // Ensure this is a recurring price
+          if (!isRecurring) {
+            console.error('Price is not configured for recurring billing:', priceData)
+            return NextResponse.json({ error: 'Price not configured for recurring billing. Please contact support.' }, { status: 500 })
+          }
+        } catch (e) {
+          console.error('Invalid or inaccessible price ID:', paddleConfig.priceId, e)
+          return NextResponse.json({ error: 'Billing configuration error. Please contact support.' }, { status: 500 })
+        }
 
     console.log('Creating checkout session for user:', user.id, 'with price:', paddleConfig.priceId)
     const session = await paddleAPI.createCheckoutSession({

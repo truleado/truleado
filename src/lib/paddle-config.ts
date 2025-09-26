@@ -42,9 +42,15 @@ export class PaddleAPI {
       throw new Error('PADDLE_API_KEY is required. Please set up your Paddle environment variables.')
     }
     
-    const url = `${this.baseUrl}${endpoint}`
+    // Detect API version from key format
+    const isV2Key = this.apiKey.startsWith('pdl_')
+    const apiVersion = isV2Key ? 'v2' : 'v1'
     
-    console.log(`Making Paddle API request to: ${url}`)
+    // Use correct API version endpoints
+    const baseUrl = isV2Key ? this.baseUrl : this.baseUrl
+    const url = `${baseUrl}${endpoint}`
+    
+    console.log(`Making Paddle API ${apiVersion} request to: ${url}`)
     
     const response = await fetch(url, {
       ...options,
@@ -52,7 +58,7 @@ export class PaddleAPI {
         'Authorization': `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Paddle-Version': '2023-10-01',
+        ...(isV2Key ? {} : { 'Paddle-Version': '2023-10-01' }),
         ...options.headers,
       },
     })
@@ -62,7 +68,8 @@ export class PaddleAPI {
       console.error('Paddle API Error:', {
         status: response.status,
         statusText: response.statusText,
-        error: errorData
+        error: errorData,
+        apiVersion
       })
       throw new Error(`Paddle API Error: ${response.status} - ${errorData.error?.detail || response.statusText}`)
     }
@@ -90,9 +97,24 @@ export class PaddleAPI {
     })
     
     try {
+      const isV2Key = this.apiKey.startsWith('pdl_')
+      
       // For recurring subscriptions, we need to create a subscription checkout
       // The price_id itself should be configured for recurring billing in Paddle
-      const requestBody = {
+      const requestBody = isV2Key ? {
+        items: [
+          {
+            price_id: data.priceId,
+            quantity: 1
+          }
+        ],
+        customer_email: data.customerEmail,
+        custom_data: data.metadata || {},
+        checkout: {
+          return_url: data.successUrl,
+          cancel_url: data.cancelUrl
+        }
+      } : {
         items: [
           {
             price_id: data.priceId,
@@ -112,7 +134,8 @@ export class PaddleAPI {
       // Try checkout sessions endpoint first (preferred for recurring)
       let session
       try {
-        session = await this.makeRequest('/checkout-sessions', {
+        const endpoint = isV2Key ? '/checkout-sessions' : '/checkout-sessions'
+        session = await this.makeRequest(endpoint, {
           method: 'POST',
           body: JSON.stringify(requestBody)
         })
@@ -120,7 +143,8 @@ export class PaddleAPI {
       } catch (checkoutError) {
         console.log('Checkout sessions endpoint failed, falling back to transactions:', checkoutError)
         // Fallback to transactions endpoint
-        session = await this.makeRequest('/transactions', {
+        const endpoint = isV2Key ? '/transactions' : '/transactions'
+        session = await this.makeRequest(endpoint, {
           method: 'POST',
           body: JSON.stringify(requestBody)
         })
@@ -138,8 +162,10 @@ export class PaddleAPI {
   // Retrieve a price by ID (helps validate configuration)
   async getPrice(priceId: string) {
     try {
-      const price = await this.makeRequest(`/prices/${priceId}`)
-      return price
+      const isV2Key = this.apiKey.startsWith('pdl_')
+      const endpoint = isV2Key ? `/prices/${priceId}` : `/prices/${priceId}`
+      const price = await this.makeRequest(endpoint)
+      return isV2Key ? price.data : price
     } catch (error) {
       console.error('Error retrieving price:', error)
       throw error
@@ -177,17 +203,24 @@ export class PaddleAPI {
     console.log('Creating Paddle customer:', data.email)
     
     try {
+      const isV2Key = this.apiKey.startsWith('pdl_')
+      const requestBody = isV2Key ? {
+        email: data.email,
+        name: data.name,
+        custom_data: data.customData || {}
+      } : {
+        email: data.email,
+        name: data.name,
+        custom_data: data.customData || {}
+      }
+      
       const customer = await this.makeRequest('/customers', {
         method: 'POST',
-        body: JSON.stringify({
-          email: data.email,
-          name: data.name,
-          custom_data: data.customData || {}
-        })
+        body: JSON.stringify(requestBody)
       })
       
       console.log('Customer created successfully:', customer.id)
-      return customer
+      return isV2Key ? customer.data : customer
     } catch (error) {
       console.error('Error creating customer:', error)
       throw error
@@ -229,22 +262,34 @@ export class PaddleAPI {
     console.log('Creating Paddle subscription:', data)
     
     try {
+      const isV2Key = this.apiKey.startsWith('pdl_')
+      const requestBody = isV2Key ? {
+        customer_id: data.customerId,
+        items: [
+          {
+            price_id: data.priceId,
+            quantity: 1
+          }
+        ],
+        custom_data: data.customData || {}
+      } : {
+        customer_id: data.customerId,
+        items: [
+          {
+            price_id: data.priceId,
+            quantity: 1
+          }
+        ],
+        custom_data: data.customData || {}
+      }
+      
       const subscription = await this.makeRequest('/subscriptions', {
         method: 'POST',
-        body: JSON.stringify({
-          customer_id: data.customerId,
-          items: [
-            {
-              price_id: data.priceId,
-              quantity: 1
-            }
-          ],
-          custom_data: data.customData || {}
-        })
+        body: JSON.stringify(requestBody)
       })
       
       console.log('Subscription created successfully:', subscription.id)
-      return subscription
+      return isV2Key ? subscription.data : subscription
     } catch (error) {
       console.error('Error creating subscription:', error)
       throw error
