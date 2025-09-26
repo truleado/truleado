@@ -201,8 +201,8 @@ export class PaddleAPI {
   async listCustomers(options: { email?: string; limit?: number } = {}) {
     try {
       console.log('Listing customers with options:', options)
-      const customers = await this.paddle.customers.list({
-        email: options.email,
+      const customers = this.paddle.customers.list({
+        email: options.email ? [options.email] : undefined,
         perPage: options.limit || 10
       })
       console.log('Customers found:', customers.data?.length || 0)
@@ -217,8 +217,8 @@ export class PaddleAPI {
   async getCustomerByEmail(email: string) {
     try {
       console.log('Searching for customer by email:', email)
-      const customers = await this.paddle.customers.list({
-        email: email,
+      const customers = this.paddle.customers.list({
+        email: [email],
         perPage: 1
       })
       
