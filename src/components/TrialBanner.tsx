@@ -1,12 +1,35 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useSubscription } from '@/lib/subscription-context'
 import { X, Clock, AlertTriangle } from 'lucide-react'
 
 export function TrialBanner() {
   const { user, trialTimeRemaining, showUpgradePrompt, accessLevel } = useSubscription()
   const [isVisible, setIsVisible] = React.useState(true)
+  const [isUpgrading, setIsUpgrading] = React.useState(false)
+
+  // Auto-hide banner if user has active subscription
+  useEffect(() => {
+    if (user?.subscription_status === 'active') {
+      setIsVisible(false)
+    }
+  }, [user?.subscription_status])
+
+  // Auto-hide banner if payment success flag is set
+  useEffect(() => {
+    const checkPaymentSuccess = () => {
+      try {
+        if (typeof window !== 'undefined' && localStorage.getItem('payment_success') === 'true') {
+          setIsVisible(false)
+          localStorage.removeItem('payment_success')
+        }
+      } catch {}
+    }
+    checkPaymentSuccess()
+    const interval = setInterval(checkPaymentSuccess, 1000)
+    return () => clearInterval(interval)
+  }, [])
 
   if (!isVisible || !showUpgradePrompt) {
     return null
@@ -39,14 +62,65 @@ export function TrialBanner() {
           </div>
           <div className="mt-3 flex flex-col sm:flex-row gap-2 sm:gap-3">
             <button
-              onClick={() => window.location.href = '/settings?tab=billing'}
+              onClick={async () => {
+                if (isUpgrading) return
+                setIsUpgrading(true)
+                try {
+                  // Try client-side Paddle checkout first
+                  const pubRes = await fetch('/api/billing/public-config')
+                  const pub = await pubRes.json()
+                  if (pub?.clientToken && pub?.priceId) {
+                    const { initializePaddle } = await import('@paddle/paddle-js')
+                    const paddle = await initializePaddle({
+                      environment: pub.environment === 'production' ? 'production' : 'sandbox',
+                      token: pub.clientToken,
+                      eventCallback: async (event: any) => {
+                        try {
+                          if (event?.name === 'checkout.completed') {
+                            // Mark success and refresh subscription immediately
+                            try { localStorage.setItem('payment_success', 'true') } catch {}
+                            await fetch('/api/debug/manual-subscription-update', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ userId: user?.id, subscriptionStatus: 'active' })
+                            })
+                            // Hide banner immediately
+                            setIsVisible(false)
+                          }
+                        } catch (e) {
+                          console.error('Checkout event handling failed', e)
+                        }
+                      }
+                    })
+                    if (!paddle || !paddle.Checkout) {
+                      throw new Error('Paddle initialization failed')
+                    }
+                    await paddle.Checkout.open({
+                      items: [{ priceId: pub.priceId, quantity: 1 }],
+                      settings: { displayMode: 'overlay' },
+                      customer: user?.email ? { email: user.email } : undefined,
+                      customData: user ? { user_id: user.id, user_email: user.email } : undefined
+                    })
+                  } else {
+                    // Fallback to settings page
+                    window.location.href = '/settings?tab=billing'
+                  }
+                } catch (e) {
+                  console.error('Upgrade failed:', e)
+                  // Fallback to settings page
+                  window.location.href = '/settings?tab=billing'
+                } finally {
+                  setIsUpgrading(false)
+                }
+              }}
+              disabled={isUpgrading}
               className={`px-3 py-2 rounded-md text-xs sm:text-sm font-medium ${
                 isExpired 
-                  ? 'bg-red-600 text-white hover:bg-red-700' 
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
+                  ? 'bg-red-600 text-white hover:bg-red-700 disabled:opacity-50' 
+                  : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50'
               }`}
             >
-              Upgrade Now
+              {isUpgrading ? 'Processing...' : 'Upgrade Now'}
             </button>
             <button
               onClick={() => setIsVisible(false)}
