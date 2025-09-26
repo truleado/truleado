@@ -5,6 +5,7 @@ import { Suspense, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import AppLayout from '@/components/app-layout'
 import { CheckCircle, ArrowRight, Loader2 } from 'lucide-react'
+import { createClient } from '@/lib/supabase-client'
 
 function BillingSuccessContent() {
   const searchParams = useSearchParams()
@@ -13,6 +14,24 @@ function BillingSuccessContent() {
   const sessionId = searchParams.get('session_id')
 
   useEffect(() => {
+    const verifyAndActivate = async () => {
+      try {
+        if (!sessionId) return
+        const supabase = createClient()
+        const { data: { session } } = await supabase.auth.getSession()
+        const userId = session?.user?.id
+        if (!userId) return
+        await fetch('/api/billing/check-payment-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, userId })
+        })
+      } catch (e) {
+        // non-blocking
+      }
+    }
+    verifyAndActivate()
+
     // Simulate loading time for better UX
     const timer = setTimeout(() => {
       setIsLoading(false)
