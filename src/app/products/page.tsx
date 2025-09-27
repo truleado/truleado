@@ -510,9 +510,9 @@ function ProductsContent() {
               </UpgradeButton>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="flex flex-wrap gap-6">
               {products.map((product) => (
-                <div key={product.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden hover:shadow-2xl transition-all duration-300">
+                <div key={product.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden hover:shadow-2xl transition-all duration-300 flex-1 min-w-[320px] max-w-[400px]">
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-6">
                       <div className="flex items-center">

@@ -412,7 +412,7 @@ function LeadsContent() {
                 </div>
               </div>
               <div className="flex gap-2 flex-wrap">
-                {['all', 'new', 'contacted', 'interested', 'not_interested'].map((status) => (
+                {['all', 'new', 'contacted'].map((status) => (
                   <button
                     key={status}
                     onClick={() => setFilter(status as any)}
@@ -461,9 +461,9 @@ function LeadsContent() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="flex flex-wrap gap-6">
               {filteredLeads.map((lead) => (
-                <div key={lead.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 p-6 hover:shadow-2xl transition-all duration-200">
+                <div key={lead.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 p-6 hover:shadow-2xl transition-all duration-200 flex-1 min-w-[350px] max-w-[500px]">
                   {/* Header with status and metadata */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -602,7 +602,7 @@ function LeadsContent() {
           {leads.length > 0 && (
             <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-gray-200/50 p-8 mt-8">
               <h3 className="text-2xl font-bold text-gray-900 mb-6">Lead Statistics</h3>
-              <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-6 sm:grid-cols-2">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-blue-600 mb-2">
                     {leads.filter(l => l.status === 'new').length}
