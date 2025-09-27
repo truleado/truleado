@@ -485,324 +485,342 @@ function SettingsContent() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="md:flex md:items-center md:justify-between">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
               Settings
             </h1>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="text-lg text-gray-600">
               Manage your account settings and preferences.
             </p>
           </div>
-        </div>
 
-        {/* Success Message */}
-        {showSuccessMessage && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <CheckCircle className="h-5 w-5 text-green-400" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-green-800">Reddit Connected Successfully!</h3>
-                <div className="mt-2 text-sm text-green-700">
-                  <p>Your Reddit account has been connected. You can now start finding leads on Reddit.</p>
+          {/* Success Message */}
+          {showSuccessMessage && (
+            <div className="mb-6 bg-green-50 border border-green-200 rounded-2xl p-6">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <CheckCircle className="h-6 w-6 text-green-500" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-semibold text-green-800">Reddit Connected Successfully!</h3>
+                  <div className="mt-2 text-green-700">
+                    <p>Your Reddit account has been connected. You can now start finding leads on Reddit.</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <div className="bg-white shadow rounded-lg">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
-                >
-                  <tab.icon className="w-4 h-4" />
-                  {tab.name}
-                </button>
-              ))}
-            </nav>
-          </div>
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-gray-200/50 overflow-hidden">
+            <div className="border-b border-gray-200/50">
+              <nav className="flex space-x-8 px-8" aria-label="Tabs">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`${
+                      activeTab === tab.id
+                        ? 'border-blue-500 text-blue-600 bg-blue-50'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                    } whitespace-nowrap py-6 px-4 border-b-2 font-semibold text-sm flex items-center gap-3 transition-all duration-200 rounded-t-xl`}
+                  >
+                    <tab.icon className="w-5 h-5" />
+                    {tab.name}
+                  </button>
+                ))}
+              </nav>
+            </div>
 
-          <div className="p-6">
-            {/* Profile Tab */}
-            {activeTab === 'profile' && (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900">Profile Information</h3>
-                  <p className="text-sm text-gray-500">Update your account information.</p>
-                </div>
-
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div className="p-8">
+              {/* Profile Tab */}
+              {activeTab === 'profile' && (
+                <div className="space-y-8">
                   <div>
-                    <label htmlFor="email" className="label-base">
-                      Email Address
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="mt-1 input-base"
-                    />
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Profile Information</h3>
+                    <p className="text-gray-600">Update your account information and personal details.</p>
                   </div>
-                </div>
 
-                {!isGoogleUser && (
-                  <div>
-                    <h4 className="text-md font-medium text-gray-900 mb-4">Change Password</h4>
+                  <div className="bg-gray-50 rounded-2xl p-6">
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                       <div>
-                        <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
-                          Current Password
-                        </label>
-                        <div className="relative mt-1">
-                          <input
-                            type={showPassword ? 'text' : 'password'}
-                            id="currentPassword"
-                            value={formData.currentPassword}
-                            onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-                            className="input-base pr-10"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                          >
-                            {showPassword ? (
-                              <EyeOff className="h-4 w-4 text-gray-400" />
-                            ) : (
-                              <Eye className="h-4 w-4 text-gray-400" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                      <div>
-                        <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
-                          New Password
+                        <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-2">
+                          Email Address
                         </label>
                         <input
-                          type="password"
-                          id="newPassword"
-                          value={formData.newPassword}
-                          onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                          className="mt-1 input-base"
+                          type="email"
+                          id="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         />
                       </div>
                     </div>
                   </div>
-                )}
 
-                {isGoogleUser && (
-                  <div>
-                    <h4 className="text-md font-medium text-gray-900 mb-4">Password Management</h4>
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <div className="flex">
-                        <div className="flex-shrink-0">
-                          <AlertCircle className="h-5 w-5 text-blue-400" />
-                        </div>
-                        <div className="ml-3">
-                          <h3 className="text-sm font-medium text-blue-800">Google Account</h3>
-                          <div className="mt-2 text-sm text-blue-700">
-                            <p>Your account is connected via Google. Password changes are managed through your Google account settings.</p>
+                  {!isGoogleUser && (
+                    <div className="bg-gray-50 rounded-2xl p-6">
+                      <h4 className="text-lg font-semibold text-gray-900 mb-6">Change Password</h4>
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div>
+                          <label htmlFor="currentPassword" className="block text-sm font-semibold text-gray-900 mb-2">
+                            Current Password
+                          </label>
+                          <div className="relative">
+                            <input
+                              type={showPassword ? 'text' : 'password'}
+                              id="currentPassword"
+                              value={formData.currentPassword}
+                              onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors pr-12"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute inset-y-0 right-0 pr-4 flex items-center hover:text-gray-600 transition-colors"
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-5 w-5 text-gray-400" />
+                              ) : (
+                                <Eye className="h-5 w-5 text-gray-400" />
+                              )}
+                            </button>
                           </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => handleSave('profile')}
-                    className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-                  >
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Changes
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Account Tab */}
-            {activeTab === 'account' && (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900">Connected Accounts</h3>
-                  <p className="text-sm text-gray-500">Manage your connected third-party accounts.</p>
-                </div>
-
-                <div className="space-y-4">
-                  {/* Reddit Connection */}
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                          <ExternalLink className="w-5 h-5 text-orange-600" />
                         </div>
                         <div>
-                          <h4 className="text-sm font-medium text-gray-900">Reddit</h4>
-                          <p className="text-sm text-gray-500">
-                            {redditConnected 
-                              ? `Connected as u/${redditUsername}` 
-                              : 'Connect your Reddit account to enable lead discovery'
-                            }
-                          </p>
+                          <label htmlFor="newPassword" className="block text-sm font-semibold text-gray-900 mb-2">
+                            New Password
+                          </label>
+                          <input
+                            type="password"
+                            id="newPassword"
+                            value={formData.newPassword}
+                            onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          />
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        {redditConnected ? (
-                          <>
-                            <CheckCircle className="w-5 h-5 text-green-500" />
-                            <button
-                              onClick={handleDisconnectReddit}
-                              className="text-sm text-red-600 hover:text-red-800 font-medium"
-                            >
-                              Disconnect
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            onClick={handleConnectReddit}
-                            disabled={isConnectingReddit}
-                            className="inline-flex items-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:opacity-50"
-                          >
-                            {isConnectingReddit ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                Connecting...
-                              </>
-                            ) : (
-                              'Connect Reddit'
-                            )}
-                          </button>
-                        )}
-                      </div>
                     </div>
-                    
-                    {!redditConnected && (
-                      <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  )}
+
+                  {isGoogleUser && (
+                    <div className="bg-blue-50 rounded-2xl p-6">
+                      <h4 className="text-lg font-semibold text-gray-900 mb-4">Password Management</h4>
+                      <div className="bg-blue-100 border border-blue-200 rounded-xl p-4">
                         <div className="flex">
                           <div className="flex-shrink-0">
-                            <AlertCircle className="h-5 w-5 text-blue-400" />
+                            <AlertCircle className="h-6 w-6 text-blue-500" />
                           </div>
-                          <div className="ml-3">
-                            <h3 className="text-sm font-medium text-blue-800">Why connect Reddit?</h3>
-                            <div className="mt-1 text-sm text-blue-700">
-                              <p>Connecting your Reddit account allows Truleado to:</p>
-                              <ul className="list-disc list-inside mt-1 space-y-1">
-                                <li>Monitor relevant subreddits for your products</li>
-                                <li>Find potential customers discussing your solutions</li>
-                                <li>Provide better lead discovery with authenticated access</li>
-                              </ul>
+                          <div className="ml-4">
+                            <h3 className="text-sm font-semibold text-blue-800">Google Account</h3>
+                            <div className="mt-2 text-sm text-blue-700">
+                              <p>Your account is connected via Google. Password changes are managed through your Google account settings.</p>
                             </div>
                           </div>
                         </div>
                       </div>
-                    )}
+                    </div>
+                  )}
+
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => handleSave('profile')}
+                      className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                    >
+                      <Save className="w-5 h-5 mr-2" />
+                      Save Changes
+                    </button>
                   </div>
-                </div>
               </div>
             )}
 
-            {/* Notifications Tab */}
-            {activeTab === 'notifications' && (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900">Notification Preferences</h3>
-                  <p className="text-sm text-gray-500">Choose how you want to be notified.</p>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900">Email Notifications</h4>
-                      <p className="text-sm text-gray-500">Receive notifications via email</p>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={formData.notifications.email}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        notifications: { ...formData.notifications, email: e.target.checked }
-                      })}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900">New Leads</h4>
-                      <p className="text-sm text-gray-500">Get notified when new leads are found</p>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={formData.notifications.newLeads}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        notifications: { ...formData.notifications, newLeads: e.target.checked }
-                      })}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900">Weekly Reports</h4>
-                      <p className="text-sm text-gray-500">Receive weekly summary reports</p>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={formData.notifications.weeklyReport}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        notifications: { ...formData.notifications, weeklyReport: e.target.checked }
-                      })}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => handleSave('notifications')}
-                    className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-                  >
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Changes
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Billing Tab */}
-            {activeTab === 'billing' && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
+              {/* Account Tab */}
+              {activeTab === 'account' && (
+                <div className="space-y-8">
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900">Billing & Subscription</h3>
-                    <p className="text-sm text-gray-500">Manage your subscription and billing information.</p>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Connected Accounts</h3>
+                    <p className="text-gray-600">Manage your connected third-party accounts and integrations.</p>
                   </div>
-                  <button
-                    onClick={handleRefreshBilling}
-                    disabled={isRefreshing}
-                    className="inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-                  >
-                    <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-                    Refresh
-                  </button>
+
+                  <div className="space-y-6">
+                    {/* Reddit Connection */}
+                    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center">
+                            <ExternalLink className="w-6 h-6 text-white" />
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900">Reddit</h4>
+                            <p className="text-gray-600">
+                              {redditConnected 
+                                ? `Connected as u/${redditUsername}` 
+                                : 'Connect your Reddit account to enable lead discovery'
+                              }
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          {redditConnected ? (
+                            <>
+                              <CheckCircle className="w-6 h-6 text-green-500" />
+                              <button
+                                onClick={handleDisconnectReddit}
+                                className="px-4 py-2 text-sm font-semibold text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-colors"
+                              >
+                                Disconnect
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={handleConnectReddit}
+                              disabled={isConnectingReddit}
+                              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-red-600 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
+                            >
+                              {isConnectingReddit ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                                  Connecting...
+                                </>
+                              ) : (
+                                'Connect Reddit'
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    
+                      {!redditConnected && (
+                        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                          <div className="flex">
+                            <div className="flex-shrink-0">
+                              <AlertCircle className="h-6 w-6 text-blue-500" />
+                            </div>
+                            <div className="ml-4">
+                              <h3 className="text-sm font-semibold text-blue-800">Why connect Reddit?</h3>
+                              <div className="mt-2 text-sm text-blue-700">
+                                <p>Connecting your Reddit account allows Truleado to:</p>
+                                <ul className="list-disc list-inside mt-2 space-y-1">
+                                  <li>Monitor relevant subreddits for your products</li>
+                                  <li>Find potential customers discussing your solutions</li>
+                                  <li>Provide better lead discovery with authenticated access</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
+              )}
+
+              {/* Notifications Tab */}
+              {activeTab === 'notifications' && (
+                <div className="space-y-8">
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Notification Preferences</h3>
+                    <p className="text-gray-600">Choose how you want to be notified about new leads and updates.</p>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-2xl p-6">
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <Bell className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900">Email Notifications</h4>
+                            <p className="text-gray-600">Receive notifications via email</p>
+                          </div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={formData.notifications.email}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            notifications: { ...formData.notifications, email: e.target.checked }
+                          })}
+                          className="h-6 w-6 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                            <Target className="w-5 h-5 text-green-600" />
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900">New Leads</h4>
+                            <p className="text-gray-600">Get notified when new leads are found</p>
+                          </div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={formData.notifications.newLeads}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            notifications: { ...formData.notifications, newLeads: e.target.checked }
+                          })}
+                          className="h-6 w-6 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                            <Calendar className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900">Weekly Reports</h4>
+                            <p className="text-gray-600">Receive weekly summary reports</p>
+                          </div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={formData.notifications.weeklyReport}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            notifications: { ...formData.notifications, weeklyReport: e.target.checked }
+                          })}
+                          className="h-6 w-6 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => handleSave('notifications')}
+                      className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                    >
+                      <Save className="w-5 h-5 mr-2" />
+                      Save Changes
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Billing Tab */}
+              {activeTab === 'billing' && (
+                <div className="space-y-8">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-2">Billing & Subscription</h3>
+                      <p className="text-gray-600">Manage your subscription and billing information.</p>
+                    </div>
+                    <button
+                      onClick={handleRefreshBilling}
+                      disabled={isRefreshing}
+                      className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                    >
+                      <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                      Refresh
+                    </button>
+                  </div>
 
                 {/* Current Plan Status */}
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
@@ -1059,10 +1077,11 @@ function SettingsContent() {
                       </a>
                     </div>
                   </div>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
+            </div>
           </div>
         </div>
       </div>

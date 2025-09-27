@@ -423,772 +423,794 @@ export default function Products() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="md:flex md:items-center md:justify-between">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
-              Products
-            </h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Manage your SaaS products and configure lead generation settings.
-            </p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+                  Products
+                </h1>
+                <p className="text-lg text-gray-600">
+                  Manage your SaaS products and configure lead generation settings.
+                </p>
+              </div>
+              <div className="flex items-center space-x-4">
+                <UpgradeButton feature="add_products">
+                  <button
+                    onClick={handleAddProductClick}
+                    className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    <Plus className="w-5 h-5 mr-2" />
+                    Add Product
+                  </button>
+                </UpgradeButton>
+              </div>
+            </div>
           </div>
-          <div className="mt-4 flex md:ml-4 md:mt-0">
-            <UpgradeButton feature="add_products">
-              <button
-                onClick={handleAddProductClick}
-                className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Product
-              </button>
-            </UpgradeButton>
-          </div>
-        </div>
 
-        {/* Products Grid */}
-        {products.length === 0 ? (
-          <div className="text-center py-12">
-            <Package className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No products</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Get started by adding your first SaaS product.
-            </p>
-            <div className="mt-6">
+          {/* Products Grid */}
+          {products.length === 0 ? (
+            <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-gray-200/50 p-12 text-center">
+              <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Package className="w-10 h-10 text-blue-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">No products yet</h3>
+              <p className="text-lg text-gray-600 mb-8 max-w-md mx-auto">
+                Get started by adding your first SaaS product. Our AI will analyze it and help you find relevant leads.
+              </p>
               <UpgradeButton feature="add_products">
                 <button
                   onClick={handleAddProductClick}
-                  className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                  className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Product
+                  <Plus className="w-5 h-5 mr-2" />
+                  Add Your First Product
                 </button>
               </UpgradeButton>
             </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {products.map((product) => (
-              <div key={product.id} className="bg-white overflow-hidden shadow rounded-lg">
-                <div className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+          ) : (
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              {products.map((product) => (
+                <div key={product.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden hover:shadow-2xl transition-all duration-300">
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-6">
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center">
                           <Package className="w-6 h-6 text-blue-600" />
                         </div>
-                      </div>
-                      <div className="ml-4">
-                        <h3 className="text-lg font-medium text-gray-900">{product.name}</h3>
-                        <p className="text-sm text-gray-500">{product.status}</p>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <UpgradeButton feature="edit_products">
-                        <button 
-                          onClick={() => handleEditProduct(product)}
-                          className="text-gray-400 hover:text-blue-600"
-                          title="Edit product"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                      </UpgradeButton>
-                      <UpgradeButton feature="delete_products">
-                        <button 
-                          onClick={() => handleDeleteProduct(product.id)}
-                          className="text-gray-400 hover:text-red-600"
-                          title="Delete product"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </UpgradeButton>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4">
-                    <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
-                  </div>
-                  
-                  <div className="mt-4 space-y-2">
-                    <div className="flex items-center text-sm text-gray-500">
-                      <Globe className="w-4 h-4 mr-2" />
-                      <a href={product.website} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600">
-                        {product.website}
-                      </a>
-                    </div>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <Target className="w-4 h-4 mr-2" />
-                      {product.subreddits.length} subreddits
-                    </div>
-                  </div>
-
-                  {/* AI Analysis Summary */}
-                  <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div>
-                        <span className="font-medium text-gray-700">Features:</span>
-                        <div className="text-gray-600 mt-1">
-                          {product.features.slice(0, 2).map((feature, idx) => (
-                            <div key={idx} className="truncate">• {feature}</div>
-                          ))}
-                          {product.features.length > 2 && (
-                            <div className="text-gray-500">+{product.features.length - 2} more</div>
-                          )}
+                        <div className="ml-4">
+                          <h3 className="text-xl font-bold text-gray-900">{product.name}</h3>
+                          <p className="text-sm text-gray-500 font-medium">{product.status}</p>
                         </div>
                       </div>
-                      <div>
-                        <span className="font-medium text-gray-700">Pain Points:</span>
-                        <div className="text-gray-600 mt-1">
-                          {product.painPoints.slice(0, 2).map((point, idx) => (
-                            <div key={idx} className="truncate">• {point}</div>
-                          ))}
-                          {product.painPoints.length > 2 && (
-                            <div className="text-gray-500">+{product.painPoints.length - 2} more</div>
-                          )}
-                        </div>
+                      <div className="flex space-x-2">
+                        <UpgradeButton feature="edit_products">
+                          <button 
+                            onClick={() => handleEditProduct(product)}
+                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Edit product"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        </UpgradeButton>
+                        <UpgradeButton feature="delete_products">
+                          <button 
+                            onClick={() => handleDeleteProduct(product.id)}
+                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete product"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </UpgradeButton>
                       </div>
                     </div>
-                    <div className="mt-2 text-xs">
-                      <span className="font-medium text-gray-700">ICP:</span>
-                      <span className="text-gray-600 ml-1">{product.idealCustomerProfile}</span>
+                    
+                    <div className="mb-6">
+                      <p className="text-gray-600 line-clamp-3 leading-relaxed">{product.description}</p>
                     </div>
-                  </div>
-                  
-                  <div className="mt-4 flex justify-between items-center">
-                    <span className="text-xs text-gray-500">
-                      Created {new Date(product.createdAt).toLocaleDateString()}
-                    </span>
-                    <button className="text-blue-600 hover:text-blue-500 text-sm font-medium">
-                      View Details
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+                    
+                    <div className="space-y-3 mb-6">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
+                          <Globe className="w-4 h-4 text-gray-600" />
+                        </div>
+                        <a href={product.website} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition-colors font-medium">
+                          {product.website}
+                        </a>
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
+                          <Target className="w-4 h-4 text-gray-600" />
+                        </div>
+                        <span className="font-medium">{product.subreddits.length} subreddits monitored</span>
+                      </div>
+                    </div>
 
-        {/* Add Product Modal */}
-        {showAddModal && (
-          <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowAddModal(false)} />
-              
-              <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
-                <div>
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                    <Package className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div className="mt-3 text-center sm:mt-5">
-                    <h3 className="text-lg font-semibold leading-6 text-gray-900">
-                      Analyze Your Product
-                    </h3>
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-500">
-                        Enter your website URL and our AI will analyze it to extract product details, features, benefits, and ideal customer profile.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <form onSubmit={handleAddProduct} className="mt-5 space-y-6">
-                  {/* Website URL Input */}
-                  <div>
-                    <label htmlFor="website" className="block text-sm font-medium text-gray-700 mb-2">
-                      Website URL
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="url"
-                        id="website"
-                        value={newProduct.website}
-                        onChange={(e) => setNewProduct({ ...newProduct, website: e.target.value })}
-                        className="flex-1 input-base"
-                        placeholder="https://yourproduct.com"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={handleAnalyzeWebsite}
-                        disabled={!newProduct.website || isAnalyzing}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-                      >
-                        {isAnalyzing ? (
-                          <div className="flex items-center">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                            {newProduct.website.includes('retry') ? 'Retrying...' : 'Analyzing...'}
+                    {/* AI Analysis Summary */}
+                    <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-4 mb-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <div className="flex items-center mb-2">
+                            <div className="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center mr-2">
+                              <Zap className="w-3 h-3 text-green-600" />
+                            </div>
+                            <span className="font-semibold text-gray-800">Key Features</span>
                           </div>
-                        ) : (
-                          'Analyze'
-                        )}
+                          <div className="text-gray-600 space-y-1">
+                            {product.features.slice(0, 2).map((feature, idx) => (
+                              <div key={idx} className="truncate">• {feature}</div>
+                            ))}
+                            {product.features.length > 2 && (
+                              <div className="text-gray-500 font-medium">+{product.features.length - 2} more</div>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex items-center mb-2">
+                            <div className="w-6 h-6 bg-red-100 rounded-lg flex items-center justify-center mr-2">
+                              <Target className="w-3 h-3 text-red-600" />
+                            </div>
+                            <span className="font-semibold text-gray-800">Pain Points</span>
+                          </div>
+                          <div className="text-gray-600 space-y-1">
+                            {product.painPoints.slice(0, 2).map((point, idx) => (
+                              <div key={idx} className="truncate">• {point}</div>
+                            ))}
+                            {product.painPoints.length > 2 && (
+                              <div className="text-gray-500 font-medium">+{product.painPoints.length - 2} more</div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <div className="flex items-start">
+                          <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center mr-2 flex-shrink-0">
+                            <Users className="w-3 h-3 text-blue-600" />
+                          </div>
+                          <div>
+                            <span className="font-semibold text-gray-800 text-sm">Ideal Customer:</span>
+                            <p className="text-gray-600 text-sm mt-1">{product.idealCustomerProfile}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                      <span className="text-sm text-gray-500 font-medium">
+                        Created {new Date(product.createdAt).toLocaleDateString()}
+                      </span>
+                      <button className="text-blue-600 hover:text-blue-700 text-sm font-semibold hover:bg-blue-50 px-3 py-1 rounded-lg transition-colors">
+                        View Details
                       </button>
                     </div>
-                    <p className="mt-2 text-sm text-gray-500">
-                      Enter your website URL and click "Analyze" to automatically extract product details.
-                    </p>
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
 
-                  {/* Editable Product Details */}
-                  {(newProduct.name || newProduct.description) && (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-medium text-gray-900">Product Details</h4>
-                        <span className="text-xs text-gray-500">Edit any field below</span>
-                      </div>
-
-                      {/* Product Name */}
-                      <div>
-                        <label className="label-base">
-                          Product Name
-                        </label>
-                        <input
-                          type="text"
-                          value={newProduct.name}
-                          onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                          className="input-base"
-                          placeholder="Enter product name"
-                        />
-                      </div>
-
-                      {/* Description */}
-                      <div>
-                        <label className="label-base">
-                          Description
-                        </label>
-                        <textarea
-                          rows={3}
-                          value={newProduct.description}
-                          onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                          className="textarea-base"
-                          placeholder="Describe what your product does"
-                        />
-                      </div>
-
-                      {/* Features */}
-                      <div>
-                        <label className="label-base">
-                          Features
-                        </label>
-                        <div className="space-y-2">
-                          {newProduct.features.map((feature, index) => (
-                            <div key={index} className="flex gap-2">
-                              <input
-                                type="text"
-                                value={feature}
-                                onChange={(e) => {
-                                  const newFeatures = [...newProduct.features]
-                                  newFeatures[index] = e.target.value
-                                  setNewProduct({ ...newProduct, features: newFeatures })
-                                }}
-                                className="flex-1 input-base"
-                                placeholder="Enter feature"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const newFeatures = newProduct.features.filter((_, i) => i !== index)
-                                  setNewProduct({ ...newProduct, features: newFeatures })
-                                }}
-                                className="px-2 py-1 text-red-600 hover:text-red-800"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
-                          <button
-                            type="button"
-                            onClick={() => setNewProduct({ ...newProduct, features: [...newProduct.features, ''] })}
-                            className="text-sm text-blue-600 hover:text-blue-800"
-                          >
-                            + Add Feature
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Benefits */}
-                      <div>
-                        <label className="label-base">
-                          Benefits
-                        </label>
-                        <div className="space-y-2">
-                          {newProduct.benefits.map((benefit, index) => (
-                            <div key={index} className="flex gap-2">
-                              <input
-                                type="text"
-                                value={benefit}
-                                onChange={(e) => {
-                                  const newBenefits = [...newProduct.benefits]
-                                  newBenefits[index] = e.target.value
-                                  setNewProduct({ ...newProduct, benefits: newBenefits })
-                                }}
-                                className="flex-1 input-base"
-                                placeholder="Enter benefit"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const newBenefits = newProduct.benefits.filter((_, i) => i !== index)
-                                  setNewProduct({ ...newProduct, benefits: newBenefits })
-                                }}
-                                className="px-2 py-1 text-red-600 hover:text-red-800"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
-                          <button
-                            type="button"
-                            onClick={() => setNewProduct({ ...newProduct, benefits: [...newProduct.benefits, ''] })}
-                            className="text-sm text-blue-600 hover:text-blue-800"
-                          >
-                            + Add Benefit
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Pain Points */}
-                      <div>
-                        <label className="label-base">
-                          Pain Points (Problems Solved)
-                        </label>
-                        <div className="space-y-2">
-                          {newProduct.painPoints.map((point, index) => (
-                            <div key={index} className="flex gap-2">
-                              <input
-                                type="text"
-                                value={point}
-                                onChange={(e) => {
-                                  const newPainPoints = [...newProduct.painPoints]
-                                  newPainPoints[index] = e.target.value
-                                  setNewProduct({ ...newProduct, painPoints: newPainPoints })
-                                }}
-                                className="flex-1 input-base"
-                                placeholder="Enter pain point"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const newPainPoints = newProduct.painPoints.filter((_, i) => i !== index)
-                                  setNewProduct({ ...newProduct, painPoints: newPainPoints })
-                                }}
-                                className="px-2 py-1 text-red-600 hover:text-red-800"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
-                          <button
-                            type="button"
-                            onClick={() => setNewProduct({ ...newProduct, painPoints: [...newProduct.painPoints, ''] })}
-                            className="text-sm text-blue-600 hover:text-blue-800"
-                          >
-                            + Add Pain Point
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Ideal Customer Profile */}
-                      <div>
-                        <label className="label-base">
-                          Ideal Customer Profile
-                        </label>
-                        <textarea
-                          rows={2}
-                          value={newProduct.idealCustomerProfile}
-                          onChange={(e) => setNewProduct({ ...newProduct, idealCustomerProfile: e.target.value })}
-                          className="w-full input-base"
-                          placeholder="Describe your ideal customer"
-                        />
-                      </div>
-
-                      {/* Subreddits Section */}
-                      <div className="border-t pt-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Relevant Subreddits
-                          </label>
-                          <button
-                            type="button"
-                            onClick={handleFindSubreddits}
-                            disabled={isFindingSubreddits}
-                            className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-                          >
-                            {isFindingSubreddits ? (
-                              <div className="flex items-center">
-                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
-                                Finding...
-                              </div>
-                            ) : (
-                              'Find Subreddits'
-                            )}
-                          </button>
-                        </div>
-                        
-                        {newProduct.subreddits.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            {newProduct.subreddits.map((subreddit, index) => (
-                              <span
-                                key={index}
-                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                              >
-                                r/{subreddit}
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const newSubreddits = newProduct.subreddits.filter((_, i) => i !== index)
-                                    setNewProduct({ ...newProduct, subreddits: newSubreddits })
-                                  }}
-                                  className="ml-1 text-blue-600 hover:text-blue-800"
-                                >
-                                  ×
-                                </button>
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                        
-                        <p className="text-sm text-gray-500">
-                          Click "Find Subreddits" to automatically discover relevant Reddit communities based on your product analysis.
+          {/* Add Product Modal */}
+          {showAddModal && (
+            <div className="fixed inset-0 z-50 overflow-y-auto">
+              <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={() => setShowAddModal(false)} />
+                
+                <div className="relative transform overflow-hidden rounded-2xl bg-white px-6 pb-6 pt-6 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-8">
+                  <div>
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-100 to-indigo-100">
+                      <Package className="h-8 w-8 text-blue-600" />
+                    </div>
+                    <div className="mt-6 text-center">
+                      <h3 className="text-2xl font-bold leading-6 text-gray-900">
+                        Analyze Your Product
+                      </h3>
+                      <div className="mt-3">
+                        <p className="text-lg text-gray-600">
+                          Enter your website URL and our AI will analyze it to extract product details, features, benefits, and ideal customer profile.
                         </p>
                       </div>
                     </div>
-                  )}
-                  
-                  {/* Progress Bar */}
-                  {isAddingProduct && (
-                    <div className="mt-4">
-                      <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
-                        <span>Adding product...</span>
-                        <span>{Math.round(addProductProgress)}%</span>
+                  </div>
+                
+                  <form onSubmit={handleAddProduct} className="mt-8 space-y-8">
+                    {/* Website URL Input */}
+                    <div>
+                      <label htmlFor="website" className="block text-lg font-semibold text-gray-900 mb-3">
+                        Website URL
+                      </label>
+                      <div className="flex gap-3">
+                        <input
+                          type="url"
+                          id="website"
+                          value={newProduct.website}
+                          onChange={(e) => setNewProduct({ ...newProduct, website: e.target.value })}
+                          className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-lg"
+                          placeholder="https://yourproduct.com"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAnalyzeWebsite}
+                          disabled={!newProduct.website || isAnalyzing}
+                          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
+                        >
+                          {isAnalyzing ? (
+                            <div className="flex items-center">
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                              {newProduct.website.includes('retry') ? 'Retrying...' : 'Analyzing...'}
+                            </div>
+                          ) : (
+                            'Analyze'
+                          )}
+                        </button>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
-                          style={{ width: `${addProductProgress}%` }}
-                        ></div>
-                      </div>
+                      <p className="mt-3 text-gray-600">
+                        Enter your website URL and click "Analyze" to automatically extract product details.
+                      </p>
+                    </div>
+
+                    {/* Editable Product Details */}
+                    {(newProduct.name || newProduct.description) && (
+                      <div className="bg-gray-50 rounded-2xl p-6 space-y-6">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xl font-bold text-gray-900">Product Details</h4>
+                          <span className="text-sm text-gray-600 font-medium">Edit any field below</span>
+                        </div>
+
+                        {/* Product Name */}
+                        <div>
+                          <label className="block text-lg font-semibold text-gray-900 mb-2">
+                            Product Name
+                          </label>
+                          <input
+                            type="text"
+                            value={newProduct.name}
+                            onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            placeholder="Enter product name"
+                          />
+                        </div>
+
+                        {/* Description */}
+                        <div>
+                          <label className="block text-lg font-semibold text-gray-900 mb-2">
+                            Description
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={newProduct.description}
+                            onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            placeholder="Describe what your product does"
+                          />
+                        </div>
+
+                        {/* Features */}
+                        <div>
+                          <label className="block text-lg font-semibold text-gray-900 mb-3">
+                            Features
+                          </label>
+                          <div className="space-y-3">
+                            {newProduct.features.map((feature, index) => (
+                              <div key={index} className="flex gap-3">
+                                <input
+                                  type="text"
+                                  value={feature}
+                                  onChange={(e) => {
+                                    const newFeatures = [...newProduct.features]
+                                    newFeatures[index] = e.target.value
+                                    setNewProduct({ ...newProduct, features: newFeatures })
+                                  }}
+                                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                  placeholder="Enter feature"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const newFeatures = newProduct.features.filter((_, i) => i !== index)
+                                    setNewProduct({ ...newProduct, features: newFeatures })
+                                  }}
+                                  className="px-4 py-3 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-colors font-semibold"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => setNewProduct({ ...newProduct, features: [...newProduct.features, ''] })}
+                              className="text-blue-600 hover:text-blue-800 font-semibold hover:bg-blue-50 px-4 py-2 rounded-xl transition-colors"
+                            >
+                              + Add Feature
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Benefits */}
+                        <div>
+                          <label className="block text-lg font-semibold text-gray-900 mb-3">
+                            Benefits
+                          </label>
+                          <div className="space-y-3">
+                            {newProduct.benefits.map((benefit, index) => (
+                              <div key={index} className="flex gap-3">
+                                <input
+                                  type="text"
+                                  value={benefit}
+                                  onChange={(e) => {
+                                    const newBenefits = [...newProduct.benefits]
+                                    newBenefits[index] = e.target.value
+                                    setNewProduct({ ...newProduct, benefits: newBenefits })
+                                  }}
+                                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                  placeholder="Enter benefit"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const newBenefits = newProduct.benefits.filter((_, i) => i !== index)
+                                    setNewProduct({ ...newProduct, benefits: newBenefits })
+                                  }}
+                                  className="px-4 py-3 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-colors font-semibold"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => setNewProduct({ ...newProduct, benefits: [...newProduct.benefits, ''] })}
+                              className="text-blue-600 hover:text-blue-800 font-semibold hover:bg-blue-50 px-4 py-2 rounded-xl transition-colors"
+                            >
+                              + Add Benefit
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Pain Points */}
+                        <div>
+                          <label className="block text-lg font-semibold text-gray-900 mb-3">
+                            Pain Points (Problems Solved)
+                          </label>
+                          <div className="space-y-3">
+                            {newProduct.painPoints.map((point, index) => (
+                              <div key={index} className="flex gap-3">
+                                <input
+                                  type="text"
+                                  value={point}
+                                  onChange={(e) => {
+                                    const newPainPoints = [...newProduct.painPoints]
+                                    newPainPoints[index] = e.target.value
+                                    setNewProduct({ ...newProduct, painPoints: newPainPoints })
+                                  }}
+                                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                  placeholder="Enter pain point"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const newPainPoints = newProduct.painPoints.filter((_, i) => i !== index)
+                                    setNewProduct({ ...newProduct, painPoints: newPainPoints })
+                                  }}
+                                  className="px-4 py-3 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-colors font-semibold"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => setNewProduct({ ...newProduct, painPoints: [...newProduct.painPoints, ''] })}
+                              className="text-blue-600 hover:text-blue-800 font-semibold hover:bg-blue-50 px-4 py-2 rounded-xl transition-colors"
+                            >
+                              + Add Pain Point
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Ideal Customer Profile */}
+                        <div>
+                          <label className="block text-lg font-semibold text-gray-900 mb-2">
+                            Ideal Customer Profile
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={newProduct.idealCustomerProfile}
+                            onChange={(e) => setNewProduct({ ...newProduct, idealCustomerProfile: e.target.value })}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            placeholder="Describe your ideal customer"
+                          />
+                        </div>
+
+                        {/* Subreddits Section */}
+                        <div className="border-t border-gray-200 pt-6">
+                          <div className="flex items-center justify-between mb-4">
+                            <label className="block text-lg font-semibold text-gray-900">
+                              Relevant Subreddits
+                            </label>
+                            <button
+                              type="button"
+                              onClick={handleFindSubreddits}
+                              disabled={isFindingSubreddits}
+                              className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
+                            >
+                              {isFindingSubreddits ? (
+                                <div className="flex items-center">
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                  Finding...
+                                </div>
+                              ) : (
+                                'Find Subreddits'
+                              )}
+                            </button>
+                          </div>
+                          
+                          {newProduct.subreddits.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              {newProduct.subreddits.map((subreddit, index) => (
+                                <span
+                                  key={index}
+                                  className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200"
+                                >
+                                  r/{subreddit}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const newSubreddits = newProduct.subreddits.filter((_, i) => i !== index)
+                                      setNewProduct({ ...newProduct, subreddits: newSubreddits })
+                                    }}
+                                    className="ml-2 text-blue-600 hover:text-blue-800 hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                                  >
+                                    ×
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          
+                          <p className="text-gray-600">
+                            Click "Find Subreddits" to automatically discover relevant Reddit communities based on your product analysis.
+                          </p>
+                        </div>
                     </div>
                   )}
-
-                  <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-                    <button
-                      type="submit"
-                      disabled={isAddingProduct}
-                      className="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:col-start-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isAddingProduct ? (
-                        <div className="flex items-center">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Adding...
+                    
+                    {/* Progress Bar */}
+                    {isAddingProduct && (
+                      <div className="mt-6">
+                        <div className="flex items-center justify-between text-lg font-semibold text-gray-700 mb-3">
+                          <span>Adding product...</span>
+                          <span>{Math.round(addProductProgress)}%</span>
                         </div>
-                      ) : (
-                        'Add Product'
-                      )}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowAddModal(false)}
-                      disabled={isAddingProduct}
-                      className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Cancel
-                    </button>
-                  </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div 
+                            className="bg-gradient-to-r from-blue-600 to-indigo-600 h-3 rounded-full transition-all duration-300 ease-out"
+                            style={{ width: `${addProductProgress}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="mt-8 flex flex-col sm:flex-row gap-4">
+                      <button
+                        type="submit"
+                        disabled={isAddingProduct}
+                        className="flex-1 inline-flex justify-center items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+                      >
+                        {isAddingProduct ? (
+                          <div className="flex items-center">
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                            Adding...
+                          </div>
+                        ) : (
+                          'Add Product'
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddModal(false)}
+                        disabled={isAddingProduct}
+                        className="flex-1 inline-flex justify-center items-center px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                 </form>
               </div>
             </div>
           </div>
         )}
 
-        {/* Edit Product Modal */}
-        {showEditModal && editingProduct && (
-          <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowEditModal(false)} />
-              
-              <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
-                <div>
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                    <Edit className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div className="mt-3 text-center sm:mt-5">
-                    <h3 className="text-lg font-semibold leading-6 text-gray-900">
-                      Edit Product
-                    </h3>
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-500">
-                        Update your product details and configuration.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+          {/* Edit Product Modal */}
+          {showEditModal && editingProduct && (
+            <div className="fixed inset-0 z-50 overflow-y-auto">
+              <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={() => setShowEditModal(false)} />
                 
-                <form onSubmit={handleUpdateProduct} className="mt-5 space-y-6">
-                  {/* Website URL Input */}
+                <div className="relative transform overflow-hidden rounded-2xl bg-white px-6 pb-6 pt-6 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-8">
                   <div>
-                    <label htmlFor="edit-website" className="block text-sm font-medium text-gray-700 mb-2">
-                      Website URL
-                    </label>
-                    <input
-                      type="url"
-                      id="edit-website"
-                      value={newProduct.website}
-                      onChange={(e) => setNewProduct({ ...newProduct, website: e.target.value })}
-                      className="w-full input-base"
-                      placeholder="https://yourproduct.com"
-                      required
-                    />
-                  </div>
-
-                  {/* Product Name */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Product Name
-                    </label>
-                    <input
-                      type="text"
-                      value={newProduct.name}
-                      onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                      className="w-full input-base"
-                      placeholder="Enter product name"
-                      required
-                    />
-                  </div>
-
-                  {/* Description */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Description
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={newProduct.description}
-                      onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                      className="w-full input-base"
-                      placeholder="Describe what your product does"
-                    />
-                  </div>
-
-                  {/* Features */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Features
-                    </label>
-                    <div className="space-y-2">
-                      {newProduct.features.map((feature, index) => (
-                        <div key={index} className="flex gap-2">
-                          <input
-                            type="text"
-                            value={feature}
-                            onChange={(e) => {
-                              const newFeatures = [...newProduct.features]
-                              newFeatures[index] = e.target.value
-                              setNewProduct({ ...newProduct, features: newFeatures })
-                            }}
-                            className="flex-1 input-base"
-                            placeholder="Enter feature"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newFeatures = newProduct.features.filter((_, i) => i !== index)
-                              setNewProduct({ ...newProduct, features: newFeatures })
-                            }}
-                            className="px-2 py-1 text-red-600 hover:text-red-800"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={() => setNewProduct({ ...newProduct, features: [...newProduct.features, ''] })}
-                        className="text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        + Add Feature
-                      </button>
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-100 to-indigo-100">
+                      <Edit className="h-8 w-8 text-blue-600" />
+                    </div>
+                    <div className="mt-6 text-center">
+                      <h3 className="text-2xl font-bold leading-6 text-gray-900">
+                        Edit Product
+                      </h3>
+                      <div className="mt-3">
+                        <p className="text-lg text-gray-600">
+                          Update your product details and configuration.
+                        </p>
+                      </div>
                     </div>
                   </div>
-
-                  {/* Benefits */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Benefits
-                    </label>
-                    <div className="space-y-2">
-                      {newProduct.benefits.map((benefit, index) => (
-                        <div key={index} className="flex gap-2">
-                          <input
-                            type="text"
-                            value={benefit}
-                            onChange={(e) => {
-                              const newBenefits = [...newProduct.benefits]
-                              newBenefits[index] = e.target.value
-                              setNewProduct({ ...newProduct, benefits: newBenefits })
-                            }}
-                            className="flex-1 input-base"
-                            placeholder="Enter benefit"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newBenefits = newProduct.benefits.filter((_, i) => i !== index)
-                              setNewProduct({ ...newProduct, benefits: newBenefits })
-                            }}
-                            className="px-2 py-1 text-red-600 hover:text-red-800"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={() => setNewProduct({ ...newProduct, benefits: [...newProduct.benefits, ''] })}
-                        className="text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        + Add Benefit
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Pain Points */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Pain Points (Problems Solved)
-                    </label>
-                    <div className="space-y-2">
-                      {newProduct.painPoints.map((point, index) => (
-                        <div key={index} className="flex gap-2">
-                          <input
-                            type="text"
-                            value={point}
-                            onChange={(e) => {
-                              const newPainPoints = [...newProduct.painPoints]
-                              newPainPoints[index] = e.target.value
-                              setNewProduct({ ...newProduct, painPoints: newPainPoints })
-                            }}
-                            className="flex-1 input-base"
-                            placeholder="Enter pain point"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newPainPoints = newProduct.painPoints.filter((_, i) => i !== index)
-                              setNewProduct({ ...newProduct, painPoints: newPainPoints })
-                            }}
-                            className="px-2 py-1 text-red-600 hover:text-red-800"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={() => setNewProduct({ ...newProduct, painPoints: [...newProduct.painPoints, ''] })}
-                        className="text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        + Add Pain Point
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Ideal Customer Profile */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Ideal Customer Profile
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={newProduct.idealCustomerProfile}
-                      onChange={(e) => setNewProduct({ ...newProduct, idealCustomerProfile: e.target.value })}
-                      className="w-full input-base"
-                      placeholder="Describe your ideal customer"
-                    />
-                  </div>
-
-                  {/* Subreddits Section */}
-                  <div className="border-t pt-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Relevant Subreddits
+                
+                  <form onSubmit={handleUpdateProduct} className="mt-8 space-y-8">
+                    {/* Website URL Input */}
+                    <div>
+                      <label htmlFor="edit-website" className="block text-lg font-semibold text-gray-900 mb-3">
+                        Website URL
                       </label>
-                      <button
-                        type="button"
-                        onClick={handleFindSubreddits}
-                        disabled={isFindingSubreddits}
-                        className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-                      >
-                        {isFindingSubreddits ? (
-                          <div className="flex items-center">
-                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
-                            Finding...
-                          </div>
-                        ) : (
-                          'Find Subreddits'
-                        )}
-                      </button>
+                      <input
+                        type="url"
+                        id="edit-website"
+                        value={newProduct.website}
+                        onChange={(e) => setNewProduct({ ...newProduct, website: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-lg"
+                        placeholder="https://yourproduct.com"
+                        required
+                      />
                     </div>
-                    
-                    {newProduct.subreddits.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {newProduct.subreddits.map((subreddit, index) => (
-                          <span
-                            key={index}
-                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                          >
-                            r/{subreddit}
+
+                    {/* Product Name */}
+                    <div>
+                      <label className="block text-lg font-semibold text-gray-900 mb-2">
+                        Product Name
+                      </label>
+                      <input
+                        type="text"
+                        value={newProduct.name}
+                        onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        placeholder="Enter product name"
+                        required
+                      />
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                      <label className="block text-lg font-semibold text-gray-900 mb-2">
+                        Description
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={newProduct.description}
+                        onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        placeholder="Describe what your product does"
+                      />
+                    </div>
+
+                    {/* Features */}
+                    <div>
+                      <label className="block text-lg font-semibold text-gray-900 mb-3">
+                        Features
+                      </label>
+                      <div className="space-y-3">
+                        {newProduct.features.map((feature, index) => (
+                          <div key={index} className="flex gap-3">
+                            <input
+                              type="text"
+                              value={feature}
+                              onChange={(e) => {
+                                const newFeatures = [...newProduct.features]
+                                newFeatures[index] = e.target.value
+                                setNewProduct({ ...newProduct, features: newFeatures })
+                              }}
+                              className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                              placeholder="Enter feature"
+                            />
                             <button
                               type="button"
                               onClick={() => {
-                                const newSubreddits = newProduct.subreddits.filter((_, i) => i !== index)
-                                setNewProduct({ ...newProduct, subreddits: newSubreddits })
+                                const newFeatures = newProduct.features.filter((_, i) => i !== index)
+                                setNewProduct({ ...newProduct, features: newFeatures })
                               }}
-                              className="ml-1 text-blue-600 hover:text-blue-800"
+                              className="px-4 py-3 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-colors font-semibold"
                             >
                               ×
                             </button>
-                          </span>
+                          </div>
                         ))}
+                        <button
+                          type="button"
+                          onClick={() => setNewProduct({ ...newProduct, features: [...newProduct.features, ''] })}
+                          className="text-blue-600 hover:text-blue-800 font-semibold hover:bg-blue-50 px-4 py-2 rounded-xl transition-colors"
+                        >
+                          + Add Feature
+                        </button>
                       </div>
-                    )}
-                    
-                    <p className="text-sm text-gray-500">
-                      Click "Find Subreddits" to automatically discover relevant Reddit communities based on your product analysis.
-                    </p>
-                  </div>
-                  
-                  <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-                    <button
-                      type="submit"
-                      disabled={isUpdatingProduct}
-                      className="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:col-start-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isUpdatingProduct ? (
-                        <div className="flex items-center">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Updating...
+                    </div>
+
+                    {/* Benefits */}
+                    <div>
+                      <label className="block text-lg font-semibold text-gray-900 mb-3">
+                        Benefits
+                      </label>
+                      <div className="space-y-3">
+                        {newProduct.benefits.map((benefit, index) => (
+                          <div key={index} className="flex gap-3">
+                            <input
+                              type="text"
+                              value={benefit}
+                              onChange={(e) => {
+                                const newBenefits = [...newProduct.benefits]
+                                newBenefits[index] = e.target.value
+                                setNewProduct({ ...newProduct, benefits: newBenefits })
+                              }}
+                              className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                              placeholder="Enter benefit"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newBenefits = newProduct.benefits.filter((_, i) => i !== index)
+                                setNewProduct({ ...newProduct, benefits: newBenefits })
+                              }}
+                              className="px-4 py-3 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-colors font-semibold"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => setNewProduct({ ...newProduct, benefits: [...newProduct.benefits, ''] })}
+                          className="text-blue-600 hover:text-blue-800 font-semibold hover:bg-blue-50 px-4 py-2 rounded-xl transition-colors"
+                        >
+                          + Add Benefit
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Pain Points */}
+                    <div>
+                      <label className="block text-lg font-semibold text-gray-900 mb-3">
+                        Pain Points (Problems Solved)
+                      </label>
+                      <div className="space-y-3">
+                        {newProduct.painPoints.map((point, index) => (
+                          <div key={index} className="flex gap-3">
+                            <input
+                              type="text"
+                              value={point}
+                              onChange={(e) => {
+                                const newPainPoints = [...newProduct.painPoints]
+                                newPainPoints[index] = e.target.value
+                                setNewProduct({ ...newProduct, painPoints: newPainPoints })
+                              }}
+                              className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                              placeholder="Enter pain point"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newPainPoints = newProduct.painPoints.filter((_, i) => i !== index)
+                                setNewProduct({ ...newProduct, painPoints: newPainPoints })
+                              }}
+                              className="px-4 py-3 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-colors font-semibold"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => setNewProduct({ ...newProduct, painPoints: [...newProduct.painPoints, ''] })}
+                          className="text-blue-600 hover:text-blue-800 font-semibold hover:bg-blue-50 px-4 py-2 rounded-xl transition-colors"
+                        >
+                          + Add Pain Point
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Ideal Customer Profile */}
+                    <div>
+                      <label className="block text-lg font-semibold text-gray-900 mb-2">
+                        Ideal Customer Profile
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={newProduct.idealCustomerProfile}
+                        onChange={(e) => setNewProduct({ ...newProduct, idealCustomerProfile: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        placeholder="Describe your ideal customer"
+                      />
+                    </div>
+
+                    {/* Subreddits Section */}
+                    <div className="border-t border-gray-200 pt-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <label className="block text-lg font-semibold text-gray-900">
+                          Relevant Subreddits
+                        </label>
+                        <button
+                          type="button"
+                          onClick={handleFindSubreddits}
+                          disabled={isFindingSubreddits}
+                          className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
+                        >
+                          {isFindingSubreddits ? (
+                            <div className="flex items-center">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Finding...
+                            </div>
+                          ) : (
+                            'Find Subreddits'
+                          )}
+                        </button>
+                      </div>
+                      
+                      {newProduct.subreddits.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {newProduct.subreddits.map((subreddit, index) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200"
+                            >
+                              r/{subreddit}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newSubreddits = newProduct.subreddits.filter((_, i) => i !== index)
+                                  setNewProduct({ ...newProduct, subreddits: newSubreddits })
+                                }}
+                                className="ml-2 text-blue-600 hover:text-blue-800 hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
                         </div>
-                      ) : (
-                        'Update Product'
                       )}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowEditModal(false)}
-                      disabled={isUpdatingProduct}
-                      className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Cancel
-                    </button>
-                  </div>
+                      
+                      <p className="text-gray-600">
+                        Click "Find Subreddits" to automatically discover relevant Reddit communities based on your product analysis.
+                      </p>
+                    </div>
+                    
+                    <div className="mt-8 flex flex-col sm:flex-row gap-4">
+                      <button
+                        type="submit"
+                        disabled={isUpdatingProduct}
+                        className="flex-1 inline-flex justify-center items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+                      >
+                        {isUpdatingProduct ? (
+                          <div className="flex items-center">
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                            Updating...
+                          </div>
+                        ) : (
+                          'Update Product'
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowEditModal(false)}
+                        disabled={isUpdatingProduct}
+                        className="flex-1 inline-flex justify-center items-center px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                 </form>
               </div>
             </div>
           </div>
-        )}
+          )}
 
-        {/* Custom Modals */}
+          {/* Custom Modals */}
         <CustomModal
           isOpen={showUpgradeModal}
           onClose={() => setShowUpgradeModal(false)}
@@ -1233,6 +1255,7 @@ export default function Products() {
           cancelText="Cancel"
           onConfirm={confirmDeleteProduct}
         />
+        </div>
       </div>
     </AppLayout>
   )
