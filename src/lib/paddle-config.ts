@@ -45,6 +45,16 @@ try {
     console.log('SDK checkoutSessions:', paddle.checkoutSessions)
     console.log('SDK has checkoutSessions:', 'checkoutSessions' in paddle)
     console.log('SDK checkoutSessions type:', typeof paddle.checkoutSessions)
+    
+    // Check what methods are available
+    console.log('Available methods on paddle object:')
+    Object.keys(paddle).forEach(key => {
+      const value = paddle[key]
+      console.log(`- ${key}:`, typeof value, value)
+      if (typeof value === 'object' && value !== null) {
+        console.log(`  - ${key} methods:`, Object.keys(value))
+      }
+    })
   } else {
     console.warn('Paddle API key not found, SDK not initialized')
   }
@@ -199,29 +209,47 @@ export class PaddleAPI {
 
       console.log('Paddle API request data:', JSON.stringify(apiData, null, 2))
 
-      // Try different endpoints for Paddle API v2
+      // Try different approaches for checkout creation
       let session
       try {
-        // First try the checkout-sessions endpoint
-        session = await this.makeRequest('/checkout-sessions', {
-          method: 'POST',
-          body: JSON.stringify(apiData)
-        })
-      } catch (checkoutError) {
-        console.log('checkout-sessions failed, trying transactions:', checkoutError)
+        // First try using SDK transactions if available
+        const sdk = this.ensureSDKInitialized()
+        if (sdk.transactions && typeof sdk.transactions.create === 'function') {
+          console.log('Using SDK transactions.create method')
+          session = await sdk.transactions.create(apiData)
+        } else {
+          throw new Error('SDK transactions not available')
+        }
+      } catch (sdkError) {
+        console.log('SDK transactions failed, trying direct API:', sdkError)
         try {
-          // Fallback to transactions endpoint
-          session = await this.makeRequest('/transactions', {
-            method: 'POST',
-            body: JSON.stringify(apiData)
-          })
-        } catch (transactionError) {
-          console.log('transactions failed, trying direct checkout:', transactionError)
-          // Last fallback - try direct checkout
-          session = await this.makeRequest('/checkout', {
-            method: 'POST',
-            body: JSON.stringify(apiData)
-          })
+          // Try different endpoints for Paddle API v2
+          try {
+            // First try the checkout-sessions endpoint
+            session = await this.makeRequest('/checkout-sessions', {
+              method: 'POST',
+              body: JSON.stringify(apiData)
+            })
+          } catch (checkoutError) {
+            console.log('checkout-sessions failed, trying transactions:', checkoutError)
+            try {
+              // Fallback to transactions endpoint
+              session = await this.makeRequest('/transactions', {
+                method: 'POST',
+                body: JSON.stringify(apiData)
+              })
+            } catch (transactionError) {
+              console.log('transactions failed, trying direct checkout:', transactionError)
+              // Last fallback - try direct checkout
+              session = await this.makeRequest('/checkout', {
+                method: 'POST',
+                body: JSON.stringify(apiData)
+              })
+            }
+          }
+        } catch (apiError) {
+          console.log('All API attempts failed:', apiError)
+          throw apiError
         }
       }
       
