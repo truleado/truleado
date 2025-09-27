@@ -5,7 +5,25 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, name, planType = 'Pro' } = await request.json()
+    const body = await request.json()
+    console.log('📧 Send upgrade email endpoint received:', JSON.stringify(body, null, 2))
+    
+    // Handle both direct calls and Paddle webhook calls
+    let email, name, planType
+    
+    if (body.event_type) {
+      // This is a Paddle webhook call
+      const data = body.data || {}
+      email = data.customer_email || data.email
+      name = data.customer_name || data.name || 'Valued Customer'
+      planType = 'Pro'
+      console.log('📧 Processing Paddle webhook:', body.event_type, 'for email:', email)
+    } else {
+      // This is a direct call
+      email = body.email
+      name = body.name
+      planType = body.planType || 'Pro'
+    }
 
     if (!email || !name) {
       return NextResponse.json({ error: 'Email and name are required' }, { status: 400 })
