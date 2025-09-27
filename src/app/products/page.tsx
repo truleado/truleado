@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/auth-context'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import AppLayout from '@/components/app-layout'
 import { 
   Plus, 
@@ -33,7 +33,7 @@ interface Product {
   createdAt: string
 }
 
-export default function Products() {
+function ProductsContent() {
   const { user, loading } = useAuth()
   const { canAccess } = useSubscription()
   const router = useRouter()
@@ -1291,6 +1291,23 @@ export default function Products() {
         </div>
       </div>
     </AppLayout>
+  )
+}
+
+export default function Products() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <Package className="w-6 h-6 text-white" />
+          </div>
+          <p className="text-gray-600 font-medium">Loading products...</p>
+        </div>
+      </div>
+    }>
+      <ProductsContent />
+    </Suspense>
   )
 }
 
