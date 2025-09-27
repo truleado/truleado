@@ -64,21 +64,49 @@ function SettingsContent() {
     },
   })
 
+  // Ensure notifications object is always properly initialized
+  const safeNotifications = formData.notifications || {
+    email: true,
+    newLeads: true,
+    weeklyReport: true,
+  }
+
   useEffect(() => {
-    try {
-      if (!loading && !user) {
-        router.push('/auth/signin')
+    const initializeSettings = async () => {
+      try {
+        if (!loading && !user) {
+          router.push('/auth/signin')
+          return
+        }
+        if (user) {
+          setFormData(prev => ({ ...prev, email: user.email || '' }))
+          
+          // Call these functions safely
+          try {
+            await checkRedditConnection()
+          } catch (err) {
+            console.error('Reddit connection check failed:', err)
+          }
+          
+          try {
+            await fetchSubscriptionStatus()
+          } catch (err) {
+            console.error('Subscription status fetch failed:', err)
+          }
+          
+          try {
+            await fetchUserPreferences()
+          } catch (err) {
+            console.error('User preferences fetch failed:', err)
+          }
+        }
+      } catch (err) {
+        console.error('Settings initialization error:', err)
+        setError('Failed to initialize settings')
       }
-      if (user) {
-        setFormData(prev => ({ ...prev, email: user.email || '' }))
-        checkRedditConnection()
-        fetchSubscriptionStatus()
-        fetchUserPreferences()
-      }
-    } catch (err) {
-      console.error('Settings initialization error:', err)
-      setError('Failed to initialize settings')
     }
+
+    initializeSettings()
   }, [user, loading, router])
 
   const fetchSubscriptionStatus = async () => {
@@ -446,7 +474,7 @@ function SettingsContent() {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              notifications: formData.notifications,
+              notifications: safeNotifications,
             }),
           })
 
@@ -773,10 +801,10 @@ function SettingsContent() {
                         </div>
                         <input
                           type="checkbox"
-                          checked={formData.notifications?.email ?? true}
+                          checked={safeNotifications.email}
                           onChange={(e) => setFormData({
                             ...formData,
-                            notifications: { ...formData.notifications, email: e.target.checked }
+                            notifications: { ...safeNotifications, email: e.target.checked }
                           })}
                           className="h-6 w-6 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
@@ -794,10 +822,10 @@ function SettingsContent() {
                         </div>
                         <input
                           type="checkbox"
-                          checked={formData.notifications?.newLeads ?? true}
+                          checked={safeNotifications.newLeads}
                           onChange={(e) => setFormData({
                             ...formData,
-                            notifications: { ...formData.notifications, newLeads: e.target.checked }
+                            notifications: { ...safeNotifications, newLeads: e.target.checked }
                           })}
                           className="h-6 w-6 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
@@ -815,10 +843,10 @@ function SettingsContent() {
                         </div>
                         <input
                           type="checkbox"
-                          checked={formData.notifications?.weeklyReport ?? true}
+                          checked={safeNotifications.weeklyReport}
                           onChange={(e) => setFormData({
                             ...formData,
-                            notifications: { ...formData.notifications, weeklyReport: e.target.checked }
+                            notifications: { ...safeNotifications, weeklyReport: e.target.checked }
                           })}
                           className="h-6 w-6 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
