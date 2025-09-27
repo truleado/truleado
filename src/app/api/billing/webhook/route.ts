@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
         const session = event.data
         console.log('Checkout session completed:', session.id)
         
-        // Find user by customer email or custom data
+        // Get user email from session
         const userEmail = session.customer_email
         const customData = session.custom_data || {}
         const userId = customData.user_id
@@ -55,64 +55,59 @@ export async function POST(request: NextRequest) {
           userId
         })
 
-        if (!userId) {
-          console.error('No user_id found in checkout session custom data')
-          console.error('Available custom data keys:', Object.keys(customData))
-          return NextResponse.json({ error: 'User not found' }, { status: 404 })
-        }
-
-        // Update subscription status - use Paddle's actual billing cycle
-        const nextBillingDate = session.next_billed_at || session.details?.next_billed_at
-        await updateUserSubscription(userId, {
-          subscription_status: 'active',
-          paddle_customer_id: session.customer_id,
-          subscription_ends_at: nextBillingDate 
-            ? new Date(nextBillingDate).toISOString()
-            : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // fallback to 30 days
-        })
-
-        // Log subscription change
-        await trialManager.logSubscriptionChange(
-          userId,
-          'active',
-          'trial',
-          'subscription_activated',
-          `webhook_${event.event_id}`,
-          { 
-            session_id: session.id,
-            customer_id: session.customer_id,
-            amount: session.details?.totals?.total
-          }
-        )
-
-        // Send upgrade thank you email
+        // Send upgrade thank you email immediately (don't wait for database lookup)
         try {
-          console.log('Looking up user profile for upgrade email:', userId)
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('full_name, email')
-            .eq('id', userId)
-            .single()
-          
-          if (profileError) {
-            console.error('Error fetching profile for upgrade email:', profileError)
-          } else if (profile?.email && profile?.full_name) {
-            console.log('Sending upgrade thank you email to:', profile.email, 'for:', profile.full_name)
-            const emailResult = await sendUpgradeThankYouEmail(profile.email, profile.full_name, 'Pro')
+          if (userEmail) {
+            console.log('Sending upgrade thank you email to:', userEmail)
+            const emailResult = await sendUpgradeThankYouEmail(userEmail, 'Valued Customer', 'Pro')
             if (emailResult.success) {
-              console.log('✅ Upgrade thank you email sent successfully to:', profile.email)
+              console.log('✅ Upgrade thank you email sent successfully to:', userEmail)
             } else {
               console.error('❌ Failed to send upgrade email:', emailResult.error)
             }
           } else {
-            console.warn('No email or name found for user:', userId, 'Profile:', profile)
+            console.warn('No customer email found in checkout session')
           }
         } catch (emailError) {
           console.error('Failed to send upgrade email:', emailError)
           // Don't fail the webhook if email fails
         }
 
-        console.log('Subscription activated for user:', userId)
+        // Try to update user subscription if we have userId
+        if (userId) {
+          try {
+            const nextBillingDate = session.next_billed_at || session.details?.next_billed_at
+            await updateUserSubscription(userId, {
+              subscription_status: 'active',
+              paddle_customer_id: session.customer_id,
+              subscription_ends_at: nextBillingDate 
+                ? new Date(nextBillingDate).toISOString()
+                : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            })
+
+            // Log subscription change
+            await trialManager.logSubscriptionChange(
+              userId,
+              'active',
+              'trial',
+              'subscription_activated',
+              `webhook_${event.event_id}`,
+              { 
+                session_id: session.id,
+                customer_id: session.customer_id,
+                amount: session.details?.totals?.total
+              }
+            )
+
+            console.log('Subscription activated for user:', userId)
+          } catch (dbError) {
+            console.error('Failed to update user subscription:', dbError)
+            // Don't fail the webhook if database update fails
+          }
+        } else {
+          console.log('No user_id in custom data, skipping database update')
+        }
+
         break
       }
 
@@ -120,34 +115,13 @@ export async function POST(request: NextRequest) {
         const subscription = event.data
         console.log('Subscription created:', subscription.id)
         
-        // Find user by customer ID
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('paddle_customer_id', subscription.customer_id)
-          .single()
-
-        if (profileError || !profile) {
-          console.error('Error finding user profile:', profileError)
-          return NextResponse.json({ error: 'User not found' }, { status: 404 })
-        }
-
-        // Update user with subscription ID
-        await updateUserSubscription(profile.id, {
-          subscription_status: 'active',
-          paddle_subscription_id: subscription.id,
-          subscription_ends_at: subscription.next_billed_at 
-            ? new Date(subscription.next_billed_at).toISOString()
-            : undefined
-        })
-
-        // Send upgrade thank you email for subscription.created
+        // Send upgrade thank you email immediately if we have customer email
         try {
-          console.log('Sending upgrade email for subscription.created:', profile.id)
-          if (profile.email && profile.full_name) {
-            const emailResult = await sendUpgradeThankYouEmail(profile.email, profile.full_name, 'Pro')
+          if (subscription.customer_email) {
+            console.log('Sending upgrade email for subscription.created to:', subscription.customer_email)
+            const emailResult = await sendUpgradeThankYouEmail(subscription.customer_email, 'Valued Customer', 'Pro')
             if (emailResult.success) {
-              console.log('✅ Upgrade thank you email sent successfully for subscription:', profile.email)
+              console.log('✅ Upgrade thank you email sent successfully for subscription:', subscription.customer_email)
             } else {
               console.error('❌ Failed to send upgrade email for subscription:', emailResult.error)
             }
@@ -156,7 +130,31 @@ export async function POST(request: NextRequest) {
           console.error('Failed to send upgrade email for subscription:', emailError)
         }
 
-        console.log('Subscription created for user:', profile.id)
+        // Try to find and update user by customer ID
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('paddle_customer_id', subscription.customer_id)
+            .single()
+
+          if (profile && !profileError) {
+            // Update user with subscription ID
+            await updateUserSubscription(profile.id, {
+              subscription_status: 'active',
+              paddle_subscription_id: subscription.id,
+              subscription_ends_at: subscription.next_billed_at 
+                ? new Date(subscription.next_billed_at).toISOString()
+                : undefined
+            })
+            console.log('Subscription created for user:', profile.id)
+          } else {
+            console.log('No user found for customer ID:', subscription.customer_id)
+          }
+        } catch (dbError) {
+          console.error('Failed to update user subscription:', dbError)
+        }
+
         break
       }
 
@@ -244,34 +242,13 @@ export async function POST(request: NextRequest) {
         const transaction = event.data
         console.log('Payment succeeded:', transaction.id)
         
-        // Find user by customer ID
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('paddle_customer_id', transaction.customer_id)
-          .single()
-
-        if (profileError || !profile) {
-          console.error('Error finding user profile:', profileError)
-          return NextResponse.json({ error: 'User not found' }, { status: 404 })
-        }
-
-        // Ensure subscription is active - use Paddle's actual billing cycle
-        const nextBillingDate = transaction.next_billed_at || transaction.details?.next_billed_at
-        await updateUserSubscription(profile.id, {
-          subscription_status: 'active',
-          subscription_ends_at: nextBillingDate 
-            ? new Date(nextBillingDate).toISOString()
-            : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // fallback to 30 days
-        })
-
-        // Send upgrade thank you email for transaction.completed
+        // Send upgrade thank you email immediately if we have customer email
         try {
-          console.log('Sending upgrade email for transaction.completed:', profile.id)
-          if (profile.email && profile.full_name) {
-            const emailResult = await sendUpgradeThankYouEmail(profile.email, profile.full_name, 'Pro')
+          if (transaction.customer_email) {
+            console.log('Sending upgrade email for transaction.completed to:', transaction.customer_email)
+            const emailResult = await sendUpgradeThankYouEmail(transaction.customer_email, 'Valued Customer', 'Pro')
             if (emailResult.success) {
-              console.log('✅ Upgrade thank you email sent successfully for transaction:', profile.email)
+              console.log('✅ Upgrade thank you email sent successfully for transaction:', transaction.customer_email)
             } else {
               console.error('❌ Failed to send upgrade email for transaction:', emailResult.error)
             }
@@ -280,7 +257,31 @@ export async function POST(request: NextRequest) {
           console.error('Failed to send upgrade email for transaction:', emailError)
         }
 
-        console.log('Payment processed for user:', profile.id)
+        // Try to find and update user by customer ID
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('paddle_customer_id', transaction.customer_id)
+            .single()
+
+          if (profile && !profileError) {
+            // Ensure subscription is active - use Paddle's actual billing cycle
+            const nextBillingDate = transaction.next_billed_at || transaction.details?.next_billed_at
+            await updateUserSubscription(profile.id, {
+              subscription_status: 'active',
+              subscription_ends_at: nextBillingDate 
+                ? new Date(nextBillingDate).toISOString()
+                : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            })
+            console.log('Payment processed for user:', profile.id)
+          } else {
+            console.log('No user found for customer ID:', transaction.customer_id)
+          }
+        } catch (dbError) {
+          console.error('Failed to update user subscription:', dbError)
+        }
+
         break
       }
 
