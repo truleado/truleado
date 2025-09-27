@@ -41,7 +41,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // For mock client (when using placeholder environment variables), set loading to false immediately
   if (process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co' || 
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'placeholder_key') {
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'placeholder_key' ||
+      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return (
       <AuthContext.Provider value={{
         user: null,
@@ -60,10 +62,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        setSession(session)
+        setUser(session?.user ?? null)
+        setLoading(false)
+      } catch (error) {
+        console.error('Auth context error:', error)
+        setLoading(false)
+      }
     }
 
     getInitialSession()
@@ -71,9 +78,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: any, session: any) => {
-        setSession(session)
-        setUser(session?.user ?? null)
-        setLoading(false)
+        try {
+          setSession(session)
+          setUser(session?.user ?? null)
+          setLoading(false)
+        } catch (error) {
+          console.error('Auth state change error:', error)
+          setLoading(false)
+        }
       }
     )
 

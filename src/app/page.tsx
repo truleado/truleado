@@ -11,8 +11,12 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && user) {
-      router.push('/dashboard');
+    try {
+      if (!loading && user) {
+        router.push('/dashboard');
+      }
+    } catch (error) {
+      console.error('Home page error:', error);
     }
   }, [user, loading, router]);
 
