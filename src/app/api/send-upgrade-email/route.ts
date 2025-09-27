@@ -14,10 +14,11 @@ export async function POST(request: NextRequest) {
     if (body.event_type) {
       // This is a Paddle webhook call
       const data = body.data || {}
-      email = data.customer_email || data.email
-      name = data.customer_name || data.name || 'Valued Customer'
+      email = data.customer_email || data.email || data.customer?.email
+      name = data.customer_name || data.name || data.customer?.name || 'Valued Customer'
       planType = 'Pro'
       console.log('📧 Processing Paddle webhook:', body.event_type, 'for email:', email)
+      console.log('📧 Webhook data structure:', JSON.stringify(data, null, 2))
     } else {
       // This is a direct call
       email = body.email
