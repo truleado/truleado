@@ -168,7 +168,7 @@ export default function Pricing() {
                     <span className="text-5xl font-bold text-gray-900">$29</span>
                     <span className="text-xl text-gray-500 ml-1">/month</span>
                   </div>
-                  <p className="mt-2 text-sm text-gray-600">Only if you want to continue</p>
+                  <p className="mt-2 text-sm text-gray-600">Less than $1 per day for unlimited leads</p>
                 </div>
 
                 <div className="mt-8">
