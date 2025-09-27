@@ -100,10 +100,26 @@ export class PaddleAPI {
       priceId: data.priceId,
       customerEmail: data.customerEmail,
       successUrl: data.successUrl,
-      cancelUrl: data.cancelUrl
+      cancelUrl: data.cancelUrl,
+      hasApiKey: !!this.apiKey,
+      environment: paddleConfig.environment
     })
     
     try {
+      // Validate required fields
+      if (!data.priceId) {
+        throw new Error('Price ID is required')
+      }
+      if (!data.customerEmail) {
+        throw new Error('Customer email is required')
+      }
+      if (!data.successUrl) {
+        throw new Error('Success URL is required')
+      }
+      if (!data.cancelUrl) {
+        throw new Error('Cancel URL is required')
+      }
+
       // Use Paddle SDK to create checkout session
       const session = await this.paddle.checkoutSessions.create({
         items: [
@@ -123,7 +139,14 @@ export class PaddleAPI {
       console.log('Checkout session created successfully:', session.id)
       return session
     } catch (error) {
-      console.error('Error creating checkout session:', error)
+      console.error('Error creating checkout session:', {
+        error: error instanceof Error ? error.message : error,
+        stack: error instanceof Error ? error.stack : undefined,
+        priceId: data.priceId,
+        customerEmail: data.customerEmail,
+        hasApiKey: !!this.apiKey,
+        environment: paddleConfig.environment
+      })
       throw error
     }
   }

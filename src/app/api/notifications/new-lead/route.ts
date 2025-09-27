@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    const supabase = createClient()
+    const supabase = await createClient()
     
     // Get lead details
     const { data: lead, error: leadError } = await supabase

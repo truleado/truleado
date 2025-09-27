@@ -4,7 +4,7 @@ import { zohoCRMService } from '@/lib/zoho-crm-service'
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     // Check if supabase client is properly initialized
     if (!supabase || typeof supabase.auth?.getUser !== 'function') {

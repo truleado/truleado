@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     console.log('New user signup detected:', { userId, userEmail, userName })
 
     // Check if this is a new signup (not just a login)
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('welcome_email_sent, created_at')

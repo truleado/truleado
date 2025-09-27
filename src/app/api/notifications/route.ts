@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase-server'
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -24,6 +24,14 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching notifications:', error)
+      // If table doesn't exist, return empty array instead of error
+      if (error.code === 'PGRST116' || error.message?.includes('relation "browser_notifications" does not exist')) {
+        return NextResponse.json({ 
+          success: true, 
+          notifications: [],
+          message: 'Notifications table not yet created'
+        })
+      }
       return NextResponse.json({ error: 'Failed to fetch notifications' }, { status: 500 })
     }
 
@@ -48,7 +56,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Notification IDs are required' }, { status: 400 })
     }
 
-    const supabase = createClient()
+    const supabase = await createClient()
     
     // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -66,6 +74,13 @@ export async function POST(request: NextRequest) {
 
     if (updateError) {
       console.error('Error marking notifications as read:', updateError)
+      // If table doesn't exist, return success instead of error
+      if (updateError.code === 'PGRST116' || updateError.message?.includes('relation "browser_notifications" does not exist')) {
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Notifications table not yet created - no action needed'
+        })
+      }
       return NextResponse.json({ error: 'Failed to mark notifications as read' }, { status: 500 })
     }
 

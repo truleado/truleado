@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = createClient()
+    const supabase = await createClient()
     
     // Find users whose trial expires in 12 hours and haven't received reminder
     const twelveHoursFromNow = new Date()
