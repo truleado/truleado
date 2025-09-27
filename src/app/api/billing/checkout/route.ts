@@ -18,11 +18,19 @@ export async function POST(request: NextRequest) {
 
     if (!paddleConfig.priceId) {
       console.error('Missing Paddle price ID')
-      return NextResponse.json({ error: 'Billing is temporarily unavailable. Missing price configuration.' }, { status: 500 })
+      return NextResponse.json({ 
+        error: 'Billing is temporarily unavailable. Missing price configuration.',
+        details: 'NEXT_PUBLIC_PADDLE_PRICE_ID or PADDLE_PRICE_ID environment variable is not set',
+        debug: 'Visit /api/debug/billing-config to check configuration status'
+      }, { status: 500 })
     }
     if (!paddleConfig.apiKey) {
       console.error('Missing Paddle API key')
-      return NextResponse.json({ error: 'Billing is temporarily unavailable. Missing payment configuration.' }, { status: 500 })
+      return NextResponse.json({ 
+        error: 'Billing is temporarily unavailable. Missing payment configuration.',
+        details: 'PADDLE_API_KEY environment variable is not set',
+        debug: 'Visit /api/debug/billing-config to check configuration status'
+      }, { status: 500 })
     }
 
     // Create checkout session
@@ -146,7 +154,9 @@ export async function POST(request: NextRequest) {
         : 'Failed to create checkout session. Please try again.'
 
     return NextResponse.json({ 
-      error: clientMessage
+      error: clientMessage,
+      details: isConfigError ? 'Missing Paddle configuration. Check environment variables.' : undefined,
+      debug: 'Visit /api/debug/billing-config to check configuration status'
     }, { status: 500 })
   }
 }
