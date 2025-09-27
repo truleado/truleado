@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
 
     // Test 1: Use the new connectivity test method
     try {
-      const connectivityTest = await paddleConfig.testConnectivity()
+      const paddleAPI = new (await import('@/lib/paddle-config')).PaddleAPI()
+      const connectivityTest = await paddleAPI.testConnectivity()
       testResults.tests.push({
         name: 'Paddle API Connectivity Test',
         ...connectivityTest

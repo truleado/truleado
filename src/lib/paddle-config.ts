@@ -262,6 +262,7 @@ export class PaddleAPI {
         
         // Use direct API call to create checkout session
         try {
+          // Try checkout-sessions endpoint first
           session = await this.makeRequest('/checkout-sessions', {
             method: 'POST',
             body: JSON.stringify(apiData)
@@ -281,10 +282,20 @@ export class PaddleAPI {
             custom_data: data.metadata || {}
           }
           
-          session = await this.makeRequest('/transactions', {
-            method: 'POST',
-            body: JSON.stringify(transactionData)
-          })
+          try {
+            session = await this.makeRequest('/transactions', {
+              method: 'POST',
+              body: JSON.stringify(transactionData)
+            })
+          } catch (transactionError) {
+            console.log('Transactions also failed, trying direct checkout:', transactionError)
+            
+            // Last fallback - try direct checkout endpoint
+            session = await this.makeRequest('/checkout', {
+              method: 'POST',
+              body: JSON.stringify(apiData)
+            })
+          }
         }
       }
       
@@ -314,6 +325,10 @@ export class PaddleAPI {
   async testConnectivity() {
     try {
       console.log('Testing Paddle API connectivity...')
+      console.log('API Key format:', this.apiKey ? `${this.apiKey.substring(0, 8)}...` : 'Not set')
+      console.log('API Key length:', this.apiKey ? this.apiKey.length : 0)
+      console.log('Base URL:', this.baseUrl)
+      console.log('Price ID:', this.priceId)
       
       // Test basic connectivity with a simple GET request
       const testUrl = `${this.baseUrl}/prices/${this.priceId}`

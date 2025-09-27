@@ -19,7 +19,8 @@ export async function GET(request: NextRequest) {
 
     console.log('Test data:', testData)
 
-    // Create checkout session
+    // Create PaddleAPI instance and checkout session
+    const paddleAPI = new (await import('@/lib/paddle-config')).PaddleAPI()
     const session = await paddleAPI.createCheckoutSession(testData)
     
     console.log('Raw session response:', JSON.stringify(session, null, 2))
