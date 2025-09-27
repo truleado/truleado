@@ -9,6 +9,29 @@ export interface WelcomeEmailData {
   trialEndDate: string
 }
 
+export interface NewLeadEmailData {
+  userEmail: string
+  userName: string
+  productName: string
+  subreddit: string
+  title: string
+  content: string
+  author: string
+  score: number
+  url: string
+}
+
+export interface WeeklyReportEmailData {
+  userEmail: string
+  userName: string
+  weekStart: string
+  weekEnd: string
+  totalLeads: number
+  newLeads: number
+  topSubreddits: Array<{ name: string; count: number }>
+  topProducts: Array<{ name: string; leads: number }>
+}
+
 export class EmailService {
   static async sendWelcomeEmail(data: WelcomeEmailData) {
     try {
@@ -352,6 +375,360 @@ export class EmailService {
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
       }
+    }
+  }
+
+  static async sendNewLeadNotification(data: NewLeadEmailData) {
+    try {
+      if (!process.env.RESEND_API_KEY) {
+        console.warn('RESEND_API_KEY not configured, skipping email send')
+        return { success: false, error: 'Email service not configured' }
+      }
+
+      const { data: emailData, error } = await resend.emails.send({
+        from: 'Truleado <noreply@truleado.com>',
+        to: [data.userEmail],
+        replyTo: 'truleado@gmail.com',
+        subject: `🎯 New Lead Found for ${data.productName}`,
+        html: `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>New Lead Found</title>
+              <style>
+                body {
+                  font-family: 'Inter', 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+                  line-height: 1.6;
+                  color: #333;
+                  max-width: 600px;
+                  margin: 0 auto;
+                  padding: 20px;
+                  background-color: #f8fafc;
+                }
+                .container {
+                  background: white;
+                  border-radius: 12px;
+                  padding: 40px;
+                  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                }
+                .header {
+                  text-align: center;
+                  margin-bottom: 30px;
+                }
+                .logo {
+                  width: 40px;
+                  height: 40px;
+                  background: #148cfc;
+                  border-radius: 8px;
+                  margin: 0 auto 20px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  color: white;
+                  font-weight: bold;
+                  font-size: 18px;
+                }
+                .title {
+                  font-size: 24px;
+                  font-weight: bold;
+                  color: #1f2937;
+                  margin-bottom: 10px;
+                }
+                .subtitle {
+                  color: #6b7280;
+                  font-size: 16px;
+                }
+                .lead-card {
+                  background: #f8fafc;
+                  border: 1px solid #e5e7eb;
+                  border-radius: 8px;
+                  padding: 20px;
+                  margin: 20px 0;
+                }
+                .lead-title {
+                  font-size: 18px;
+                  font-weight: 600;
+                  color: #1f2937;
+                  margin-bottom: 10px;
+                }
+                .lead-meta {
+                  display: flex;
+                  gap: 15px;
+                  margin-bottom: 15px;
+                  font-size: 14px;
+                  color: #6b7280;
+                }
+                .lead-content {
+                  background: white;
+                  padding: 15px;
+                  border-radius: 6px;
+                  border-left: 4px solid #148cfc;
+                  font-size: 14px;
+                  line-height: 1.5;
+                  color: #374151;
+                }
+                .cta-button {
+                  display: inline-block;
+                  background: #148cfc;
+                  color: white;
+                  padding: 12px 24px;
+                  text-decoration: none;
+                  border-radius: 6px;
+                  font-weight: 600;
+                  margin: 20px 0;
+                }
+                .footer {
+                  margin-top: 30px;
+                  padding-top: 20px;
+                  border-top: 1px solid #e5e7eb;
+                  text-align: center;
+                  color: #6b7280;
+                  font-size: 14px;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <div class="logo">T</div>
+                  <div class="title">🎯 New Lead Found!</div>
+                  <div class="subtitle">We found a potential customer for your product</div>
+                </div>
+
+                <div class="lead-card">
+                  <div class="lead-title">${data.title}</div>
+                  <div class="lead-meta">
+                    <span><strong>Product:</strong> ${data.productName}</span>
+                    <span><strong>Subreddit:</strong> r/${data.subreddit}</span>
+                    <span><strong>Author:</strong> u/${data.author}</span>
+                    <span><strong>Score:</strong> ${data.score}</span>
+                  </div>
+                  <div class="lead-content">
+                    ${data.content.substring(0, 300)}${data.content.length > 300 ? '...' : ''}
+                  </div>
+                </div>
+
+                <div style="text-align: center;">
+                  <a href="${data.url}" class="cta-button">
+                    View Full Lead →
+                  </a>
+                </div>
+
+                <div class="footer">
+                  <p>This lead was found by monitoring r/${data.subreddit} for mentions of your product.</p>
+                  <p>Questions? Reply to this email or visit our <a href="https://truleado.com/support" style="color: #148cfc;">Support Center</a></p>
+                </div>
+              </div>
+            </body>
+          </html>
+        `
+      })
+
+      if (error) {
+        console.error('Error sending new lead email:', error)
+        return { success: false, error: error.message }
+      }
+
+      return { success: true, messageId: emailData?.id }
+    } catch (error) {
+      console.error('Error sending new lead email:', error)
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+    }
+  }
+
+  static async sendWeeklyReport(data: WeeklyReportEmailData) {
+    try {
+      if (!process.env.RESEND_API_KEY) {
+        console.warn('RESEND_API_KEY not configured, skipping email send')
+        return { success: false, error: 'Email service not configured' }
+      }
+
+      const { data: emailData, error } = await resend.emails.send({
+        from: 'Truleado <noreply@truleado.com>',
+        to: [data.userEmail],
+        replyTo: 'truleado@gmail.com',
+        subject: `📊 Your Weekly Lead Report - ${data.newLeads} New Leads Found`,
+        html: `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Weekly Lead Report</title>
+              <style>
+                body {
+                  font-family: 'Inter', 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+                  line-height: 1.6;
+                  color: #333;
+                  max-width: 600px;
+                  margin: 0 auto;
+                  padding: 20px;
+                  background-color: #f8fafc;
+                }
+                .container {
+                  background: white;
+                  border-radius: 12px;
+                  padding: 40px;
+                  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                }
+                .header {
+                  text-align: center;
+                  margin-bottom: 30px;
+                }
+                .logo {
+                  width: 40px;
+                  height: 40px;
+                  background: #148cfc;
+                  border-radius: 8px;
+                  margin: 0 auto 20px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  color: white;
+                  font-weight: bold;
+                  font-size: 18px;
+                }
+                .title {
+                  font-size: 24px;
+                  font-weight: bold;
+                  color: #1f2937;
+                  margin-bottom: 10px;
+                }
+                .subtitle {
+                  color: #6b7280;
+                  font-size: 16px;
+                }
+                .stats-grid {
+                  display: grid;
+                  grid-template-columns: 1fr 1fr;
+                  gap: 20px;
+                  margin: 30px 0;
+                }
+                .stat-card {
+                  background: #f8fafc;
+                  border: 1px solid #e5e7eb;
+                  border-radius: 8px;
+                  padding: 20px;
+                  text-align: center;
+                }
+                .stat-number {
+                  font-size: 32px;
+                  font-weight: bold;
+                  color: #148cfc;
+                  margin-bottom: 5px;
+                }
+                .stat-label {
+                  color: #6b7280;
+                  font-size: 14px;
+                }
+                .section {
+                  margin: 30px 0;
+                }
+                .section-title {
+                  font-size: 18px;
+                  font-weight: 600;
+                  color: #1f2937;
+                  margin-bottom: 15px;
+                }
+                .list-item {
+                  display: flex;
+                  justify-content: space-between;
+                  padding: 10px 0;
+                  border-bottom: 1px solid #f3f4f6;
+                }
+                .list-item:last-child {
+                  border-bottom: none;
+                }
+                .cta-button {
+                  display: inline-block;
+                  background: #148cfc;
+                  color: white;
+                  padding: 12px 24px;
+                  text-decoration: none;
+                  border-radius: 6px;
+                  font-weight: 600;
+                  margin: 20px 0;
+                }
+                .footer {
+                  margin-top: 30px;
+                  padding-top: 20px;
+                  border-top: 1px solid #e5e7eb;
+                  text-align: center;
+                  color: #6b7280;
+                  font-size: 14px;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <div class="logo">T</div>
+                  <div class="title">📊 Weekly Lead Report</div>
+                  <div class="subtitle">${data.weekStart} - ${data.weekEnd}</div>
+                </div>
+
+                <div class="stats-grid">
+                  <div class="stat-card">
+                    <div class="stat-number">${data.newLeads}</div>
+                    <div class="stat-label">New Leads This Week</div>
+                  </div>
+                  <div class="stat-card">
+                    <div class="stat-number">${data.totalLeads}</div>
+                    <div class="stat-label">Total Leads</div>
+                  </div>
+                </div>
+
+                ${data.topSubreddits.length > 0 ? `
+                <div class="section">
+                  <div class="section-title">🔥 Top Subreddits</div>
+                  ${data.topSubreddits.map(sub => `
+                    <div class="list-item">
+                      <span>r/${sub.name}</span>
+                      <span>${sub.count} leads</span>
+                    </div>
+                  `).join('')}
+                </div>
+                ` : ''}
+
+                ${data.topProducts.length > 0 ? `
+                <div class="section">
+                  <div class="section-title">🎯 Top Products</div>
+                  ${data.topProducts.map(product => `
+                    <div class="list-item">
+                      <span>${product.name}</span>
+                      <span>${product.leads} leads</span>
+                    </div>
+                  `).join('')}
+                </div>
+                ` : ''}
+
+                <div style="text-align: center;">
+                  <a href="https://truleado.com/dashboard" class="cta-button">
+                    View All Leads →
+                  </a>
+                </div>
+
+                <div class="footer">
+                  <p>Keep monitoring Reddit for more potential customers!</p>
+                  <p>Questions? Reply to this email or visit our <a href="https://truleado.com/support" style="color: #148cfc;">Support Center</a></p>
+                </div>
+              </div>
+            </body>
+          </html>
+        `
+      })
+
+      if (error) {
+        console.error('Error sending weekly report email:', error)
+        return { success: false, error: error.message }
+      }
+
+      return { success: true, messageId: emailData?.id }
+    } catch (error) {
+      console.error('Error sending weekly report email:', error)
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
     }
   }
 }

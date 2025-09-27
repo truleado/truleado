@@ -467,20 +467,6 @@ export default function Dashboard() {
           <div className="px-4 py-5 sm:p-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium leading-6 text-gray-900">Recent Activity</h3>
-              <div className="flex space-x-3">
-                <button
-                  onClick={refreshSubscription}
-                  className="text-sm text-green-600 hover:text-green-500"
-                >
-                  Refresh Subscription
-                </button>
-                <button
-                  onClick={fetchDashboardData}
-                  className="text-sm text-blue-600 hover:text-blue-500"
-                >
-                  Refresh Data
-                </button>
-              </div>
             </div>
             <div className="mt-5">
               {activityLoading ? (

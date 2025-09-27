@@ -72,6 +72,7 @@ function SettingsContent() {
       setFormData(prev => ({ ...prev, email: user.email || '' }))
       checkRedditConnection()
       fetchSubscriptionStatus()
+      fetchUserPreferences()
     }
   }, [user, loading, router])
 
@@ -106,6 +107,23 @@ function SettingsContent() {
       }
     } catch (error) {
       console.error('Error fetching billing info:', error)
+    }
+  }
+
+  const fetchUserPreferences = async () => {
+    try {
+      const response = await fetch('/api/user/preferences')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.preferences) {
+          setFormData(prev => ({
+            ...prev,
+            notifications: data.preferences
+          }))
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user preferences:', error)
     }
   }
 

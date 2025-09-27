@@ -18,6 +18,7 @@ import {
   Megaphone
 } from 'lucide-react'
 import { TrialBanner } from './TrialBanner'
+import { NotificationBell } from './NotificationBell'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, description: 'Overview & analytics' },
@@ -132,6 +133,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex flex-1 gap-x-3 sm:gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1" />
             <div className="flex items-center gap-x-3 sm:gap-x-4 lg:gap-x-6">
+              {/* Notifications */}
+              <NotificationBell />
+              
               {/* User menu */}
               <div className="relative">
                 <div className="flex items-center space-x-2 sm:space-x-3">

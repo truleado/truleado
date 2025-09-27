@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { EmailService } from '@/lib/email-service'
+import { NotificationService } from '@/lib/notification-service'
 
 export async function GET(request: NextRequest) {
   try {
@@ -52,6 +53,13 @@ export async function GET(request: NextRequest) {
         if (!userEmail) {
           console.warn(`No email found for user ${user.id}`)
           errorCount++
+          continue
+        }
+
+        // Check if user wants email notifications
+        const shouldSendEmail = await NotificationService.shouldSendEmail(user.id)
+        if (!shouldSendEmail) {
+          console.log(`User ${user.id} has disabled email notifications, skipping trial reminder`)
           continue
         }
 
