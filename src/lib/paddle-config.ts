@@ -28,10 +28,21 @@ console.log('Paddle Config Loaded:', {
   priceIdValue: paddleConfig.priceId
 })
 
-// Initialize Paddle SDK
-const paddle = new Paddle(paddleConfig.apiKey, {
-  environment: paddleConfig.environment === 'production' ? 'production' : 'sandbox'
-})
+// Initialize Paddle SDK with error handling
+let paddle: Paddle | null = null
+try {
+  if (paddleConfig.apiKey) {
+    paddle = new Paddle(paddleConfig.apiKey, {
+      environment: paddleConfig.environment === 'production' ? 'production' : 'sandbox'
+    })
+    console.log('Paddle SDK initialized successfully')
+  } else {
+    console.warn('Paddle API key not found, SDK not initialized')
+  }
+} catch (error) {
+  console.error('Failed to initialize Paddle SDK:', error)
+  paddle = null
+}
 
 // Paddle API Client
 export class PaddleAPI {
@@ -43,6 +54,13 @@ export class PaddleAPI {
     this.apiKey = paddleConfig.apiKey
     this.baseUrl = paddleConfig.baseUrl
     this.paddle = paddle
+  }
+
+  private ensureSDKInitialized() {
+    if (!this.paddle) {
+      throw new Error('Paddle SDK not initialized. Please check your PADDLE_API_KEY environment variable.')
+    }
+    return this.paddle
   }
 
   private async makeRequest(endpoint: string, options: RequestInit = {}) {
@@ -165,7 +183,8 @@ export class PaddleAPI {
         }
 
         console.log('Paddle SDK request data:', JSON.stringify(checkoutData, null, 2))
-        session = await this.paddle.checkoutSessions.create(checkoutData)
+        const sdk = this.ensureSDKInitialized()
+        session = await sdk.checkoutSessions.create(checkoutData)
       }
       
       console.log('Checkout session created successfully:', session.id)
@@ -194,7 +213,8 @@ export class PaddleAPI {
   async getPrice(priceId: string) {
     try {
       console.log('Fetching price using Paddle SDK:', priceId)
-      const price = await this.paddle.prices.get(priceId)
+      const sdk = this.ensureSDKInitialized()
+      const price = await sdk.prices.get(priceId)
       console.log('Price retrieved successfully:', price)
       return price
     } catch (error) {
@@ -234,7 +254,8 @@ export class PaddleAPI {
     console.log('Creating Paddle customer using SDK:', data.email)
     
     try {
-      const customer = await this.paddle.customers.create({
+      const sdk = this.ensureSDKInitialized()
+      const customer = await sdk.customers.create({
         email: data.email,
         name: data.name,
         customData: data.customData || {}
@@ -263,7 +284,8 @@ export class PaddleAPI {
   async listCustomers(options: { email?: string; limit?: number } = {}) {
     try {
       console.log('Listing customers with options:', options)
-      const customers = this.paddle.customers.list({
+      const sdk = this.ensureSDKInitialized()
+      const customers = sdk.customers.list({
         email: options.email ? [options.email] : undefined,
         perPage: options.limit || 10
       })
@@ -281,7 +303,8 @@ export class PaddleAPI {
       console.log('Searching for customer by email:', email)
       
       // Try the search with email filter
-      const customers = this.paddle.customers.list({
+      const sdk = this.ensureSDKInitialized()
+      const customers = sdk.customers.list({
         email: [email],
         perPage: 10
       })
@@ -323,7 +346,8 @@ export class PaddleAPI {
     
     try {
       // In Paddle, subscriptions are created via transactions with recurring items
-      const transaction = await this.paddle.transactions.create({
+      const sdk = this.ensureSDKInitialized()
+      const transaction = await sdk.transactions.create({
         customerId: data.customerId,
         items: [
           {
