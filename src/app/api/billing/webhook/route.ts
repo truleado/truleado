@@ -5,6 +5,14 @@ import { paddleAPI, updateUserSubscription } from '@/lib/paddle-config'
 import { trialManager } from '@/lib/trial-manager'
 import { sendUpgradeThankYouEmail } from '@/lib/upgrade-email-service'
 
+export async function GET() {
+  return NextResponse.json({ 
+    message: 'Paddle webhook endpoint is active',
+    methods: ['POST'],
+    status: 'ready'
+  })
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('Paddle webhook received')
