@@ -55,7 +55,14 @@ export async function GET(request: NextRequest) {
       checkoutTest = {
         success: false,
         error: checkoutError instanceof Error ? checkoutError.message : 'Unknown error',
-        details: checkoutError
+        details: checkoutError,
+        // Add debugging info
+        debug: {
+          hasApiKey: !!paddleConfig.apiKey,
+          hasPriceId: !!paddleConfig.priceId,
+          environment: paddleConfig.environment,
+          apiKeyPreview: paddleConfig.apiKey ? `${paddleConfig.apiKey.substring(0, 8)}...` : 'Not set'
+        }
       }
     }
 

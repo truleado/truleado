@@ -32,15 +32,20 @@ console.log('Paddle Config Loaded:', {
 let paddle: Paddle | null = null
 try {
   if (paddleConfig.apiKey) {
+    console.log('Initializing Paddle SDK with API key:', paddleConfig.apiKey.substring(0, 8) + '...')
+    console.log('Environment:', paddleConfig.environment)
     paddle = new Paddle(paddleConfig.apiKey, {
       environment: paddleConfig.environment === 'production' ? 'production' : 'sandbox'
     })
     console.log('Paddle SDK initialized successfully')
+    console.log('SDK object:', paddle)
+    console.log('SDK checkoutSessions:', paddle.checkoutSessions)
   } else {
     console.warn('Paddle API key not found, SDK not initialized')
   }
 } catch (error) {
   console.error('Failed to initialize Paddle SDK:', error)
+  console.error('Error details:', error)
   paddle = null
 }
 
@@ -48,12 +53,12 @@ try {
 export class PaddleAPI {
   private apiKey: string
   private baseUrl: string
-  private paddle: Paddle
+  private paddle: Paddle | null
 
   constructor() {
     this.apiKey = paddleConfig.apiKey
     this.baseUrl = paddleConfig.baseUrl
-    this.paddle = paddle
+    this.paddle = paddle || null
   }
 
   private ensureSDKInitialized() {
