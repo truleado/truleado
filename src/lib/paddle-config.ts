@@ -155,63 +155,28 @@ export class PaddleAPI {
         throw new Error('Cancel URL is required')
       }
 
-      // Try direct API call first, then fallback to SDK
-      let session
-      try {
-        // Use direct API call with proper format
-        const apiData = {
-          items: [
-            {
-              price_id: data.priceId,
-              quantity: 1
-            }
-          ],
-          customer_email: data.customerEmail,
-          custom_data: data.metadata || {},
-          checkout: {
-            return_url: data.successUrl,
-            cancel_url: data.cancelUrl
+      // Use direct API call since checkoutSessions is not available in this SDK version
+      const apiData = {
+        items: [
+          {
+            price_id: data.priceId,
+            quantity: 1
           }
+        ],
+        customer_email: data.customerEmail,
+        custom_data: data.metadata || {},
+        checkout: {
+          return_url: data.successUrl,
+          cancel_url: data.cancelUrl
         }
-
-        console.log('Paddle API request data:', JSON.stringify(apiData, null, 2))
-
-        session = await this.makeRequest('/checkout-sessions', {
-          method: 'POST',
-          body: JSON.stringify(apiData)
-        })
-      } catch (apiError) {
-        console.log('Direct API failed, trying SDK approach:', apiError)
-        
-        // Fallback to SDK approach
-        const checkoutData = {
-          items: [
-            {
-              priceId: data.priceId,
-              quantity: 1
-            }
-          ],
-          customerEmail: data.customerEmail,
-          customData: data.metadata || {},
-          checkout: {
-            returnUrl: data.successUrl,
-            cancelUrl: data.cancelUrl
-          }
-        }
-
-        console.log('Paddle SDK request data:', JSON.stringify(checkoutData, null, 2))
-        const sdk = this.ensureSDKInitialized()
-        
-        // Check if checkoutSessions exists and has create method
-        if (!sdk.checkoutSessions) {
-          throw new Error('checkoutSessions not available on Paddle SDK instance')
-        }
-        if (typeof sdk.checkoutSessions.create !== 'function') {
-          throw new Error('checkoutSessions.create is not a function')
-        }
-        
-        session = await sdk.checkoutSessions.create(checkoutData)
       }
+
+      console.log('Paddle API request data:', JSON.stringify(apiData, null, 2))
+
+      const session = await this.makeRequest('/checkout-sessions', {
+        method: 'POST',
+        body: JSON.stringify(apiData)
+      })
       
       console.log('Checkout session created successfully:', session.id)
       return session
@@ -240,6 +205,13 @@ export class PaddleAPI {
     try {
       console.log('Fetching price using Paddle SDK:', priceId)
       const sdk = this.ensureSDKInitialized()
+      
+      // Check if prices property exists
+      if (!sdk.prices) {
+        console.log('prices not available, trying direct API call')
+        return await this.makeRequest(`/prices/${priceId}`)
+      }
+      
       const price = await sdk.prices.get(priceId)
       console.log('Price retrieved successfully:', price)
       return price
@@ -281,6 +253,20 @@ export class PaddleAPI {
     
     try {
       const sdk = this.ensureSDKInitialized()
+      
+      // Check if customers property exists
+      if (!sdk.customers) {
+        console.log('customers not available, trying direct API call')
+        return await this.makeRequest('/customers', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: data.email,
+            name: data.name,
+            custom_data: data.customData || {}
+          })
+        })
+      }
+      
       const customer = await sdk.customers.create({
         email: data.email,
         name: data.name,
