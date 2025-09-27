@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
       // Don't fail the OAuth flow if job creation fails
     }
 
-    return NextResponse.redirect(new URL('/settings?success=reddit_connected', request.url))
+    return NextResponse.redirect(new URL('/products?reddit_connected=true', request.url))
   } catch (error) {
     console.error('Reddit OAuth callback error:', error)
     return NextResponse.redirect(new URL('/settings?error=oauth_callback_failed', request.url))

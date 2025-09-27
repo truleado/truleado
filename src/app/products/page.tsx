@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuth } from '@/contexts/auth-context'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import AppLayout from '@/components/app-layout'
 import { 
@@ -12,7 +12,8 @@ import {
   Trash2, 
   Eye,
   Globe,
-  Target
+  Target,
+  CheckCircle
 } from 'lucide-react'
 import { AccessGuard, UpgradeButton } from '@/components/AccessGuard'
 import { useSubscription } from '@/lib/subscription-context'
@@ -36,6 +37,7 @@ export default function Products() {
   const { user, loading } = useAuth()
   const { canAccess } = useSubscription()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [products, setProducts] = useState<Product[]>([])
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -64,6 +66,7 @@ export default function Products() {
   const [modalMessage, setModalMessage] = useState('')
   const [modalTitle, setModalTitle] = useState('')
   const [productToDelete, setProductToDelete] = useState<string | null>(null)
+  const [showRedditSuccess, setShowRedditSuccess] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -72,6 +75,20 @@ export default function Products() {
       fetchProducts()
     }
   }, [user, loading, router])
+
+  // Handle Reddit connection success
+  useEffect(() => {
+    const redditConnected = searchParams.get('reddit_connected')
+    if (redditConnected === 'true') {
+      setShowRedditSuccess(true)
+      // Clean up URL
+      const url = new URL(window.location.href)
+      url.searchParams.delete('reddit_connected')
+      window.history.replaceState({}, '', url.toString())
+      // Hide success message after 5 seconds
+      setTimeout(() => setShowRedditSuccess(false), 5000)
+    }
+  }, [searchParams])
 
   const fetchProducts = async () => {
     try {
@@ -194,7 +211,9 @@ export default function Products() {
       const progressInterval = setInterval(() => {
         setAddProductProgress(prev => {
           if (prev >= 90) return prev
-          return prev + Math.random() * 20
+          const increment = Math.random() * 15
+          const newProgress = prev + increment
+          return Math.min(newProgress, 90) // Cap at 90% until completion
         })
       }, 200)
 
@@ -253,6 +272,7 @@ export default function Products() {
       })
       
       // Show success message based on lead discovery status
+      setShowErrorModal(false) // Ensure error modal is closed
       if (data.leadDiscoveryStarted) {
         setModalTitle('Success')
         setModalMessage('Product added successfully! Lead discovery has started automatically.')
@@ -450,6 +470,23 @@ export default function Products() {
             </div>
           </div>
 
+          {/* Reddit Connection Success Message */}
+          {showRedditSuccess && (
+            <div className="mb-6 bg-green-50 border border-green-200 rounded-2xl p-6">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <CheckCircle className="h-6 w-6 text-green-500" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-semibold text-green-800">Reddit Connected Successfully!</h3>
+                  <div className="mt-2 text-green-700">
+                    <p>Your Reddit account has been connected. You can now add products to start finding leads on Reddit.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Products Grid */}
           {products.length === 0 ? (
             <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-gray-200/50 p-12 text-center">
@@ -486,24 +523,20 @@ export default function Products() {
                         </div>
                       </div>
                       <div className="flex space-x-2">
-                        <UpgradeButton feature="edit_products">
-                          <button 
-                            onClick={() => handleEditProduct(product)}
-                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Edit product"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                        </UpgradeButton>
-                        <UpgradeButton feature="delete_products">
-                          <button 
-                            onClick={() => handleDeleteProduct(product.id)}
-                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Delete product"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </UpgradeButton>
+                        <button 
+                          onClick={() => handleEditProduct(product)}
+                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Edit product"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteProduct(product.id)}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete product"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
                     

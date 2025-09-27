@@ -461,155 +461,137 @@ function LeadsContent() {
               </p>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {filteredLeads.map((lead) => (
-                <div key={lead.id} className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-gray-200/50 p-8 hover:shadow-3xl transition-all duration-200">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-4">
-                        <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold border ${getStatusColor(lead.status)}`}>
-                          {getStatusIcon(lead.status)}
-                          {lead.status.charAt(0).toUpperCase() + lead.status.slice(1).replace('_', ' ')}
-                        </span>
-                        <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${
-                          lead.isComment ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-gray-100 text-gray-800 border border-gray-200'
-                        }`}>
-                          {lead.isComment ? '💬 Comment' : '📝 Post'}
-                        </span>
-                        <span className="text-sm text-gray-500">•</span>
-                        <span className="text-sm text-gray-500">r/{lead.subreddit}</span>
-                        <span className="text-sm text-gray-500">•</span>
-                        <span className="text-sm text-gray-500">u/{lead.author}</span>
-                      </div>
-                      
-                      <h3 className="text-xl font-bold text-gray-900 mb-4">
-                        {lead.title}
-                      </h3>
-                      
-                      {lead.isComment && lead.parentPostTitle && (
-                        <div className="bg-gray-50 border-l-4 border-blue-400 rounded-r-xl p-4 mb-4">
-                          <p className="text-sm text-gray-600 mb-2 font-semibold">
-                            Parent Post:
-                          </p>
-                          <p className="text-sm text-gray-800 font-medium">
-                            {lead.parentPostTitle}
-                          </p>
-                          {lead.parentPostUrl && (
-                            <a 
-                              href={lead.parentPostUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-xs text-blue-600 hover:text-blue-800 mt-2 inline-flex items-center gap-1"
-                            >
-                              <Link className="w-3 h-3" />
-                              View original post
-                            </a>
-                          )}
-                        </div>
-                      )}
-                      
-                      <p className="text-gray-600 mb-6 line-clamp-3 leading-relaxed">
-                        {lead.content}
-                      </p>
-                      
-                      <div className="flex items-center gap-6 text-sm text-gray-500 mb-6">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4" />
-                          {new Date(lead.createdAt).toLocaleDateString()}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <MessageSquare className="w-4 h-4" />
-                          {lead.comments} comments
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Tag className="w-4 h-4" />
-                          {lead.productName}
-                        </div>
-                        {lead.aiAnalysisScore > 0 && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-purple-600">
-                              AI Score: {lead.aiAnalysisScore}/10
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* AI Analysis Section */}
-                      {lead.aiAnalysisReasons.length > 0 && (
-                        <div className="mb-6 p-6 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-2xl">
-                          <h4 className="text-sm font-semibold text-purple-900 mb-3 flex items-center gap-2">
-                            <Brain className="w-4 h-4" />
-                            AI Analysis - Why this is a good lead:
-                          </h4>
-                          <ul className="text-sm text-purple-800 space-y-2">
-                            {lead.aiAnalysisReasons.map((reason, index) => (
-                              <li key={index} className="flex items-start gap-3">
-                                <span className="text-purple-600 mt-1">•</span>
-                                <span>{reason}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {/* AI Sample Reply Section */}
-                      {lead.aiSampleReply && (
-                        <div className="mb-6 p-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl">
-                          <h4 className="text-sm font-semibold text-green-900 mb-3 flex items-center gap-2">
-                            <MessageSquare className="w-4 h-4" />
-                            AI Suggested Reply:
-                          </h4>
-                          <div className="text-sm text-green-800 bg-white p-4 rounded-xl border mb-3">
-                            {lead.aiSampleReply}
-                          </div>
-                          <button
-                            onClick={() => handleCopyReply(lead.aiSampleReply, lead.id)}
-                            className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
-                          >
-                            {copiedReply === lead.id ? (
-                              <>
-                                <CheckCircle className="w-4 h-4" />
-                                Copied!
-                              </>
-                            ) : (
-                              <>
-                                <span>📋</span>
-                                Copy Reply
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      )}
+                <div key={lead.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 p-6 hover:shadow-2xl transition-all duration-200">
+                  {/* Header with status and metadata */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusColor(lead.status)}`}>
+                        {getStatusIcon(lead.status)}
+                        {lead.status.charAt(0).toUpperCase() + lead.status.slice(1).replace('_', ' ')}
+                      </span>
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                        lead.isComment ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
+                      }`}>
+                        {lead.isComment ? '💬' : '📝'}
+                      </span>
+                      <span className="text-xs text-gray-500">r/{lead.subreddit}</span>
+                      <span className="text-xs text-gray-500">•</span>
+                      <span className="text-xs text-gray-500">u/{lead.author}</span>
                     </div>
+                    <button 
+                      onClick={() => handleDeleteLead(lead.id)}
+                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete lead"
+                    >
+                      <XCircle className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Title and content */}
+                  <div className="mb-4">
+                    <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
+                      {lead.title}
+                    </h3>
                     
-                    <div className="flex flex-col gap-3 ml-6">
-                      <a
-                        href={lead.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:text-blue-500 border border-blue-200 rounded-xl hover:bg-blue-50 transition-colors"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        View Post
-                      </a>
-                      
-                      <div className="flex gap-2">
-                        <button className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors">
-                          Interested
-                        </button>
-                        <button className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                          Not Interested
-                        </button>
-                        <UpgradeButton feature="delete_leads">
-                          <button 
-                            onClick={() => handleDeleteLead(lead.id)}
-                            className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
-                          >
-                            Delete
-                          </button>
-                        </UpgradeButton>
+                    {lead.isComment && lead.parentPostTitle && (
+                      <div className="bg-gray-50 border-l-2 border-blue-400 rounded-r-lg p-3 mb-3">
+                        <p className="text-xs text-gray-600 mb-1 font-medium">Parent Post:</p>
+                        <p className="text-sm text-gray-800 line-clamp-1">{lead.parentPostTitle}</p>
+                      </div>
+                    )}
+                    
+                    <p className="text-gray-600 text-sm line-clamp-3 leading-relaxed">
+                      {lead.content}
+                    </p>
+                  </div>
+
+                  {/* Metadata row */}
+                  <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {new Date(lead.createdAt).toLocaleDateString()}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <MessageSquare className="w-3 h-3" />
+                        {lead.comments}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Tag className="w-3 h-3" />
+                        {lead.productName}
                       </div>
                     </div>
+                    {lead.aiAnalysisScore > 0 && (
+                      <div className="flex items-center gap-1">
+                        <Brain className="w-3 h-3 text-purple-600" />
+                        <span className="font-semibold text-purple-600">{lead.aiAnalysisScore}/10</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* AI Analysis - Compact */}
+                  {lead.aiAnalysisReasons.length > 0 && (
+                    <div className="mb-4 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl">
+                      <h4 className="text-xs font-semibold text-purple-900 mb-2 flex items-center gap-1">
+                        <Brain className="w-3 h-3" />
+                        AI Analysis:
+                      </h4>
+                      <ul className="text-xs text-purple-800 space-y-1">
+                        {lead.aiAnalysisReasons.slice(0, 2).map((reason, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <span className="text-purple-600 mt-0.5">•</span>
+                            <span className="line-clamp-1">{reason}</span>
+                          </li>
+                        ))}
+                        {lead.aiAnalysisReasons.length > 2 && (
+                          <li className="text-purple-600 text-xs">+{lead.aiAnalysisReasons.length - 2} more reasons</li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* AI Sample Reply - Compact */}
+                  {lead.aiSampleReply && (
+                    <div className="mb-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl">
+                      <h4 className="text-xs font-semibold text-green-900 mb-2 flex items-center gap-1">
+                        <MessageSquare className="w-3 h-3" />
+                        AI Reply:
+                      </h4>
+                      <div className="text-xs text-green-800 bg-white p-2 rounded-lg border mb-2 line-clamp-2">
+                        {lead.aiSampleReply}
+                      </div>
+                      <button
+                        onClick={() => handleCopyReply(lead.aiSampleReply, lead.id)}
+                        className="inline-flex items-center gap-1 px-3 py-1 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        {copiedReply === lead.id ? (
+                          <>
+                            <CheckCircle className="w-3 h-3" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <span>📋</span>
+                            Copy
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Action button */}
+                  <div className="flex justify-end">
+                    <a
+                      href={lead.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:text-blue-500 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      View Post
+                    </a>
                   </div>
                 </div>
               ))}
