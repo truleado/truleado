@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase-server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { paddleAPI, updateUserSubscription } from '@/lib/paddle-config'
 import { trialManager } from '@/lib/trial-manager'
+import { sendUpgradeThankYouEmail } from '@/lib/upgrade-email-service'
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,6 +76,23 @@ export async function POST(request: NextRequest) {
             amount: session.details?.totals?.total
           }
         )
+
+        // Send upgrade thank you email
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, email')
+            .eq('id', userId)
+            .single()
+          
+          if (profile?.email && profile?.full_name) {
+            await sendUpgradeThankYouEmail(profile.email, profile.full_name, 'Pro')
+            console.log('Upgrade thank you email sent to:', profile.email)
+          }
+        } catch (emailError) {
+          console.warn('Failed to send upgrade email:', emailError)
+          // Don't fail the webhook if email fails
+        }
 
         console.log('Subscription activated for user:', userId)
         break
