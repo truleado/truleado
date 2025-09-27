@@ -41,7 +41,10 @@ try {
     })
     console.log('Paddle SDK initialized successfully')
     console.log('SDK object:', paddle)
+    console.log('SDK object keys:', Object.keys(paddle))
     console.log('SDK checkoutSessions:', paddle.checkoutSessions)
+    console.log('SDK has checkoutSessions:', 'checkoutSessions' in paddle)
+    console.log('SDK checkoutSessions type:', typeof paddle.checkoutSessions)
   } else {
     console.warn('Paddle API key not found, SDK not initialized')
   }
@@ -67,6 +70,13 @@ export class PaddleAPI {
     if (!this.paddle) {
       throw new Error('Paddle SDK not initialized. Please check your PADDLE_API_KEY environment variable.')
     }
+    
+    // Debug the paddle instance
+    console.log('ensureSDKInitialized - paddle object:', this.paddle)
+    console.log('ensureSDKInitialized - paddle keys:', Object.keys(this.paddle))
+    console.log('ensureSDKInitialized - checkoutSessions:', this.paddle.checkoutSessions)
+    console.log('ensureSDKInitialized - has checkoutSessions:', 'checkoutSessions' in this.paddle)
+    
     return this.paddle
   }
 
@@ -191,6 +201,15 @@ export class PaddleAPI {
 
         console.log('Paddle SDK request data:', JSON.stringify(checkoutData, null, 2))
         const sdk = this.ensureSDKInitialized()
+        
+        // Check if checkoutSessions exists and has create method
+        if (!sdk.checkoutSessions) {
+          throw new Error('checkoutSessions not available on Paddle SDK instance')
+        }
+        if (typeof sdk.checkoutSessions.create !== 'function') {
+          throw new Error('checkoutSessions.create is not a function')
+        }
+        
         session = await sdk.checkoutSessions.create(checkoutData)
       }
       
