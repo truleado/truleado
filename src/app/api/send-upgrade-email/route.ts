@@ -14,11 +14,32 @@ export async function POST(request: NextRequest) {
     if (body.event_type) {
       // This is a Paddle webhook call
       const data = body.data || {}
-      email = data.customer_email || data.email || data.customer?.email
-      name = data.customer_name || data.name || data.customer?.name || 'Valued Customer'
+      
+      // Try multiple possible locations for email
+      email = data.customer_email || 
+              data.email || 
+              data.customer?.email || 
+              data.customer_email_address ||
+              data.billing_address?.email ||
+              data.customer_details?.email ||
+              data.payer?.email ||
+              data.payer?.email_address
+      
+      // Try multiple possible locations for name
+      name = data.customer_name || 
+             data.name || 
+             data.customer?.name || 
+             data.customer_name || 
+             data.billing_address?.name ||
+             data.customer_details?.name ||
+             data.payer?.name ||
+             data.payer?.first_name + ' ' + data.payer?.last_name ||
+             'Valued Customer'
+      
       planType = 'Pro'
-      console.log('📧 Processing Paddle webhook:', body.event_type, 'for email:', email)
-      console.log('📧 Webhook data structure:', JSON.stringify(data, null, 2))
+      console.log('📧 Processing Paddle webhook:', body.event_type)
+      console.log('📧 Full webhook body:', JSON.stringify(body, null, 2))
+      console.log('📧 Extracted email:', email, 'name:', name)
     } else {
       // This is a direct call
       email = body.email
@@ -26,8 +47,17 @@ export async function POST(request: NextRequest) {
       planType = body.planType || 'Pro'
     }
 
+    // If we still don't have email/name, use defaults for webhook calls
     if (!email || !name) {
-      return NextResponse.json({ error: 'Email and name are required' }, { status: 400 })
+      if (body.event_type) {
+        // This is a webhook call - use defaults and log the issue
+        email = 'truleado@gmail.com' // Send to your email for testing
+        name = 'Valued Customer'
+        console.log('⚠️ Could not extract email/name from webhook, using defaults')
+        console.log('⚠️ Webhook data was:', JSON.stringify(body, null, 2))
+      } else {
+        return NextResponse.json({ error: 'Email and name are required' }, { status: 400 })
+      }
     }
 
     console.log('📧 Sending upgrade thank you email to:', email, 'for:', name, 'plan:', planType)
