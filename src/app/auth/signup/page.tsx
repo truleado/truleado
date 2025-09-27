@@ -17,11 +17,12 @@ async function createZohoContact(email: string, fullName: string) {
     const firstName = nameParts[0] || 'User'
     const lastName = nameParts.slice(1).join(' ') || ''
 
-    // Get access token
-    const tokenResponse = await fetch('https://accounts.zoho.in/oauth/v2/token', {
+    // Get access token using CORS proxy
+    const tokenResponse = await fetch('https://cors-anywhere.herokuapp.com/https://accounts.zoho.in/oauth/v2/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'X-Requested-With': 'XMLHttpRequest',
       },
       body: new URLSearchParams({
         grant_type: 'refresh_token',
@@ -49,11 +50,12 @@ async function createZohoContact(email: string, fullName: string) {
       Description: `New user signup from Truleado - ${fullName} (${email})`
     }
 
-    const contactResponse = await fetch('https://www.zohoapis.in/crm/v2/Contacts', {
+    const contactResponse = await fetch('https://cors-anywhere.herokuapp.com/https://www.zohoapis.in/crm/v2/Contacts', {
       method: 'POST',
       headers: {
         'Authorization': `Zoho-oauthtoken ${tokenData.access_token}`,
         'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
       },
       body: JSON.stringify({
         data: [contactData]
