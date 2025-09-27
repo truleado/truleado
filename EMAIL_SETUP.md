@@ -74,7 +74,7 @@ For Google OAuth signups, set up a webhook:
 ## 🧪 Testing
 
 ### Test Page
-Visit `/test-email` to test the email system:
+Visit `t/test-email` to test the email system:
 
 1. Click "Send Test Welcome Email"
 2. Check your email inbox
