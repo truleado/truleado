@@ -47,14 +47,14 @@ export async function GET(request: NextRequest) {
         id: '1',
         date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
         description: 'Pro Plan - Monthly',
-        amount: '$30.00',
+        amount: '$29.00',
         status: 'paid'
       },
       {
         id: '2', 
         date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
         description: 'Pro Plan - Monthly',
-        amount: '$30.00',
+        amount: '$29.00',
         status: 'paid'
       }
     ] : []

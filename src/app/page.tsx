@@ -298,7 +298,7 @@ export default function Home() {
                 
                 <div className="mt-8">
                   <div className="flex items-baseline justify-center">
-                    <span className="text-5xl font-bold text-gray-900">$30</span>
+                    <span className="text-5xl font-bold text-gray-900">$29</span>
                     <span className="text-xl text-gray-500 ml-1">/month</span>
                   </div>
                 </div>

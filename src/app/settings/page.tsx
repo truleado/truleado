@@ -99,7 +99,7 @@ function SettingsContent() {
         const data = await response.json()
         setBillingInfo({
           nextBillingDate: data.next_billing_date || '',
-          amount: data.amount || '$30',
+          amount: data.amount || '$29',
           paymentMethod: data.payment_method || 'Card ending in ****',
           invoiceHistory: data.invoices || []
         })
@@ -811,7 +811,7 @@ function SettingsContent() {
                     <div className="text-right">
                       {subscriptionStatus === 'active' && (
                         <div className="text-sm text-gray-600">
-                          <p className="font-medium text-gray-900">$30/month</p>
+                          <p className="font-medium text-gray-900">$29/month</p>
                           <p>Next billing: {billingInfo.nextBillingDate || 'N/A'}</p>
                         </div>
                       )}
