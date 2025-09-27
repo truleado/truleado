@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Initialize Resend only when API key is available
+const getResend = () => {
+  if (!process.env.RESEND_API_KEY) {
+    return null
+  }
+  return new Resend(process.env.RESEND_API_KEY)
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,6 +28,14 @@ export async function POST(request: NextRequest) {
       ? [email] 
       : ['truleado@gmail.com'] // Send to your email for testing
 
+    const resend = getResend()
+    if (!resend) {
+      return NextResponse.json({ 
+        success: false,
+        error: 'Email service not configured' 
+      }, { status: 500 })
+    }
+    
     const { data, error } = await resend.emails.send({
       from: fromAddress,
       to: toAddress,

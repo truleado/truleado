@@ -1,6 +1,12 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Initialize Resend only when API key is available
+const getResend = () => {
+  if (!process.env.RESEND_API_KEY) {
+    return null
+  }
+  return new Resend(process.env.RESEND_API_KEY)
+}
 
 export interface WelcomeEmailData {
   userEmail: string
@@ -40,6 +46,7 @@ export class EmailService {
         return { success: false, error: 'Email service not configured' }
       }
 
+      const resend = getResend()
       const { data: emailData, error } = await resend.emails.send({
         from: 'Truleado <onboarding@truleado.com>',
         to: [data.userEmail],
@@ -273,6 +280,7 @@ export class EmailService {
         return { success: false, error: 'Email service not configured' }
       }
 
+      const resend = getResend()
       const { data: emailData, error } = await resend.emails.send({
         from: 'Truleado <onboarding@truleado.com>',
         to: [data.userEmail],
@@ -385,6 +393,7 @@ export class EmailService {
         return { success: false, error: 'Email service not configured' }
       }
 
+      const resend = getResend()
       const { data: emailData, error } = await resend.emails.send({
         from: 'Truleado <noreply@truleado.com>',
         to: [data.userEmail],
@@ -545,6 +554,7 @@ export class EmailService {
         return { success: false, error: 'Email service not configured' }
       }
 
+      const resend = getResend()
       const { data: emailData, error } = await resend.emails.send({
         from: 'Truleado <noreply@truleado.com>',
         to: [data.userEmail],
