@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await resend.emails.send({
       from: fromAddress,
       to: toAddress,
+      replyTo: 'truleado@gmail.com',
       subject: process.env.NODE_ENV === 'production' 
         ? 'Welcome to Truleado! 🚀'
         : `Welcome to Truleado! 🚀 (Test for ${email})`,

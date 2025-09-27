@@ -82,7 +82,7 @@ export default function FontTestPage() {
               <div className="space-y-2">
                 <p className="text-lg text-gray-600">English: The quick brown fox jumps over the lazy dog</p>
                 <p className="text-lg text-gray-600">Numbers: 0123456789</p>
-                <p className="text-lg text-gray-600">Symbols: !@#$%^&*()_+-=[]{}|;':",./<>?</p>
+                <p className="text-lg text-gray-600">Symbols: !@#$%^&*()_+-=[]{}|;':",./&lt;&gt;?</p>
                 <p className="text-lg text-gray-600">German: Söhne font implementation test</p>
                 <p className="text-lg text-gray-600">French: Test d'implémentation de la police Söhne</p>
                 <p className="text-lg text-gray-600">Spanish: Prueba de implementación de fuente Söhne</p>

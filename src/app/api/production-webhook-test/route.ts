@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
           const { data: emailData, error: emailError } = await resend.emails.send({
             from: 'Truleado <noreply@truleado.com>',
             to: [email],
+            replyTo: 'truleado@gmail.com',
             subject: `Welcome to Truleado Pro! 🚀`,
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

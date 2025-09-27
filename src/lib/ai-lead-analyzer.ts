@@ -1,8 +1,8 @@
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
+const openai = process.env.OPENAI_API_KEY ? new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-})
+}) : null
 
 export interface LeadAnalysis {
   reasons: string[]
@@ -35,6 +35,16 @@ export class AILeadAnalyzer {
   
   async analyzeLead(lead: LeadData, product: ProductData): Promise<LeadAnalysis> {
     try {
+      if (!openai) {
+        // Return mock analysis if OpenAI is not configured
+        return {
+          reasons: ['AI analysis not available - OpenAI not configured'],
+          sampleReply: 'Hello! I noticed your post about [topic]. I work with [product name] and think we might be able to help. Would you be interested in learning more?',
+          qualityScore: 0.5,
+          confidence: 0.3
+        }
+      }
+
       const prompt = this.buildAnalysisPrompt(lead, product)
       
       const response = await openai.chat.completions.create({

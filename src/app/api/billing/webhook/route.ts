@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
-import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { paddleAPI, updateUserSubscription } from '@/lib/paddle-config'
 import { trialManager } from '@/lib/trial-manager'
 import { sendUpgradeThankYouEmail } from '@/lib/upgrade-email-service'
@@ -33,10 +32,7 @@ export async function POST(request: NextRequest) {
     console.log('Webhook event:', event.event_type, event.event_id)
     console.log('Event data:', JSON.stringify(event.data, null, 2))
 
-    const supabase = createServiceClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const supabase = await createClient()
 
     switch (event.event_type) {
       case 'checkout.session.completed': {

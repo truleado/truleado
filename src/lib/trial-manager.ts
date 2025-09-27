@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase-server'
 
 // Trial configuration
 const trialConfig = {
@@ -18,17 +18,22 @@ export class TrialManager {
   private supabase: any
 
   constructor() {
-    // Use service role key for server-side operations
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    // Initialize with null, will be set when needed
+    this.supabase = null
+  }
+
+  private async getSupabase() {
+    if (!this.supabase) {
+      this.supabase = await createClient()
+    }
+    return this.supabase
   }
 
   async checkTrialEligibility(email: string, ipAddress: string, userAgent: string): Promise<TrialAbuseCheck> {
     try {
       // Check if email has already used a trial
-      const { data: emailCheck, error: emailError } = await this.supabase
+      const supabase = await this.getSupabase()
+      const { data: emailCheck, error: emailError } = await supabase
         .from('trial_abuse_prevention')
         .select('*')
         .eq('email', email.toLowerCase())
@@ -54,7 +59,7 @@ export class TrialManager {
       }
 
       // Check IP address trial count
-      const { data: ipCheck, error: ipError } = await this.supabase
+      const { data: ipCheck, error: ipError } = await supabase
         .from('trial_abuse_prevention')
         .select('*')
         .eq('ip_address', ipAddress)
@@ -81,7 +86,8 @@ export class TrialManager {
       trialEndsAt.setDate(trialEndsAt.getDate() + trialConfig.trialDays)
 
       // Update user profile with trial information
-      const { error: profileError } = await this.supabase
+      const supabase = await this.getSupabase()
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({
           subscription_status: 'trial',
@@ -99,7 +105,7 @@ export class TrialManager {
       }
 
       // Record trial usage for abuse prevention
-      const { error: abuseError } = await this.supabase
+      const { error: abuseError } = await supabase
         .from('trial_abuse_prevention')
         .upsert({
           email: email.toLowerCase(),
@@ -128,7 +134,8 @@ export class TrialManager {
 
   async checkAndUpdateTrialStatus(userId: string): Promise<void> {
     try {
-      const { data: user, error: userError } = await this.supabase
+      const supabase = await this.getSupabase()
+      const { data: user, error: userError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
@@ -145,7 +152,7 @@ export class TrialManager {
 
         if (now > trialEndsAt) {
           // Trial expired
-          const { error: updateError } = await this.supabase
+          const { error: updateError } = await supabase
             .from('profiles')
             .update({
               subscription_status: 'expired'
@@ -173,7 +180,8 @@ export class TrialManager {
     metadata?: any
   ): Promise<void> {
     try {
-      const { error } = await this.supabase
+      const supabase = await this.getSupabase()
+      const { error } = await supabase
         .from('subscription_history')
         .insert({
           user_id: userId,
@@ -197,7 +205,7 @@ export class TrialManager {
       const blockUntil = new Date()
       blockUntil.setHours(blockUntil.getHours() + trialConfig.trialCooldownHours)
 
-      const { error } = await this.supabase
+      const { error } = await supabase
         .from('trial_abuse_prevention')
         .upsert({
           email: email.toLowerCase(),
