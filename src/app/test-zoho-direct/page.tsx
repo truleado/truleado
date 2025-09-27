@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { sendWelcomeEmailDirect } from '@/lib/direct-email-service'
 
 // Direct Zoho contact creation function (same as in signup)
 async function createZohoContact(email: string, fullName: string) {
@@ -95,8 +96,20 @@ export default function TestZohoDirect() {
     setResult(null)
 
     try {
-      const result = await createZohoContact(formData.email, formData.name)
-      setResult(result)
+      // Test both email and Zoho
+      console.log('🧪 Testing both email and Zoho integration...')
+      
+      const [emailResult, zohoResult] = await Promise.allSettled([
+        sendWelcomeEmailDirect(formData.email, formData.name),
+        createZohoContact(formData.email, formData.name)
+      ])
+
+      const results = {
+        email: emailResult.status === 'fulfilled' ? emailResult.value : { success: false, error: emailResult.reason },
+        zoho: zohoResult.status === 'fulfilled' ? zohoResult.value : { success: false, error: zohoResult.reason }
+      }
+
+      setResult(results)
     } catch (error) {
       setResult({ success: false, error: error.message })
     } finally {
@@ -109,13 +122,13 @@ export default function TestZohoDirect() {
       <div className="max-w-2xl mx-auto">
         <div className="bg-white shadow rounded-lg p-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">
-            Direct Zoho CRM Test
+            Email & Zoho CRM Test
           </h1>
           
           <div className="space-y-6">
             <div>
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                Test Zoho Contact Creation
+                Test Email & Zoho Contact Creation
               </h2>
               
               <div className="space-y-4">
@@ -156,7 +169,7 @@ export default function TestZohoDirect() {
                       Creating Contact...
                     </>
                   ) : (
-                    'Create Zoho Contact'
+                    'Test Email & Zoho Contact'
                   )}
                 </button>
               </div>
@@ -183,8 +196,9 @@ export default function TestZohoDirect() {
               <h3 className="text-blue-800 font-medium mb-2">Instructions:</h3>
               <ol className="text-blue-700 text-sm space-y-1 list-decimal list-inside">
                 <li>Enter a test name and email above</li>
-                <li>Click "Create Zoho Contact"</li>
+                <li>Click "Test Email & Zoho Contact"</li>
                 <li>Check the browser console for detailed logs</li>
+                <li>Check your email inbox for the welcome email</li>
                 <li>Check your Zoho CRM for the new contact</li>
               </ol>
             </div>

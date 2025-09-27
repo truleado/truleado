@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
 import { Filter, Eye, EyeOff } from 'lucide-react'
+import { sendWelcomeEmailDirect } from '@/lib/direct-email-service'
 
 // Direct Zoho contact creation function
 async function createZohoContact(email: string, fullName: string) {
@@ -111,18 +112,17 @@ export default function SignUp() {
     } else {
       // Send welcome email and create Zoho contact in the background
       try {
-        // Send welcome email
-        fetch('/api/send-welcome-email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }).catch(err => console.warn('Welcome email failed:', err))
+        // Send welcome email directly
+        sendWelcomeEmailDirect(email, name.trim()).catch(err => 
+          console.warn('Welcome email failed:', err)
+        )
 
         // Create Zoho CRM contact directly
-        createZohoContact(email, name.trim())
+        createZohoContact(email, name.trim()).catch(err => 
+          console.warn('Zoho contact creation failed:', err)
+        )
       } catch (error) {
-        console.warn('Failed to send welcome email or create Zoho contact:', error)
+        console.warn('Background tasks failed:', error)
         // Don't fail the signup if these fail
       }
       
