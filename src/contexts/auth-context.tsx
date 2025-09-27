@@ -22,6 +22,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
+  // Early return if Supabase is not configured (during build time)
+  if (!supabase || !supabase.auth) {
+    return (
+      <AuthContext.Provider value={{
+        user: null,
+        session: null,
+        loading: false,
+        signIn: async () => ({ error: { message: 'Supabase not configured' } }),
+        signUp: async () => ({ error: { message: 'Supabase not configured' } }),
+        signInWithGoogle: async () => ({ error: { message: 'Supabase not configured' } }),
+        signOut: async () => {}
+      }}>
+        {children}
+      </AuthContext.Provider>
+    )
+  }
+
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
