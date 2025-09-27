@@ -133,6 +133,21 @@ export async function POST(request: NextRequest) {
             : undefined
         })
 
+        // Send upgrade thank you email for subscription.created
+        try {
+          console.log('Sending upgrade email for subscription.created:', profile.id)
+          if (profile.email && profile.full_name) {
+            const emailResult = await sendUpgradeThankYouEmail(profile.email, profile.full_name, 'Pro')
+            if (emailResult.success) {
+              console.log('✅ Upgrade thank you email sent successfully for subscription:', profile.email)
+            } else {
+              console.error('❌ Failed to send upgrade email for subscription:', emailResult.error)
+            }
+          }
+        } catch (emailError) {
+          console.error('Failed to send upgrade email for subscription:', emailError)
+        }
+
         console.log('Subscription created for user:', profile.id)
         break
       }
@@ -241,6 +256,21 @@ export async function POST(request: NextRequest) {
             ? new Date(nextBillingDate).toISOString()
             : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // fallback to 30 days
         })
+
+        // Send upgrade thank you email for transaction.completed
+        try {
+          console.log('Sending upgrade email for transaction.completed:', profile.id)
+          if (profile.email && profile.full_name) {
+            const emailResult = await sendUpgradeThankYouEmail(profile.email, profile.full_name, 'Pro')
+            if (emailResult.success) {
+              console.log('✅ Upgrade thank you email sent successfully for transaction:', profile.email)
+            } else {
+              console.error('❌ Failed to send upgrade email for transaction:', emailResult.error)
+            }
+          }
+        } catch (emailError) {
+          console.error('Failed to send upgrade email for transaction:', emailError)
+        }
 
         console.log('Payment processed for user:', profile.id)
         break
