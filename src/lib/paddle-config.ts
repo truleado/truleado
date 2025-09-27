@@ -113,7 +113,7 @@ export class PaddleAPI {
         ...(isV2Key ? {} : { 'Paddle-Version': '2023-10-01' }),
         ...options.headers,
       },
-      body: options.body ? JSON.parse(options.body as string) : undefined
+      body: options.body
     })
     
     try {
@@ -152,8 +152,30 @@ export class PaddleAPI {
         stack: error instanceof Error ? error.stack : undefined,
         url,
         apiVersion,
-        isV2Key
+        isV2Key,
+        errorType: error instanceof Error ? error.constructor.name : typeof error,
+        isNetworkError: error instanceof Error && (
+          error.message.includes('fetch failed') ||
+          error.message.includes('network') ||
+          error.message.includes('ECONNREFUSED') ||
+          error.message.includes('ENOTFOUND') ||
+          error.message.includes('ETIMEDOUT')
+        )
       })
+      
+      // Provide more specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes('fetch failed')) {
+          throw new Error(`Network error: Unable to connect to Paddle API at ${url}. This could be due to network connectivity, DNS resolution, or SSL issues.`)
+        } else if (error.message.includes('ECONNREFUSED')) {
+          throw new Error(`Connection refused: Paddle API server is not responding at ${url}`)
+        } else if (error.message.includes('ENOTFOUND')) {
+          throw new Error(`DNS error: Cannot resolve Paddle API hostname. Check your network connection.`)
+        } else if (error.message.includes('ETIMEDOUT')) {
+          throw new Error(`Timeout: Paddle API request timed out. The server may be slow or unreachable.`)
+        }
+      }
+      
       throw error
     }
   }
@@ -209,60 +231,46 @@ export class PaddleAPI {
 
       console.log('Paddle API request data:', JSON.stringify(apiData, null, 2))
 
-      // Try a simpler approach - create a transaction directly
+      // Create checkout session using Paddle API v2
       let session
       try {
         const sdk = this.ensureSDKInitialized()
         
-        // Try to create a transaction with the price
-        console.log('Attempting to create transaction with SDK')
-        const transactionData = {
-          items: [
-            {
-              price_id: data.priceId,
-              quantity: 1
-            }
-          ],
-          customer_email: data.customerEmail,
-          custom_data: data.metadata || {}
-        }
-        
-        console.log('Transaction data:', JSON.stringify(transactionData, null, 2))
-        
-        // Try different SDK methods
-        if (sdk.transactions && typeof sdk.transactions.create === 'function') {
-          console.log('Using SDK transactions.create')
-          session = await sdk.transactions.create(transactionData)
-        } else if (sdk.checkout && typeof sdk.checkout.create === 'function') {
-          console.log('Using SDK checkout.create')
-          session = await sdk.checkout.create(transactionData)
+        // Try SDK first if available
+        if (sdk.checkoutSessions && typeof sdk.checkoutSessions.create === 'function') {
+          console.log('Using SDK checkoutSessions.create')
+          session = await sdk.checkoutSessions.create(apiData)
         } else {
-          throw new Error('No suitable SDK method found')
+          throw new Error('SDK checkoutSessions not available')
         }
       } catch (sdkError) {
-        console.log('SDK methods failed, trying direct API with simplified approach:', sdkError)
+        console.log('SDK checkoutSessions failed, trying direct API:', sdkError)
         
-        // Simplified API call - just create a basic transaction
-        const simpleApiData = {
-          items: [
-            {
-              price_id: data.priceId,
-              quantity: 1
-            }
-          ],
-          customer_email: data.customerEmail
-        }
-        
-        console.log('Simple API data:', JSON.stringify(simpleApiData, null, 2))
-        
+        // Use direct API call to create checkout session
         try {
-          session = await this.makeRequest('/transactions', {
+          session = await this.makeRequest('/checkout-sessions', {
             method: 'POST',
-            body: JSON.stringify(simpleApiData)
+            body: JSON.stringify(apiData)
           })
         } catch (apiError) {
-          console.log('Simple API call failed:', apiError)
-          throw new Error(`All checkout creation methods failed. SDK error: ${sdkError.message}, API error: ${apiError.message}`)
+          console.log('Direct API checkout-sessions failed, trying transactions:', apiError)
+          
+          // Fallback to transactions if checkout-sessions doesn't work
+          const transactionData = {
+            items: [
+              {
+                price_id: data.priceId,
+                quantity: 1
+              }
+            ],
+            customer_email: data.customerEmail,
+            custom_data: data.metadata || {}
+          }
+          
+          session = await this.makeRequest('/transactions', {
+            method: 'POST',
+            body: JSON.stringify(transactionData)
+          })
         }
       }
       
@@ -285,6 +293,58 @@ export class PaddleAPI {
       }
       
       throw error
+    }
+  }
+
+  // Test basic connectivity to Paddle API
+  async testConnectivity() {
+    try {
+      console.log('Testing Paddle API connectivity...')
+      
+      // Test basic connectivity with a simple GET request
+      const testUrl = `${this.baseUrl}/prices/${this.priceId}`
+      console.log('Testing connectivity to:', testUrl)
+      
+      const response = await fetch(testUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      })
+      
+      console.log('Connectivity test response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        return {
+          success: true,
+          message: 'Paddle API connectivity test successful',
+          status: response.status,
+          data: data
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        return {
+          success: false,
+          message: `Paddle API returned error: ${response.status} ${response.statusText}`,
+          status: response.status,
+          error: errorData
+        }
+      }
+    } catch (error) {
+      console.error('Connectivity test failed:', error)
+      return {
+        success: false,
+        message: `Connectivity test failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error: error instanceof Error ? error.message : error
+      }
     }
   }
 
