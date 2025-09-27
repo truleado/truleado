@@ -21,10 +21,10 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const { user: authUser, loading: authLoading } = useAuth()
   const [user, setUser] = useState<UserWithSubscription | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+	const [trialTimeRemaining, setTrialTimeRemaining] = useState<string>('')
 
-  const accessLevel = user ? getAccessLevel(user) : 'none'
-  const trialTimeRemaining = user ? formatTrialTimeRemaining(user) : ''
-  const showUpgradePrompt = user ? shouldShowUpgradePrompt(user) : false
+	const accessLevel = user ? getAccessLevel(user) : 'none'
+	const showUpgradePrompt = user ? shouldShowUpgradePrompt(user) : false
 
   const canAccess = (feature: string, currentProductCount?: number) => user ? canAccessFeature(user, feature, currentProductCount) : false
 
@@ -64,6 +64,24 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       setIsLoading(false)
     }
   }, [user, authLoading])
+
+	// Live-update trial time remaining every minute
+	useEffect(() => {
+		// Initialize immediately on user change
+		if (user) {
+			setTrialTimeRemaining(formatTrialTimeRemaining(user))
+		} else {
+			setTrialTimeRemaining('')
+		}
+
+		const intervalId = setInterval(() => {
+			if (user) {
+				setTrialTimeRemaining(formatTrialTimeRemaining(user))
+			}
+		}, 60_000)
+
+		return () => clearInterval(intervalId)
+	}, [user])
 
   const value: SubscriptionContextType = {
     user,
