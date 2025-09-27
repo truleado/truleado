@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
+  // Production-ready version with error handling
   const { user, loading } = useAuth();
   const router = useRouter();
 
