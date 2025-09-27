@@ -26,7 +26,7 @@ export default function Home() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <img src="/logo.svg" alt="Truleado" className="w-full h-full" />
+            <img src="/truleadologo.png" alt="Truleado" className="w-full h-full object-contain" />
           </div>
           <p className="text-gray-600 font-medium">Loading...</p>
         </div>
@@ -46,7 +46,7 @@ export default function Home() {
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center">
                 <div className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg">
-                  <img src="/logo.svg" alt="Truleado" className="w-full h-full" />
+                  <img src="/truleadologo.png" alt="Truleado" className="w-full h-full object-contain" />
                 </div>
                 <span className="ml-3 text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Truleado</span>
               </div>
