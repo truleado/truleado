@@ -1,7 +1,7 @@
 'use client'
 
 import Link from "next/link";
-import { ArrowRight, Filter, Target, Zap, Users, TrendingUp, CheckCircle, Sparkles, BarChart3, Clock, Shield, Globe, Star, Brain, Search, Bell, Mail } from "lucide-react";
+import { ArrowRight, Filter, Target, Zap, Users, TrendingUp, CheckCircle, Sparkles, BarChart3, Clock, Shield, Globe, Star, Brain, Search, Bell, Mail, Megaphone } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -79,43 +79,43 @@ export default function Home() {
               <Sparkles className="w-4 h-4 mr-2" />
               AI-Powered Lead Generation
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight px-4">
               Find Quality Leads on
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"> Reddit</span>
             </h1>
-            <p className="text-xl sm:text-2xl text-gray-600 mb-8 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 mb-6 sm:mb-8 max-w-4xl mx-auto leading-relaxed px-4">
               Monitor Reddit for mentions of your product and get notified when potential customers are looking for solutions like yours. 
               <span className="font-semibold text-gray-800"> Powered by AI analysis.</span>
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12 px-4">
               <Link 
                 href="/auth/signup" 
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-2xl text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 flex items-center justify-center transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 flex items-center justify-center transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
               >
                 Start Free Trial
-                <ArrowRight className="ml-2 w-5 h-5" />
+                <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
               </Link>
               <Link 
                 href="/pricing" 
-                className="border-2 border-gray-200 text-gray-700 px-8 py-4 rounded-2xl text-lg font-semibold hover:bg-gray-50 hover:border-gray-300 flex items-center justify-center transition-all duration-200"
+                className="border-2 border-gray-200 text-gray-700 px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold hover:bg-gray-50 hover:border-gray-300 flex items-center justify-center transition-all duration-200"
               >
                 View Pricing
               </Link>
             </div>
             
             {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-3xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 max-w-3xl mx-auto px-4">
               <div className="text-center">
-                <div className="text-3xl font-bold text-gray-900 mb-2">1000+</div>
-                <div className="text-gray-600">Leads Found Daily</div>
+                <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">1000+</div>
+                <div className="text-sm sm:text-base text-gray-600">Leads Found Daily</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-gray-900 mb-2">95%</div>
-                <div className="text-gray-600">Accuracy Rate</div>
+                <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">95%</div>
+                <div className="text-sm sm:text-base text-gray-600">Accuracy Rate</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-gray-900 mb-2">24/7</div>
-                <div className="text-gray-600">Monitoring</div>
+                <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">24/7</div>
+                <div className="text-sm sm:text-base text-gray-600">Monitoring</div>
               </div>
             </div>
           </div>
@@ -134,34 +134,44 @@ export default function Home() {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             <div className="text-center group">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-200">
-                <Target className="w-8 h-8 text-white" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-200">
+                <Target className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Define Your Product</h3>
-              <p className="text-gray-600 leading-relaxed">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Define Your Product</h3>
+              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
                 Add your product details and let our AI understand what problems you solve and who your ideal customers are.
               </p>
             </div>
             
             <div className="text-center group">
-              <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-200">
-                <Search className="w-8 h-8 text-white" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-200">
+                <Search className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Monitor Reddit</h3>
-              <p className="text-gray-600 leading-relaxed">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Monitor Reddit</h3>
+              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
                 We scan all relevant subreddits 24/7 to find discussions where people need your solution.
               </p>
             </div>
             
             <div className="text-center group">
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-200">
-                <Zap className="w-8 h-8 text-white" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-200">
+                <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Get Notified</h3>
-              <p className="text-gray-600 leading-relaxed">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Get Notified</h3>
+              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
                 Receive instant notifications with full context from Reddit conversations when high-intent prospects appear.
+              </p>
+            </div>
+            
+            <div className="text-center group">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-200">
+                <Megaphone className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Promote Your Product</h3>
+              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                Generate highly engaging Reddit posts tailored to each subreddit's rules and culture to promote your product.
               </p>
             </div>
           </div>
@@ -271,59 +281,63 @@ export default function Home() {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto">
             {/* Free Trial Card */}
-            <div className="bg-white rounded-3xl shadow-xl border border-gray-200 p-8 hover:shadow-2xl transition-shadow duration-300">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-gray-200 p-6 sm:p-8 hover:shadow-2xl transition-shadow duration-300">
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Free Trial</h3>
-                <p className="text-gray-600 mb-8">Try everything for 1 day</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Free Trial</h3>
+                <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8">Try everything for 1 day</p>
                 
-                <div className="mb-8">
+                <div className="mb-6 sm:mb-8">
                   <div className="flex items-baseline justify-center">
-                    <span className="text-5xl font-bold text-gray-900">$0</span>
-                    <span className="text-xl text-gray-500 ml-2">for 1 day</span>
+                    <span className="text-4xl sm:text-5xl font-bold text-gray-900">$0</span>
+                    <span className="text-lg sm:text-xl text-gray-500 ml-2">for 1 day</span>
                   </div>
-                  <p className="mt-2 text-sm text-gray-600">No credit card required</p>
+                  <p className="mt-2 text-xs sm:text-sm text-gray-600">No credit card required</p>
                 </div>
 
                 <Link 
                   href="/auth/signup" 
-                  className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-4 rounded-2xl text-lg font-semibold hover:from-green-600 hover:to-green-700 flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold hover:from-green-600 hover:to-green-700 flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   Start Free Trial
-                  <ArrowRight className="ml-2 w-5 h-5" />
+                  <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
                 </Link>
               </div>
 
-              <div className="mt-8 border-t border-gray-200 pt-8">
-                <h4 className="text-lg font-semibold text-gray-900 mb-6">What's included:</h4>
-                <ul className="space-y-4">
+              <div className="mt-6 sm:mt-8 border-t border-gray-200 pt-6 sm:pt-8">
+                <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">What's included:</h4>
+                <ul className="space-y-3 sm:space-y-4">
                   <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-gray-700">Full access to all features</span>
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
+                    <span className="text-sm sm:text-base text-gray-700">Full access to all features</span>
                   </li>
                   <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-gray-700">Unlimited product monitoring</span>
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
+                    <span className="text-sm sm:text-base text-gray-700">Unlimited product monitoring</span>
                   </li>
                   <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-gray-700">All subreddits monitored</span>
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
+                    <span className="text-sm sm:text-base text-gray-700">All subreddits monitored</span>
                   </li>
                   <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-gray-700">AI-powered lead analysis</span>
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
+                    <span className="text-sm sm:text-base text-gray-700">AI-powered lead analysis</span>
                   </li>
                   <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-gray-700">24/7 background monitoring</span>
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
+                    <span className="text-sm sm:text-base text-gray-700">24/7 background monitoring</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
+                    <span className="text-sm sm:text-base text-gray-700">AI-powered Reddit post generation</span>
                   </li>
                 </ul>
               </div>
             </div>
 
             {/* Pro Plan Card */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl shadow-2xl border-2 border-blue-200 p-8 relative hover:shadow-3xl transition-shadow duration-300">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl sm:rounded-3xl shadow-2xl border-2 border-blue-200 p-6 sm:p-8 relative hover:shadow-3xl transition-shadow duration-300">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                 <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg">
                   Most Popular
@@ -331,48 +345,52 @@ export default function Home() {
               </div>
               
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Pro Plan</h3>
-                <p className="text-gray-600 mb-8">Everything you need to find quality leads</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Pro Plan</h3>
+                <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8">Everything you need to find quality leads</p>
                 
-                <div className="mb-8">
+                <div className="mb-6 sm:mb-8">
                   <div className="flex items-baseline justify-center">
-                    <span className="text-5xl font-bold text-gray-900">$29</span>
-                    <span className="text-xl text-gray-500 ml-2">/month</span>
+                    <span className="text-4xl sm:text-5xl font-bold text-gray-900">$29</span>
+                    <span className="text-lg sm:text-xl text-gray-500 ml-2">/month</span>
                   </div>
-                  <p className="mt-2 text-sm text-gray-600">Less than $1 per day for unlimited leads</p>
+                  <p className="mt-2 text-xs sm:text-sm text-gray-600">Less than $1 per day for unlimited leads</p>
                 </div>
 
                 <Link 
                   href="/auth/signup" 
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 rounded-2xl text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 flex items-center justify-center transition-all duration-200 shadow-xl hover:shadow-2xl"
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 flex items-center justify-center transition-all duration-200 shadow-xl hover:shadow-2xl"
                 >
                   Start Free Trial
-                  <ArrowRight className="ml-2 w-5 h-5" />
+                  <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
                 </Link>
               </div>
 
-              <div className="mt-8 border-t border-gray-200 pt-8">
-                <h4 className="text-lg font-semibold text-gray-900 mb-6">What's included:</h4>
-                <ul className="space-y-4">
+              <div className="mt-6 sm:mt-8 border-t border-gray-200 pt-6 sm:pt-8">
+                <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">What's included:</h4>
+                <ul className="space-y-3 sm:space-y-4">
                   <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-gray-700">Unlimited product monitoring</span>
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
+                    <span className="text-sm sm:text-base text-gray-700">Unlimited product monitoring</span>
                   </li>
                   <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-gray-700">All subreddits monitored</span>
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
+                    <span className="text-sm sm:text-base text-gray-700">All subreddits monitored</span>
                   </li>
                   <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-gray-700">AI-powered lead analysis</span>
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
+                    <span className="text-sm sm:text-base text-gray-700">AI-powered lead analysis</span>
                   </li>
                   <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-gray-700">24/7 background monitoring</span>
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
+                    <span className="text-sm sm:text-base text-gray-700">24/7 background monitoring</span>
                   </li>
                   <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-gray-700">Real-time lead notifications</span>
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
+                    <span className="text-sm sm:text-base text-gray-700">Real-time lead notifications</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
+                    <span className="text-sm sm:text-base text-gray-700">AI-powered Reddit post generation</span>
                   </li>
                 </ul>
               </div>
