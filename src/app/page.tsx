@@ -301,7 +301,6 @@ export default function Home() {
                     <span className="text-5xl font-bold text-gray-900">$30</span>
                     <span className="text-xl text-gray-500 ml-1">/month</span>
                   </div>
-                  <p className="mt-2 text-sm text-gray-600">After 1-day free trial</p>
                 </div>
 
                 <div className="mt-8">

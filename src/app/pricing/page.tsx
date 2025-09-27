@@ -79,7 +79,7 @@ export default function Pricing() {
               Simple, Transparent Pricing
             </h1>
             <p className="mt-6 text-lg leading-8 text-gray-600 max-w-3xl mx-auto">
-              Start with a 1-day free trial, then pay $30/month if you want to continue. No commitment required.
+              Start with a free trial, then pay $30/month if you want to continue. No commitment required.
             </p>
           </div>
         </div>
@@ -168,7 +168,7 @@ export default function Pricing() {
                     <span className="text-5xl font-bold text-gray-900">$30</span>
                     <span className="text-xl text-gray-500 ml-1">/month</span>
                   </div>
-                  <p className="mt-2 text-sm text-gray-600">Only if you want to continue after trial</p>
+                  <p className="mt-2 text-sm text-gray-600">Only if you want to continue</p>
                 </div>
 
                 <div className="mt-8">
@@ -284,7 +284,7 @@ export default function Pricing() {
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">How does the free trial work?</h3>
                 <p className="mt-2 text-gray-600">
-                  You get full access to all features for 1 day. No credit card required to start. After the trial, you can choose to pay $30/month to continue, or simply stop using the service.
+                  You get full access to all features for 1 day. No credit card required to start. You can choose to pay $30/month to continue, or simply stop using the service.
                 </p>
               </div>
               
@@ -321,7 +321,7 @@ export default function Pricing() {
               Ready to Find Your Next Customers?
             </h2>
             <p className="mt-4 text-lg text-blue-100 max-w-2xl mx-auto">
-              Start your 1-day free trial today. No credit card required. Pay only if you want to continue.
+              Start your free trial today. No credit card required. Pay only if you want to continue.
             </p>
             <div className="mt-8">
               <Link 

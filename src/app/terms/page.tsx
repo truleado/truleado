@@ -77,7 +77,7 @@ export default function TermsOfService() {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Payment and Billing</h2>
               <p className="text-gray-600 leading-relaxed">
-                Our service operates on a subscription model. Payment is due in advance for each billing period. We offer a 1-day free trial, after which you will be charged according to your selected plan. All fees are non-refundable except as required by law.
+                Our service operates on a subscription model. Payment is due in advance for each billing period. We offer a free trial, after which you will be charged according to your selected plan. All fees are non-refundable except as required by law.
               </p>
             </section>
 

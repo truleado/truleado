@@ -49,7 +49,7 @@ export default function RefundPolicy() {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Free Trial Period</h2>
               <p className="text-gray-600 leading-relaxed">
-                We offer a 1-day free trial to all new users. During this trial period, you can use all features of our service without charge. If you cancel your subscription before the trial period ends, you will not be charged.
+                We offer a free trial to all new users. During this trial period, you can use all features of our service without charge. If you cancel your subscription before the trial period ends, you will not be charged.
               </p>
             </section>
 

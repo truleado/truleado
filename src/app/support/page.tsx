@@ -121,7 +121,7 @@ export default function SupportPage() {
             <div className="border border-gray-200 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Is there a free trial?</h3>
               <p className="text-gray-600">
-                Yes! We offer a 1-day free trial so you can test all features before committing to a subscription.
+                Yes! We offer a free trial so you can test all features before committing to a subscription.
               </p>
             </div>
           </div>
