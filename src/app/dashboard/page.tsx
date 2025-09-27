@@ -75,7 +75,6 @@ export default function Dashboard() {
   const [hasProducts, setHasProducts] = useState(false)
   const [leadFindingActive, setLeadFindingActive] = useState(false)
   const [currentTrialTime, setCurrentTrialTime] = useState(trialTimeRemaining)
-  const [debugInfo, setDebugInfo] = useState<any>(null)
 
   // Icon mapping
   const iconMap: { [key: string]: any } = {
@@ -118,25 +117,6 @@ export default function Dashboard() {
     setCurrentTrialTime(trialTimeRemaining)
   }, [trialTimeRemaining])
 
-  // Debug subscription data
-  useEffect(() => {
-    const fetchDebugInfo = async () => {
-      try {
-        const response = await fetch('/api/debug/subscription')
-        if (response.ok) {
-          const data = await response.json()
-          setDebugInfo(data)
-          console.log('Debug subscription data:', data)
-        }
-      } catch (error) {
-        console.error('Failed to fetch debug info:', error)
-      }
-    }
-    
-    if (user) {
-      fetchDebugInfo()
-    }
-  }, [user])
 
   // Check for payment success and refresh subscription
   useEffect(() => {
@@ -313,20 +293,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Debug Information - Remove this in production */}
-          {debugInfo && (
-            <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-              <h3 className="text-sm font-semibold text-yellow-800 mb-2">Debug Info (Remove in production)</h3>
-              <div className="text-xs text-yellow-700 space-y-1">
-                <p><strong>Subscription Status:</strong> {debugInfo.subscription_status}</p>
-                <p><strong>Trial Ends At:</strong> {debugInfo.trial_ends_at || 'null'}</p>
-                <p><strong>Time Remaining (ms):</strong> {debugInfo.time_remaining}</p>
-                <p><strong>Current Time:</strong> {debugInfo.current_time}</p>
-                <p><strong>Trial Time Remaining (context):</strong> {trialTimeRemaining}</p>
-                <p><strong>Current Trial Time (state):</strong> {currentTrialTime}</p>
-              </div>
-            </div>
-          )}
 
           {/* Pro Plan Status - Only show for active subscribers */}
           {subscriptionStatus === 'active' && (
