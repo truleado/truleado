@@ -47,17 +47,27 @@ export default function SignUp() {
     if (error) {
       setError(error.message)
     } else {
-      // Send welcome email in the background
+      // Send welcome email and create Zoho contact in the background
       try {
-        await fetch('/api/send-welcome-email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-      } catch (emailError) {
-        console.warn('Failed to send welcome email:', emailError)
-        // Don't fail the signup if email fails
+        await Promise.all([
+          // Send welcome email
+          fetch('/api/send-welcome-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }),
+          // Create Zoho CRM contact
+          fetch('/api/zoho/create-contact', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          })
+        ])
+      } catch (error) {
+        console.warn('Failed to send welcome email or create Zoho contact:', error)
+        // Don't fail the signup if these fail
       }
       
       // Redirect immediately to dashboard
