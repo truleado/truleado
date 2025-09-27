@@ -9,10 +9,10 @@ const resolvedBaseUrl = resolvedEnvironment === 'production'
   : 'https://api.sandbox.paddle.com'
 
 export const paddleConfig = {
-  apiKey: process.env.PADDLE_API_KEY || '',
-  clientToken: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN || '',
-  webhookSecret: process.env.PADDLE_WEBHOOK_SECRET || '',
-  priceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID || process.env.PADDLE_PRICE_ID || '',
+  apiKey: (process.env.PADDLE_API_KEY || '').trim(),
+  clientToken: (process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN || '').trim(),
+  webhookSecret: (process.env.PADDLE_WEBHOOK_SECRET || '').trim(),
+  priceId: (process.env.NEXT_PUBLIC_PADDLE_PRICE_ID || process.env.PADDLE_PRICE_ID || '').trim(),
   environment: resolvedEnvironment,
   baseUrl: resolvedBaseUrl
 }
@@ -25,7 +25,11 @@ console.log('Paddle Config Loaded:', {
   hasPriceId: !!paddleConfig.priceId,
   environment: paddleConfig.environment,
   baseUrl: paddleConfig.baseUrl,
-  priceIdValue: paddleConfig.priceId
+  priceIdValue: paddleConfig.priceId,
+  apiKeyLength: paddleConfig.apiKey ? paddleConfig.apiKey.length : 0,
+  apiKeyPreview: paddleConfig.apiKey ? `"${paddleConfig.apiKey.substring(0, 12)}..."` : 'Not set',
+  apiKeyHasWhitespace: paddleConfig.apiKey ? /\s/.test(paddleConfig.apiKey) : false,
+  apiKeyTrimmedLength: paddleConfig.apiKey ? paddleConfig.apiKey.trim().length : 0
 })
 
 // Initialize Paddle SDK with error handling
