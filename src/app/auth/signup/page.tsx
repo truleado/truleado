@@ -7,65 +7,31 @@ import { useAuth } from '@/contexts/auth-context'
 import { Filter, Eye, EyeOff } from 'lucide-react'
 import { sendWelcomeEmailDirect } from '@/lib/direct-email-service'
 
-// Direct Zoho contact creation function
+// Simple Zoho contact creation function using API
 async function createZohoContact(email: string, fullName: string) {
   try {
-    // Split full name into first and last name
-    const nameParts = fullName.trim().split(' ')
-    const firstName = nameParts[0] || 'User'
-    const lastName = nameParts.slice(1).join(' ') || ''
-
-    // Get access token
-    const tokenResponse = await fetch('https://accounts.zoho.in/oauth/v2/token', {
+    console.log('🔗 Creating Zoho contact for:', email)
+    
+    const response = await fetch('/api/zoho', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        grant_type: 'refresh_token',
-        client_id: '1000.82DRWH7GU91XIPF7ZN9Q3W9KZ770GY',
-        client_secret: '30c61a291d791a0d1caa6e2ce193d069be007d6ea9',
-        refresh_token: '1000.1aa3bd63937b5fb65d8e970165babc99.4df927f0368af5b8807bea0ee715c8cb',
-      }),
-    })
-
-    if (!tokenResponse.ok) {
-      console.warn('Failed to get Zoho access token')
-      return
-    }
-
-    const tokenData = await tokenResponse.json()
-
-    // Create contact in Zoho CRM
-    const contactData = {
-      First_Name: firstName,
-      Last_Name: lastName,
-      Email: email,
-      Lead_Source: 'Truleado Website',
-      Lead_Status: 'Not Contacted',
-      Company: 'Individual',
-      Description: `New user signup from Truleado - ${fullName} (${email})`
-    }
-
-    const contactResponse = await fetch('https://www.zohoapis.in/crm/v2/Contacts', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Zoho-oauthtoken ${tokenData.access_token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        data: [contactData]
+        email,
+        name: fullName
       }),
     })
 
-    if (contactResponse.ok) {
-      const result = await contactResponse.json()
-      console.log('✅ Zoho contact created successfully:', result.data[0]?.details?.id)
+    const result = await response.json()
+
+    if (result.success) {
+      console.log('✅ Zoho contact created successfully:', result.contactId)
     } else {
-      console.warn('Failed to create Zoho contact:', await contactResponse.text())
+      console.warn('❌ Zoho contact creation failed:', result.error)
     }
   } catch (error) {
-    console.warn('Zoho contact creation failed:', error)
+    console.warn('❌ Zoho contact creation error:', error)
   }
 }
 
