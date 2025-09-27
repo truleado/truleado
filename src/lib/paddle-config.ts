@@ -120,21 +120,53 @@ export class PaddleAPI {
         throw new Error('Cancel URL is required')
       }
 
-      // Use Paddle SDK to create checkout session
-      const session = await this.paddle.checkoutSessions.create({
-        items: [
-          {
-            priceId: data.priceId,
-            quantity: 1
+      // Try direct API call first, then fallback to SDK
+      let session
+      try {
+        // Use direct API call with proper format
+        const apiData = {
+          items: [
+            {
+              price_id: data.priceId,
+              quantity: 1
+            }
+          ],
+          customer_email: data.customerEmail,
+          custom_data: data.metadata || {},
+          checkout: {
+            return_url: data.successUrl,
+            cancel_url: data.cancelUrl
           }
-        ],
-        customerEmail: data.customerEmail,
-        customData: data.metadata || {},
-        checkout: {
-          returnUrl: data.successUrl,
-          cancelUrl: data.cancelUrl
         }
-      })
+
+        console.log('Paddle API request data:', JSON.stringify(apiData, null, 2))
+
+        session = await this.makeRequest('/checkout-sessions', {
+          method: 'POST',
+          body: JSON.stringify(apiData)
+        })
+      } catch (apiError) {
+        console.log('Direct API failed, trying SDK approach:', apiError)
+        
+        // Fallback to SDK approach
+        const checkoutData = {
+          items: [
+            {
+              priceId: data.priceId,
+              quantity: 1
+            }
+          ],
+          customerEmail: data.customerEmail,
+          customData: data.metadata || {},
+          checkout: {
+            returnUrl: data.successUrl,
+            cancelUrl: data.cancelUrl
+          }
+        }
+
+        console.log('Paddle SDK request data:', JSON.stringify(checkoutData, null, 2))
+        session = await this.paddle.checkoutSessions.create(checkoutData)
+      }
       
       console.log('Checkout session created successfully:', session.id)
       return session
@@ -145,8 +177,15 @@ export class PaddleAPI {
         priceId: data.priceId,
         customerEmail: data.customerEmail,
         hasApiKey: !!this.apiKey,
-        environment: paddleConfig.environment
+        environment: paddleConfig.environment,
+        errorDetails: error
       })
+      
+      // Handle specific Paddle validation errors
+      if (error instanceof Error && error.message.includes('validation')) {
+        throw new Error(`Paddle validation error: ${error.message}. Please check your price ID and ensure it's configured for recurring billing.`)
+      }
+      
       throw error
     }
   }
