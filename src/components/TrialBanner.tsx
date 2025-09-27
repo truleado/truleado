@@ -5,9 +5,10 @@ import { useSubscription } from '@/lib/subscription-context'
 import { X, Clock, AlertTriangle } from 'lucide-react'
 
 export function TrialBanner() {
-  const { user, trialTimeRemaining, showUpgradePrompt, accessLevel } = useSubscription()
+  const { user, trialTimeRemaining, showUpgradePrompt, accessLevel, refreshSubscription } = useSubscription()
   const [isVisible, setIsVisible] = React.useState(true)
   const [isUpgrading, setIsUpgrading] = React.useState(false)
+  const [currentTrialTime, setCurrentTrialTime] = React.useState(trialTimeRemaining)
 
   // Auto-hide banner if user has active subscription
   useEffect(() => {
@@ -31,12 +32,30 @@ export function TrialBanner() {
     return () => clearInterval(interval)
   }, [])
 
+  // Real-time trial countdown
+  useEffect(() => {
+    if (user?.subscription_status === 'trial' && trialTimeRemaining && trialTimeRemaining !== 'Trial expired') {
+      setCurrentTrialTime(trialTimeRemaining)
+      
+      const interval = setInterval(() => {
+        refreshSubscription() // This will update the trial time
+      }, 1000) // Update every second
+
+      return () => clearInterval(interval)
+    }
+  }, [user?.subscription_status, trialTimeRemaining, refreshSubscription])
+
+  // Update current trial time when trialTimeRemaining changes
+  useEffect(() => {
+    setCurrentTrialTime(trialTimeRemaining)
+  }, [trialTimeRemaining])
+
   if (!isVisible || !showUpgradePrompt) {
     return null
   }
 
-  const isExpired = trialTimeRemaining === 'Trial expired'
-  const isExpiringSoon = trialTimeRemaining.includes('m remaining') && !trialTimeRemaining.includes('h')
+  const isExpired = currentTrialTime === 'Trial expired'
+  const isExpiringSoon = currentTrialTime.includes('m remaining') && !currentTrialTime.includes('h')
 
   return (
     <div className={`relative ${isExpired ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'} border-l-4 p-3 sm:p-4`}>
@@ -56,7 +75,7 @@ export function TrialBanner() {
             <p>
               {isExpired 
                 ? 'Your trial is expired. Upgrade now to avoid interruption.'
-                : `Your trial ends in ${trialTimeRemaining}. Upgrade now to avoid interruption.`
+                : `Your trial ends in ${currentTrialTime}. Upgrade now to avoid interruption.`
               }
             </p>
           </div>

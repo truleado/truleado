@@ -74,6 +74,7 @@ export default function Dashboard() {
   const [redditConnected, setRedditConnected] = useState(false)
   const [hasProducts, setHasProducts] = useState(false)
   const [leadFindingActive, setLeadFindingActive] = useState(false)
+  const [currentTrialTime, setCurrentTrialTime] = useState(trialTimeRemaining)
 
   // Icon mapping
   const iconMap: { [key: string]: any } = {
@@ -97,6 +98,24 @@ export default function Dashboard() {
       refreshSubscription()
     }
   }, [user, refreshSubscription])
+
+  // Real-time trial countdown
+  useEffect(() => {
+    if (subscriptionStatus === 'trial' && trialTimeRemaining && trialTimeRemaining !== 'Trial expired') {
+      setCurrentTrialTime(trialTimeRemaining)
+      
+      const interval = setInterval(() => {
+        refreshSubscription() // This will update the trial time
+      }, 1000) // Update every second
+
+      return () => clearInterval(interval)
+    }
+  }, [subscriptionStatus, trialTimeRemaining, refreshSubscription])
+
+  // Update current trial time when trialTimeRemaining changes
+  useEffect(() => {
+    setCurrentTrialTime(trialTimeRemaining)
+  }, [trialTimeRemaining])
 
   // Check for payment success and refresh subscription
   useEffect(() => {
@@ -293,7 +312,7 @@ export default function Dashboard() {
           )}
 
           {/* Trial Status - Show for trial users */}
-          {subscriptionStatus === 'trial' && trialTimeRemaining && trialTimeRemaining !== 'Trial expired' && (
+          {subscriptionStatus === 'trial' && currentTrialTime && currentTrialTime !== 'Trial expired' && (
             <div className="mb-6 sm:mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl sm:rounded-2xl p-4 sm:p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
@@ -301,10 +320,10 @@ export default function Dashboard() {
                     <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                   </div>
                 </div>
-                <div className="ml-3 sm:ml-4">
+                <div className="ml-3 sm:ml-4 flex-1">
                   <h3 className="text-base sm:text-lg font-semibold text-blue-800">Free Trial Active</h3>
                   <p className="text-sm sm:text-base text-blue-700">
-                    {trialTimeRemaining} remaining. Upgrade to Pro to continue after trial ends.
+                    <span className="font-bold text-lg text-blue-900">{currentTrialTime}</span> remaining. Upgrade to Pro to continue after trial ends.
                   </p>
                 </div>
                 <div className="ml-auto">

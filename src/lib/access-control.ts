@@ -151,11 +151,14 @@ export const formatTrialTimeRemaining = (user: UserWithSubscription): string => 
   
   const hours = Math.floor(timeRemaining / (1000 * 60 * 60))
   const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60))
+  const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000)
   
   if (hours > 0) {
     return `${hours}h ${minutes}m remaining`
+  } else if (minutes > 0) {
+    return `${minutes}m ${seconds}s remaining`
   } else {
-    return `${minutes}m remaining`
+    return `${seconds}s remaining`
   }
 }
 
