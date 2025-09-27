@@ -59,6 +59,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Email and name are required' }, { status: 400 })
       }
     }
+    
+    // Ensure we have valid values
+    if (!email) email = 'truleado@gmail.com'
+    if (!name) name = 'Valued Customer'
 
     console.log('📧 Sending upgrade thank you email to:', email, 'for:', name, 'plan:', planType)
 
