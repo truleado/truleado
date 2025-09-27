@@ -1,13 +1,12 @@
-// Real email service using Resend API directly
+// Resend email service with proper error handling
 export async function sendWelcomeEmailDirect(email: string, name: string) {
   try {
     console.log('📧 Sending welcome email to:', email, 'for:', name)
     
-    // Use Resend API directly from browser
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer re_FMUirfL...`, // Replace with your actual Resend API key
+        'Authorization': `Bearer re_FMUirfLD_Gxk8JThCfh1e1nA6DNdojKay`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -52,17 +51,19 @@ export async function sendWelcomeEmailDirect(email: string, name: string) {
       }),
     })
 
+    console.log('📧 Resend response status:', response.status)
+    
     if (response.ok) {
       const result = await response.json()
       console.log('✅ Welcome email sent successfully:', result)
       return { success: true, result }
     } else {
-      const error = await response.json()
-      console.warn('❌ Welcome email failed:', error)
-      return { success: false, error }
+      const errorText = await response.text()
+      console.error('❌ Welcome email failed:', response.status, errorText)
+      return { success: false, error: `HTTP ${response.status}: ${errorText}` }
     }
   } catch (error) {
-    console.warn('❌ Welcome email error:', error)
+    console.error('❌ Welcome email error:', error)
     return { success: false, error: error.message }
   }
 }

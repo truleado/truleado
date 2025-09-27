@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { sendWelcomeEmailDirect } from '@/lib/direct-email-service'
 
-export default function TestIntegrationPage() {
+export default function TestEmailOnlyPage() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [formData, setFormData] = useState({
@@ -10,59 +11,19 @@ export default function TestIntegrationPage() {
     email: 'test@example.com'
   })
 
-  const handleTest = async () => {
+  const handleTestEmail = async () => {
     setLoading(true)
     setResult(null)
 
     try {
-      console.log('🧪 Testing both integrations...')
+      console.log('🧪 Testing Resend email integration...')
       
-      // Test email
-      const emailResponse = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer re_FMUirfLD_Gxk8JThCfh1e1nA6DNdojKay`, // Replace with your actual Resend API key
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: 'Truleado <onboarding@resend.dev>',
-          to: [formData.email],
-          subject: 'Test Email from Truleado',
-          html: `<h1>Test Email for ${formData.name}</h1><p>This is a test email from Truleado.</p>`
-        }),
-      })
-
-      const emailResult = emailResponse.ok ? 
-        { success: true, message: 'Email sent successfully' } : 
-        { success: false, error: await emailResponse.text() }
-
-      // Test Zoho
-      const zohoResponse = await fetch('https://cors-anywhere.herokuapp.com/https://accounts.zoho.in/oauth/v2/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-        body: new URLSearchParams({
-          grant_type: 'refresh_token',
-          client_id: '1000.82DRWH7GU91XIPF7ZN9Q3W9KZ770GY',
-          client_secret: '30c61a291d791a0d1caa6e2ce193d069be007d6ea9',
-          refresh_token: '1000.1aa3bd63937b5fb65d8e970165babc99.4df927f0368af5b8807bea0ee715c8cb',
-        }),
-      })
-
-      const zohoResult = zohoResponse.ok ? 
-        { success: true, message: 'Zoho token received' } : 
-        { success: false, error: await zohoResponse.text() }
-
-      setResult({
-        email: emailResult,
-        zoho: zohoResult
-      })
+      const emailResult = await sendWelcomeEmailDirect(formData.email, formData.name)
+      setResult(emailResult)
     } catch (error) {
       setResult({ 
-        email: { success: false, error: error.message },
-        zoho: { success: false, error: error.message }
+        success: false, 
+        error: error.message 
       })
     } finally {
       setLoading(false)
@@ -74,13 +35,13 @@ export default function TestIntegrationPage() {
       <div className="max-w-2xl mx-auto">
         <div className="bg-white shadow rounded-lg p-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">
-            Integration Test
+            Resend Email Test
           </h1>
           
           <div className="space-y-6">
             <div>
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                Test Email & Zoho Integration
+                Test Resend Email Integration
               </h2>
               
               <div className="space-y-4">
@@ -98,7 +59,7 @@ export default function TestIntegrationPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email
+                    Email Address
                   </label>
                   <input
                     type="email"
@@ -109,38 +70,51 @@ export default function TestIntegrationPage() {
                   />
                 </div>
                 <button
-                  onClick={handleTest}
+                  onClick={handleTestEmail}
                   disabled={loading}
                   className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 flex items-center gap-2"
                 >
                   {loading ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Testing...
+                      Sending Email...
                     </>
                   ) : (
-                    'Test Both Integrations'
+                    'Send Test Email'
                   )}
                 </button>
               </div>
             </div>
 
             {result && (
-              <div className="bg-gray-100 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">Test Results:</h3>
-                <pre className="bg-gray-200 p-3 rounded-md text-sm overflow-x-auto">
+              <div className={`p-4 rounded-lg ${result.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                <h3 className={`text-lg font-semibold mb-2 ${result.success ? 'text-green-800' : 'text-red-800'}`}>
+                  {result.success ? '✅ Email Sent Successfully!' : '❌ Email Failed'}
+                </h3>
+                <pre className={`p-3 rounded-md text-sm overflow-x-auto ${result.success ? 'bg-green-100' : 'bg-red-100'}`}>
                   {JSON.stringify(result, null, 2)}
                 </pre>
               </div>
             )}
 
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <h3 className="text-yellow-800 font-medium mb-2">Important:</h3>
-              <ol className="text-yellow-700 text-sm space-y-1 list-decimal list-inside">
-                <li>Replace the Resend API key in the code with your actual key</li>
-                <li>Enable CORS proxy at <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank" className="underline">cors-anywhere.herokuapp.com</a></li>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="text-blue-800 font-medium mb-2">Instructions:</h3>
+              <ol className="text-blue-700 text-sm space-y-1 list-decimal list-inside">
+                <li>Enter your email address above</li>
+                <li>Click "Send Test Email"</li>
+                <li>Check your email inbox for the welcome email</li>
                 <li>Check browser console for detailed logs</li>
               </ol>
+            </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <h3 className="text-yellow-800 font-medium mb-2">Troubleshooting:</h3>
+              <ul className="text-yellow-700 text-sm space-y-1 list-disc list-inside">
+                <li>Make sure you're using a real email address</li>
+                <li>Check spam folder if email doesn't arrive</li>
+                <li>Verify Resend API key is correct</li>
+                <li>Check browser console for error details</li>
+              </ul>
             </div>
           </div>
         </div>
