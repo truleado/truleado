@@ -94,9 +94,8 @@ export class PaddleAPI {
     const url = `${baseUrl}${endpoint}`
     
     console.log(`Making Paddle API ${apiVersion} request to: ${url}`)
-    
-    const response = await fetch(url, {
-      ...options,
+    console.log('Request options:', {
+      method: options.method || 'GET',
       headers: {
         'Authorization': `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
@@ -104,22 +103,49 @@ export class PaddleAPI {
         ...(isV2Key ? {} : { 'Paddle-Version': '2023-10-01' }),
         ...options.headers,
       },
+      body: options.body ? JSON.parse(options.body as string) : undefined
     })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      console.error('Paddle API Error:', {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorData,
-        apiVersion
+    
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...(isV2Key ? {} : { 'Paddle-Version': '2023-10-01' }),
+          ...options.headers,
+        },
       })
-      throw new Error(`Paddle API Error: ${response.status} - ${errorData.error?.detail || response.statusText}`)
-    }
 
-    const data = await response.json()
-    console.log('Paddle API Response:', data)
-    return data
+      console.log('Response status:', response.status)
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()))
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Paddle API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData,
+          apiVersion,
+          url
+        })
+        throw new Error(`Paddle API Error: ${response.status} - ${errorData.error?.detail || response.statusText}`)
+      }
+
+      const data = await response.json()
+      console.log('Paddle API Response:', data)
+      return data
+    } catch (error) {
+      console.error('Fetch error details:', {
+        error: error instanceof Error ? error.message : error,
+        stack: error instanceof Error ? error.stack : undefined,
+        url,
+        apiVersion,
+        isV2Key
+      })
+      throw error
+    }
   }
 
   // Create a checkout session
@@ -173,10 +199,31 @@ export class PaddleAPI {
 
       console.log('Paddle API request data:', JSON.stringify(apiData, null, 2))
 
-      const session = await this.makeRequest('/checkout-sessions', {
-        method: 'POST',
-        body: JSON.stringify(apiData)
-      })
+      // Try different endpoints for Paddle API v2
+      let session
+      try {
+        // First try the checkout-sessions endpoint
+        session = await this.makeRequest('/checkout-sessions', {
+          method: 'POST',
+          body: JSON.stringify(apiData)
+        })
+      } catch (checkoutError) {
+        console.log('checkout-sessions failed, trying transactions:', checkoutError)
+        try {
+          // Fallback to transactions endpoint
+          session = await this.makeRequest('/transactions', {
+            method: 'POST',
+            body: JSON.stringify(apiData)
+          })
+        } catch (transactionError) {
+          console.log('transactions failed, trying direct checkout:', transactionError)
+          // Last fallback - try direct checkout
+          session = await this.makeRequest('/checkout', {
+            method: 'POST',
+            body: JSON.stringify(apiData)
+          })
+        }
+      }
       
       console.log('Checkout session created successfully:', session.id)
       return session
