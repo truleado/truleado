@@ -26,7 +26,8 @@ import {
   RefreshCw,
   Download,
   Shield,
-  Zap
+  Zap,
+  Target
 } from 'lucide-react'
 
 function SettingsContent() {
