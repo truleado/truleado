@@ -15,8 +15,8 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await resend.emails.send({
       from: 'Truleado <onboarding@resend.dev>',
-      to: [email],
-      subject: 'Welcome to Truleado! 🚀',
+      to: ['truleado@gmail.com'], // Send to your email for testing
+      subject: `Welcome to Truleado! 🚀 (Test for ${email})`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h1 style="color: #2563eb; text-align: center;">Welcome to Truleado, ${name}! 🎉</h1>
