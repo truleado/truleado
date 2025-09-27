@@ -209,47 +209,60 @@ export class PaddleAPI {
 
       console.log('Paddle API request data:', JSON.stringify(apiData, null, 2))
 
-      // Try different approaches for checkout creation
+      // Try a simpler approach - create a transaction directly
       let session
       try {
-        // First try using SDK transactions if available
         const sdk = this.ensureSDKInitialized()
+        
+        // Try to create a transaction with the price
+        console.log('Attempting to create transaction with SDK')
+        const transactionData = {
+          items: [
+            {
+              price_id: data.priceId,
+              quantity: 1
+            }
+          ],
+          customer_email: data.customerEmail,
+          custom_data: data.metadata || {}
+        }
+        
+        console.log('Transaction data:', JSON.stringify(transactionData, null, 2))
+        
+        // Try different SDK methods
         if (sdk.transactions && typeof sdk.transactions.create === 'function') {
-          console.log('Using SDK transactions.create method')
-          session = await sdk.transactions.create(apiData)
+          console.log('Using SDK transactions.create')
+          session = await sdk.transactions.create(transactionData)
+        } else if (sdk.checkout && typeof sdk.checkout.create === 'function') {
+          console.log('Using SDK checkout.create')
+          session = await sdk.checkout.create(transactionData)
         } else {
-          throw new Error('SDK transactions not available')
+          throw new Error('No suitable SDK method found')
         }
       } catch (sdkError) {
-        console.log('SDK transactions failed, trying direct API:', sdkError)
-        try {
-          // Try different endpoints for Paddle API v2
-          try {
-            // First try the checkout-sessions endpoint
-            session = await this.makeRequest('/checkout-sessions', {
-              method: 'POST',
-              body: JSON.stringify(apiData)
-            })
-          } catch (checkoutError) {
-            console.log('checkout-sessions failed, trying transactions:', checkoutError)
-            try {
-              // Fallback to transactions endpoint
-              session = await this.makeRequest('/transactions', {
-                method: 'POST',
-                body: JSON.stringify(apiData)
-              })
-            } catch (transactionError) {
-              console.log('transactions failed, trying direct checkout:', transactionError)
-              // Last fallback - try direct checkout
-              session = await this.makeRequest('/checkout', {
-                method: 'POST',
-                body: JSON.stringify(apiData)
-              })
+        console.log('SDK methods failed, trying direct API with simplified approach:', sdkError)
+        
+        // Simplified API call - just create a basic transaction
+        const simpleApiData = {
+          items: [
+            {
+              price_id: data.priceId,
+              quantity: 1
             }
-          }
+          ],
+          customer_email: data.customerEmail
+        }
+        
+        console.log('Simple API data:', JSON.stringify(simpleApiData, null, 2))
+        
+        try {
+          session = await this.makeRequest('/transactions', {
+            method: 'POST',
+            body: JSON.stringify(simpleApiData)
+          })
         } catch (apiError) {
-          console.log('All API attempts failed:', apiError)
-          throw apiError
+          console.log('Simple API call failed:', apiError)
+          throw new Error(`All checkout creation methods failed. SDK error: ${sdkError.message}, API error: ${apiError.message}`)
         }
       }
       
