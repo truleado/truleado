@@ -510,10 +510,11 @@ function ProductsContent() {
               </UpgradeButton>
             </div>
           ) : (
-            <div className="flex flex-wrap gap-6">
+            <div className="space-y-6">
               {products.map((product) => (
-                <div key={product.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden hover:shadow-2xl transition-all duration-300 flex-1 min-w-[320px] max-w-[400px]">
+                <div key={product.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden hover:shadow-2xl transition-all duration-300">
                   <div className="p-6">
+                    {/* Header Row */}
                     <div className="flex items-start justify-between mb-6">
                       <div className="flex items-center">
                         <div className="w-12 h-12 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center">
@@ -542,83 +543,96 @@ function ProductsContent() {
                       </div>
                     </div>
                     
-                    <div className="mb-6">
-                      <p className="text-gray-600 line-clamp-3 leading-relaxed">{product.description}</p>
-                    </div>
-                    
-                    <div className="space-y-3 mb-6">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
-                          <Globe className="w-4 h-4 text-gray-600" />
+                    {/* Main Content Row */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      {/* Left Column - Description and Basic Info */}
+                      <div className="lg:col-span-1">
+                        <div className="mb-4">
+                          <p className="text-gray-600 leading-relaxed">{product.description}</p>
                         </div>
-                        <a href={product.website} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition-colors font-medium">
-                          {product.website}
-                        </a>
-                      </div>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
-                          <Target className="w-4 h-4 text-gray-600" />
+                        
+                        <div className="space-y-3">
+                          <div className="flex items-center text-sm text-gray-600">
+                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
+                              <Globe className="w-4 h-4 text-gray-600" />
+                            </div>
+                            <a href={product.website} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition-colors font-medium truncate">
+                              {product.website}
+                            </a>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-600">
+                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
+                              <Target className="w-4 h-4 text-gray-600" />
+                            </div>
+                            <span className="font-medium">{product.subreddits.length} subreddits monitored</span>
+                          </div>
                         </div>
-                        <span className="font-medium">{product.subreddits.length} subreddits monitored</span>
                       </div>
-                    </div>
 
-                    {/* AI Analysis Summary */}
-                    <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-4 mb-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <div className="flex items-center mb-2">
-                            <div className="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center mr-2">
-                              <Zap className="w-3 h-3 text-green-600" />
+                      {/* Middle Column - AI Analysis Summary */}
+                      <div className="lg:col-span-1">
+                        <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-4 h-full">
+                          <div className="space-y-4 text-sm">
+                            <div>
+                              <div className="flex items-center mb-2">
+                                <div className="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center mr-2">
+                                  <Zap className="w-3 h-3 text-green-600" />
+                                </div>
+                                <span className="font-semibold text-gray-800">Key Features</span>
+                              </div>
+                              <div className="text-gray-600 space-y-1">
+                                {product.features.slice(0, 3).map((feature, idx) => (
+                                  <div key={idx} className="truncate">• {feature}</div>
+                                ))}
+                                {product.features.length > 3 && (
+                                  <div className="text-gray-500 font-medium">+{product.features.length - 3} more</div>
+                                )}
+                              </div>
                             </div>
-                            <span className="font-semibold text-gray-800">Key Features</span>
-                          </div>
-                          <div className="text-gray-600 space-y-1">
-                            {product.features.slice(0, 2).map((feature, idx) => (
-                              <div key={idx} className="truncate">• {feature}</div>
-                            ))}
-                            {product.features.length > 2 && (
-                              <div className="text-gray-500 font-medium">+{product.features.length - 2} more</div>
-                            )}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="flex items-center mb-2">
-                            <div className="w-6 h-6 bg-red-100 rounded-lg flex items-center justify-center mr-2">
-                              <Target className="w-3 h-3 text-red-600" />
+                            
+                            <div>
+                              <div className="flex items-center mb-2">
+                                <div className="w-6 h-6 bg-red-100 rounded-lg flex items-center justify-center mr-2">
+                                  <Target className="w-3 h-3 text-red-600" />
+                                </div>
+                                <span className="font-semibold text-gray-800">Pain Points</span>
+                              </div>
+                              <div className="text-gray-600 space-y-1">
+                                {product.painPoints.slice(0, 3).map((point, idx) => (
+                                  <div key={idx} className="truncate">• {point}</div>
+                                ))}
+                                {product.painPoints.length > 3 && (
+                                  <div className="text-gray-500 font-medium">+{product.painPoints.length - 3} more</div>
+                                )}
+                              </div>
                             </div>
-                            <span className="font-semibold text-gray-800">Pain Points</span>
-                          </div>
-                          <div className="text-gray-600 space-y-1">
-                            {product.painPoints.slice(0, 2).map((point, idx) => (
-                              <div key={idx} className="truncate">• {point}</div>
-                            ))}
-                            {product.painPoints.length > 2 && (
-                              <div className="text-gray-500 font-medium">+{product.painPoints.length - 2} more</div>
-                            )}
                           </div>
                         </div>
                       </div>
-                      <div className="mt-3 pt-3 border-t border-gray-200">
-                        <div className="flex items-start">
-                          <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center mr-2 flex-shrink-0">
-                            <Users className="w-3 h-3 text-blue-600" />
+
+                      {/* Right Column - Ideal Customer and Actions */}
+                      <div className="lg:col-span-1">
+                        <div className="bg-blue-50 rounded-xl p-4 h-full">
+                          <div className="flex items-start mb-4">
+                            <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center mr-2 flex-shrink-0">
+                              <Users className="w-3 h-3 text-blue-600" />
+                            </div>
+                            <div>
+                              <span className="font-semibold text-gray-800 text-sm">Ideal Customer:</span>
+                              <p className="text-gray-600 text-sm mt-1">{product.idealCustomerProfile}</p>
+                            </div>
                           </div>
-                          <div>
-                            <span className="font-semibold text-gray-800 text-sm">Ideal Customer:</span>
-                            <p className="text-gray-600 text-sm mt-1">{product.idealCustomerProfile}</p>
+                          
+                          <div className="mt-auto">
+                            <div className="text-sm text-gray-500 font-medium mb-3">
+                              Created {new Date(product.createdAt).toLocaleDateString()}
+                            </div>
+                            <button className="w-full text-blue-600 hover:text-blue-700 text-sm font-semibold hover:bg-blue-100 px-3 py-2 rounded-lg transition-colors">
+                              View Details
+                            </button>
                           </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-                      <span className="text-sm text-gray-500 font-medium">
-                        Created {new Date(product.createdAt).toLocaleDateString()}
-                      </span>
-                      <button className="text-blue-600 hover:text-blue-700 text-sm font-semibold hover:bg-blue-50 px-3 py-1 rounded-lg transition-colors">
-                        View Details
-                      </button>
                     </div>
                   </div>
                 </div>

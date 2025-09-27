@@ -327,7 +327,7 @@ function LeadsContent() {
                 </button>
               </div>
             ) : (
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="space-y-4">
                 {products.map((product) => (
                   <div 
                     key={product.id} 
@@ -338,34 +338,41 @@ function LeadsContent() {
                     }`}
                     onClick={() => setSelectedProduct(product)}
                   >
-                    <div className="flex items-start justify-between mb-4">
-                      <h3 className="font-semibold text-gray-900 truncate">{product.name}</h3>
-                      {product.isFiltering && (
-                        <div className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                          <Activity className="w-3 h-3" />
-                          Filtering
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4 flex-1">
+                        <div className="w-12 h-12 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <Package className="w-6 h-6 text-blue-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <h3 className="font-semibold text-gray-900 truncate">{product.name}</h3>
+                            {product.isFiltering && (
+                              <div className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                                <Activity className="w-3 h-3" />
+                                Filtering
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-gray-600 text-sm line-clamp-1 mb-2">
+                            {product.description}
+                          </p>
+                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                            <span>{product.subreddits.length} subreddits</span>
+                            <span>•</span>
+                            <span className="capitalize">{product.status}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {redditConnected && (
+                        <div className="flex gap-2 ml-4">
+                          <div className="flex items-center gap-1 px-3 py-1 text-sm bg-green-100 text-green-700 rounded-xl">
+                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            Auto-discovering
+                          </div>
                         </div>
                       )}
                     </div>
-                    
-                    <p className="text-gray-600 mb-4 line-clamp-2">
-                      {product.description}
-                    </p>
-                    
-                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                      <span>{product.subreddits.length} subreddits</span>
-                      <span>•</span>
-                      <span className="capitalize">{product.status}</span>
-                    </div>
-                    
-                    {redditConnected && (
-                      <div className="flex gap-2">
-                        <div className="flex items-center gap-1 px-3 py-1 text-sm bg-green-100 text-green-700 rounded-xl">
-                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                          Auto-discovering
-                        </div>
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
