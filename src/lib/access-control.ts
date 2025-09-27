@@ -108,6 +108,26 @@ export const canAccessFeature = (user: UserWithSubscription, feature: string, cu
   if (limitedAccessFeatures.includes(feature)) {
     return accessLevel === 'full' || accessLevel === 'limited'
   }
+
+  // 24-hour trial features (same as add_products logic)
+  const trialFeatures = [
+    'promote_products'
+  ]
+  
+  if (trialFeatures.includes(feature)) {
+    // If user has active subscription, allow unlimited access
+    if (user.subscription_status === 'active' && isSubscriptionActive(user)) {
+      return true
+    }
+    
+    // If user is on trial, check if trial is not expired
+    if (user.subscription_status === 'trial' && !isTrialExpired(user)) {
+      return true
+    }
+    
+    // For expired/cancelled users, no access
+    return false
+  }
   
   return false
 }

@@ -13,7 +13,9 @@ import {
   Eye,
   Globe,
   Target,
-  CheckCircle
+  CheckCircle,
+  Zap,
+  Users
 } from 'lucide-react'
 import { AccessGuard, UpgradeButton } from '@/components/AccessGuard'
 import { useSubscription } from '@/lib/subscription-context'

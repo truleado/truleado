@@ -31,10 +31,11 @@ import {
 
 function SettingsContent() {
   const { user, loading } = useAuth()
-  const { accessLevel, trialTimeRemaining, showUpgradePrompt, refreshSubscription } = useSubscription()
+  const { accessLevel, trialTimeRemaining, showUpgradePrompt, refreshSubscription, subscriptionStatus } = useSubscription()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState('profile')
+  const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [redditConnected, setRedditConnected] = useState(false)
   const [redditUsername, setRedditUsername] = useState('')
@@ -42,7 +43,6 @@ function SettingsContent() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [isCancelling, setIsCancelling] = useState(false)
-  const [subscriptionStatus, setSubscriptionStatus] = useState('')
   const [billingInfo, setBillingInfo] = useState({
     nextBillingDate: '',
     amount: '',
@@ -65,28 +65,30 @@ function SettingsContent() {
   })
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/auth/signin')
-    }
-    if (user) {
-      setFormData(prev => ({ ...prev, email: user.email || '' }))
-      checkRedditConnection()
-      fetchSubscriptionStatus()
-      fetchUserPreferences()
+    try {
+      if (!loading && !user) {
+        router.push('/auth/signin')
+      }
+      if (user) {
+        setFormData(prev => ({ ...prev, email: user.email || '' }))
+        checkRedditConnection()
+        fetchSubscriptionStatus()
+        fetchUserPreferences()
+      }
+    } catch (err) {
+      console.error('Settings initialization error:', err)
+      setError('Failed to initialize settings')
     }
   }, [user, loading, router])
 
   const fetchSubscriptionStatus = async () => {
     try {
-      const response = await fetch('/api/debug/subscription')
-      if (response.ok) {
-        const data = await response.json()
-        setSubscriptionStatus(data.subscription_status || 'free')
-        
-        // Fetch billing info if user has active subscription
-        if (data.subscription_status === 'active') {
-          await fetchBillingInfo()
-        }
+      // Refresh subscription status from context
+      await refreshSubscription()
+      
+      // Fetch billing info if user has active subscription
+      if (subscriptionStatus === 'active') {
+        await fetchBillingInfo()
       }
     } catch (error) {
       console.error('Error fetching subscription status:', error)
@@ -247,7 +249,6 @@ function SettingsContent() {
             if (res.ok) {
               const data = await res.json()
               if (data.subscription_status === 'active') {
-                setSubscriptionStatus('active')
                 await fetchBillingInfo()
                 setIsPollingUpgrade(false)
                 return
@@ -345,7 +346,6 @@ function SettingsContent() {
 
       if (response.ok) {
         const data = await response.json()
-        setSubscriptionStatus('cancelled')
         setShowCancelModal(false)
         setShowSuccessMessage(true)
         setTimeout(() => setShowSuccessMessage(false), 5000)
@@ -476,6 +476,28 @@ function SettingsContent() {
 
   if (!user) {
     return null
+  }
+
+  if (error) {
+    return (
+      <AppLayout>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-6 h-6 text-red-600" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Error Loading Settings</h3>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </AppLayout>
+    )
   }
 
   // Check if user is connected via Google OAuth
@@ -1139,7 +1161,16 @@ function SettingsContent() {
 
 export default function Settings() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <SettingsIcon className="w-6 h-6 text-white" />
+          </div>
+          <p className="text-gray-600 font-medium">Loading settings...</p>
+        </div>
+      </div>
+    }>
       <SettingsContent />
     </Suspense>
   )

@@ -292,6 +292,62 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* Trial Status - Show for trial users */}
+          {subscriptionStatus === 'trial' && trialTimeRemaining && trialTimeRemaining !== 'Trial expired' && (
+            <div className="mb-6 sm:mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl sm:rounded-2xl flex items-center justify-center">
+                    <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+                  </div>
+                </div>
+                <div className="ml-3 sm:ml-4">
+                  <h3 className="text-base sm:text-lg font-semibold text-blue-800">Free Trial Active</h3>
+                  <p className="text-sm sm:text-base text-blue-700">
+                    {trialTimeRemaining} remaining. Upgrade to Pro to continue after trial ends.
+                  </p>
+                </div>
+                <div className="ml-auto">
+                  <button
+                    onClick={() => window.location.href = '/pricing'}
+                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <Star className="w-4 h-4 mr-2" />
+                    Upgrade Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Trial Expired - Show for expired trial users */}
+          {subscriptionStatus === 'trial' && trialTimeRemaining === 'Trial expired' && (
+            <div className="mb-6 sm:mb-8 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-xl sm:rounded-2xl flex items-center justify-center">
+                    <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
+                  </div>
+                </div>
+                <div className="ml-3 sm:ml-4">
+                  <h3 className="text-base sm:text-lg font-semibold text-orange-800">Trial Expired</h3>
+                  <p className="text-sm sm:text-base text-orange-700">
+                    Your free trial has ended. Upgrade to Pro to continue using all features.
+                  </p>
+                </div>
+                <div className="ml-auto">
+                  <button
+                    onClick={() => window.location.href = '/pricing'}
+                    className="inline-flex items-center px-4 py-2 bg-orange-600 text-white text-sm font-semibold rounded-lg hover:bg-orange-700 transition-colors"
+                  >
+                    <Star className="w-4 h-4 mr-2" />
+                    Upgrade Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Stats Grid */}
           <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-6 sm:mb-8">
             {statsCards.map((stat) => (

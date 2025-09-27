@@ -1,0 +1,31 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="tGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F97316;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background circle for better visibility -->
+  <circle cx="100" cy="100" r="90" fill="#F8FAFC" opacity="0.1"/>
+  
+  <!-- Main T letter -->
+  <path d="M60 40 L140 40 L140 80 L110 80 L110 160 L90 160 L90 80 L60 80 Z" 
+        fill="url(#tGradient)" 
+        filter="url(#glow)"
+        stroke="none"/>
+  
+  <!-- Additional glow effect -->
+  <path d="M60 40 L140 40 L140 80 L110 80 L110 160 L90 160 L90 80 L60 80 Z" 
+        fill="none" 
+        stroke="url(#tGradient)" 
+        stroke-width="2" 
+        opacity="0.3"/>
+</svg>

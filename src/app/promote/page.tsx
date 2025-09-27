@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { useSubscription } from '@/lib/subscription-context'
 import AppLayout from '@/components/app-layout'
-import { Megaphone, Package, Copy, Edit3, Check, Loader2, ExternalLink } from 'lucide-react'
+import { Megaphone, Package, Copy, Edit3, Check, Loader2, ExternalLink, Star } from 'lucide-react'
 
 interface Product {
   id: string
@@ -135,19 +135,34 @@ export default function PromotePage() {
     )
   }
 
-  if (!canAccess('view_products')) {
+  if (!canAccess('promote_products')) {
     return (
       <AppLayout>
-        <div className="text-center py-12">
-          <Megaphone className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Upgrade Required</h2>
-          <p className="text-gray-600 mb-6">You need an active subscription to access promotional tools.</p>
-          <button
-            onClick={() => window.location.href = '/upgrade'}
-            className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700"
-          >
-            View Pricing
-          </button>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto px-6">
+            <div className="w-20 h-20 bg-gradient-to-r from-orange-100 to-red-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <Megaphone className="w-10 h-10 text-orange-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Upgrade Required</h2>
+            <p className="text-gray-600 mb-6">
+              You need an active subscription to access promotional tools. Upgrade to Pro to generate promotional posts for your products.
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={() => window.location.href = '/pricing'}
+                className="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                <Star className="w-5 h-5 mr-2" />
+                View Pricing
+              </button>
+              <button
+                onClick={() => window.location.href = '/dashboard'}
+                className="w-full inline-flex items-center justify-center px-6 py-3 bg-white text-gray-700 font-semibold rounded-xl border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+              >
+                Back to Dashboard
+              </button>
+            </div>
+          </div>
         </div>
       </AppLayout>
     )

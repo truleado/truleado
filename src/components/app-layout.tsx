@@ -47,8 +47,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="fixed inset-y-0 left-0 flex w-64 sm:w-72 flex-col bg-white shadow-xl">
           <div className="flex h-14 sm:h-16 items-center justify-between px-4">
             <div className="flex items-center space-x-2">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#148cfc] rounded-lg flex items-center justify-center">
-                <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center">
+                <img src="/logo.svg" alt="Truleado" className="w-full h-full" />
               </div>
               <span className="text-lg sm:text-xl font-semibold text-gray-900">Truleado</span>
             </div>
@@ -87,8 +87,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="flex flex-col flex-grow bg-white border-r border-gray-200">
           <div className="flex h-16 items-center px-4">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-[#148cfc] rounded-lg flex items-center justify-center">
-                <Filter className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center">
+                <img src="/logo.svg" alt="Truleado" className="w-full h-full" />
               </div>
               <span className="text-xl font-semibold text-gray-900">Truleado</span>
             </div>

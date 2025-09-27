@@ -539,14 +539,14 @@ function LeadsContent() {
                         AI Analysis:
                       </h4>
                       <ul className="text-xs text-purple-800 space-y-1">
-                        {lead.aiAnalysisReasons.slice(0, 2).map((reason, index) => (
+                        {lead.aiAnalysisReasons.slice(0, 3).map((reason, index) => (
                           <li key={index} className="flex items-start gap-2">
                             <span className="text-purple-600 mt-0.5">•</span>
-                            <span className="line-clamp-1">{reason}</span>
+                            <span>{reason}</span>
                           </li>
                         ))}
-                        {lead.aiAnalysisReasons.length > 2 && (
-                          <li className="text-purple-600 text-xs">+{lead.aiAnalysisReasons.length - 2} more reasons</li>
+                        {lead.aiAnalysisReasons.length > 3 && (
+                          <li className="text-purple-600 text-xs">+{lead.aiAnalysisReasons.length - 3} more reasons</li>
                         )}
                       </ul>
                     </div>
@@ -559,7 +559,7 @@ function LeadsContent() {
                         <MessageSquare className="w-3 h-3" />
                         AI Reply:
                       </h4>
-                      <div className="text-xs text-green-800 bg-white p-2 rounded-lg border mb-2 line-clamp-2">
+                      <div className="text-xs text-green-800 bg-white p-2 rounded-lg border mb-2">
                         {lead.aiSampleReply}
                       </div>
                       <button
