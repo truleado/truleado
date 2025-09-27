@@ -2,9 +2,22 @@
 
 import { useState } from 'react'
 
+interface TestResult {
+  email: {
+    success: boolean
+    message?: string
+    error?: string
+  }
+  zoho: {
+    success: boolean
+    message?: string
+    error?: string
+  }
+}
+
 export default function TestIntegrationPage() {
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState(null)
+  const [result, setResult] = useState<TestResult | null>(null)
   const [formData, setFormData] = useState({
     name: 'Test User',
     email: 'test@example.com'
@@ -60,9 +73,10 @@ export default function TestIntegrationPage() {
         zoho: zohoResult
       })
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
       setResult({ 
-        email: { success: false, error: error.message },
-        zoho: { success: false, error: error.message }
+        email: { success: false, error: errorMessage },
+        zoho: { success: false, error: errorMessage }
       })
     } finally {
       setLoading(false)

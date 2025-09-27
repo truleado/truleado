@@ -382,9 +382,60 @@ function SettingsContent() {
     }
   }
 
-  const handleSave = (section: string) => {
-    // TODO: Implement save functionality
-    console.log(`Saving ${section}:`, formData)
+  const handleSave = async (section: string) => {
+    try {
+      if (section === 'profile') {
+        // Update email and password
+        const response = await fetch('/api/auth/update-profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            currentPassword: formData.currentPassword,
+            newPassword: formData.newPassword,
+          }),
+        })
+
+        if (response.ok) {
+          setShowSuccessMessage(true)
+          setTimeout(() => setShowSuccessMessage(false), 3000)
+          // Clear password fields
+          setFormData(prev => ({
+            ...prev,
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: '',
+          }))
+        } else {
+          const error = await response.json()
+          alert(`Failed to update profile: ${error.message || 'Unknown error'}`)
+        }
+      } else if (section === 'notifications') {
+        // Update notification preferences
+        const response = await fetch('/api/user/preferences', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            notifications: formData.notifications,
+          }),
+        })
+
+        if (response.ok) {
+          setShowSuccessMessage(true)
+          setTimeout(() => setShowSuccessMessage(false), 3000)
+        } else {
+          const error = await response.json()
+          alert(`Failed to update notifications: ${error.message || 'Unknown error'}`)
+        }
+      }
+    } catch (error) {
+      console.error(`Failed to save ${section}:`, error)
+      alert(`Failed to save ${section}. Please try again.`)
+    }
   }
 
   const tabs = [

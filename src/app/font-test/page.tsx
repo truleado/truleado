@@ -6,132 +6,110 @@ export default function FontTestPage() {
       <div className="max-w-4xl mx-auto">
         <div className="bg-white shadow rounded-lg p-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-8">
-            Font Test Page - SF Pro Verification
+            Font Test - Söhne/Inter Implementation
           </h1>
           
-          <div className="space-y-6">
-            {/* Headings */}
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Headings</h2>
-              <div className="space-y-2">
-                <h1 className="text-3xl font-bold">H1 - Bold Heading</h1>
-                <h2 className="text-2xl font-semibold">H2 - Semibold Heading</h2>
-                <h3 className="text-xl font-medium">H3 - Medium Heading</h3>
-                <h4 className="text-lg font-medium">H4 - Medium Heading</h4>
-                <h5 className="text-base font-medium">H5 - Medium Heading</h5>
-                <h6 className="text-sm font-medium">H6 - Medium Heading</h6>
-              </div>
-            </section>
+          <div className="space-y-8">
+            {/* Font Family Display */}
+            <div className="border-b pb-6">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Font Family Stack</h2>
+              <p className="text-gray-600 mb-2">
+                Primary: Inter (Google Fonts)
+              </p>
+              <p className="text-gray-600 mb-2">
+                Fallback: Söhne, SF Pro Display, SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif
+              </p>
+            </div>
 
-            {/* Body Text */}
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Body Text</h2>
-              <div className="space-y-2">
-                <p className="text-lg">Large paragraph text - Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                <p className="text-base">Regular paragraph text - Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-                <p className="text-sm">Small paragraph text - Ut enim ad minim veniam, quis nostrud exercitation.</p>
-                <p className="text-xs">Extra small paragraph text - Duis aute irure dolor in reprehenderit.</p>
+            {/* Typography Scale */}
+            <div className="border-b pb-6">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Typography Scale</h2>
+              <div className="space-y-4">
+                <h1 className="text-4xl font-bold text-gray-900">Heading 1 - 4xl Bold</h1>
+                <h2 className="text-3xl font-semibold text-gray-800">Heading 2 - 3xl Semibold</h2>
+                <h3 className="text-2xl font-medium text-gray-700">Heading 3 - 2xl Medium</h3>
+                <h4 className="text-xl font-medium text-gray-600">Heading 4 - xl Medium</h4>
+                <h5 className="text-lg font-medium text-gray-600">Heading 5 - lg Medium</h5>
+                <h6 className="text-base font-medium text-gray-600">Heading 6 - base Medium</h6>
+                <p className="text-base text-gray-600">Body text - base Regular</p>
+                <p className="text-sm text-gray-500">Small text - sm Regular</p>
+                <p className="text-xs text-gray-400">Extra small text - xs Regular</p>
               </div>
-            </section>
-
-            {/* Buttons */}
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Buttons</h2>
-              <div className="flex flex-wrap gap-4">
-                <button className="bg-blue-600 text-white px-4 py-2 rounded font-medium">
-                  Primary Button
-                </button>
-                <button className="bg-gray-200 text-gray-800 px-4 py-2 rounded font-medium">
-                  Secondary Button
-                </button>
-                <button className="bg-red-600 text-white px-4 py-2 rounded font-semibold">
-                  Danger Button
-                </button>
-                <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded font-medium">
-                  Outline Button
-                </button>
-              </div>
-            </section>
-
-            {/* Form Elements */}
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Form Elements</h2>
-              <div className="space-y-4 max-w-md">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Text Input
-                  </label>
-                  <input 
-                    type="text" 
-                    placeholder="Enter text here"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Textarea
-                  </label>
-                  <textarea 
-                    placeholder="Enter longer text here"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md h-20"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Select
-                  </label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-md">
-                    <option>Option 1</option>
-                    <option>Option 2</option>
-                    <option>Option 3</option>
-                  </select>
-                </div>
-              </div>
-            </section>
+            </div>
 
             {/* Font Weights */}
-            <section>
+            <div className="border-b pb-6">
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">Font Weights</h2>
               <div className="space-y-2">
-                <p className="font-thin">Thin (100) - The quick brown fox jumps over the lazy dog</p>
-                <p className="font-light">Light (300) - The quick brown fox jumps over the lazy dog</p>
-                <p className="font-normal">Normal (400) - The quick brown fox jumps over the lazy dog</p>
-                <p className="font-medium">Medium (500) - The quick brown fox jumps over the lazy dog</p>
-                <p className="font-semibold">Semibold (600) - The quick brown fox jumps over the lazy dog</p>
-                <p className="font-bold">Bold (700) - The quick brown fox jumps over the lazy dog</p>
-                <p className="font-extrabold">Extrabold (800) - The quick brown fox jumps over the lazy dog</p>
-                <p className="font-black">Black (900) - The quick brown fox jumps over the lazy dog</p>
+                <p className="text-lg font-thin text-gray-600">Thin (100) - The quick brown fox jumps over the lazy dog</p>
+                <p className="text-lg font-extralight text-gray-600">Extra Light (200) - The quick brown fox jumps over the lazy dog</p>
+                <p className="text-lg font-light text-gray-600">Light (300) - The quick brown fox jumps over the lazy dog</p>
+                <p className="text-lg font-normal text-gray-600">Normal (400) - The quick brown fox jumps over the lazy dog</p>
+                <p className="text-lg font-medium text-gray-600">Medium (500) - The quick brown fox jumps over the lazy dog</p>
+                <p className="text-lg font-semibold text-gray-600">Semibold (600) - The quick brown fox jumps over the lazy dog</p>
+                <p className="text-lg font-bold text-gray-600">Bold (700) - The quick brown fox jumps over the lazy dog</p>
+                <p className="text-lg font-extrabold text-gray-600">Extra Bold (800) - The quick brown fox jumps over the lazy dog</p>
+                <p className="text-lg font-black text-gray-600">Black (900) - The quick brown fox jumps over the lazy dog</p>
               </div>
-            </section>
+            </div>
 
-            {/* Code Elements */}
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Code Elements</h2>
-              <div className="space-y-2">
-                <p>Inline <code className="bg-gray-100 px-2 py-1 rounded text-sm">code</code> element</p>
-                <pre className="bg-gray-100 p-4 rounded text-sm overflow-x-auto">
-                  <code>// Code block example
-const example = 'SF Pro font test';
-console.log(example);</code>
-                </pre>
+            {/* UI Components */}
+            <div className="border-b pb-6">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">UI Components</h2>
+              <div className="space-y-4">
+                <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
+                  Primary Button
+                </button>
+                <button className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200">
+                  Secondary Button
+                </button>
+                <input 
+                  type="text" 
+                  placeholder="Input field with Inter font"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <textarea 
+                  placeholder="Textarea with Inter font"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={3}
+                />
               </div>
-            </section>
+            </div>
 
-            {/* Third-party Component Simulation */}
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Third-party Components</h2>
+            {/* Special Characters */}
+            <div className="border-b pb-6">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Special Characters & International</h2>
               <div className="space-y-2">
-                <div className="headlessui-test p-4 border rounded">
-                  <p className="text-sm">HeadlessUI component simulation</p>
-                </div>
-                <div className="supabase-test p-4 border rounded">
-                  <p className="text-sm">Supabase component simulation</p>
-                </div>
-                <div className="paddle-test p-4 border rounded">
-                  <p className="text-sm">Paddle component simulation</p>
-                </div>
+                <p className="text-lg text-gray-600">English: The quick brown fox jumps over the lazy dog</p>
+                <p className="text-lg text-gray-600">Numbers: 0123456789</p>
+                <p className="text-lg text-gray-600">Symbols: !@#$%^&*()_+-=[]{}|;':",./<>?</p>
+                <p className="text-lg text-gray-600">German: Söhne font implementation test</p>
+                <p className="text-lg text-gray-600">French: Test d'implémentation de la police Söhne</p>
+                <p className="text-lg text-gray-600">Spanish: Prueba de implementación de fuente Söhne</p>
               </div>
-            </section>
+            </div>
+
+            {/* Code Example */}
+            <div>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Code Example</h2>
+              <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto">
+                <code className="text-sm">
+{`// Font implementation in CSS
+body {
+  font-family: 'Inter', 'Söhne', 'SF Pro Display', 'SF Pro Text', 
+               -apple-system, BlinkMacSystemFont, 'Segoe UI', 
+               'Roboto', 'Helvetica Neue', Arial, sans-serif;
+}
+
+// Tailwind config
+fontFamily: {
+  sans: ['Inter', 'Söhne', 'SF Pro Display', 'SF Pro Text', 
+         '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 
+         'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+}`}
+                </code>
+              </pre>
+            </div>
           </div>
         </div>
       </div>
