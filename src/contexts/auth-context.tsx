@@ -39,6 +39,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
   }
 
+  // For mock client (when using placeholder environment variables), set loading to false immediately
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co' || 
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'placeholder_key') {
+    return (
+      <AuthContext.Provider value={{
+        user: null,
+        session: null,
+        loading: false,
+        signIn: async () => ({ error: { message: 'Supabase not configured' } }),
+        signUp: async () => ({ error: { message: 'Supabase not configured' } }),
+        signInWithGoogle: async () => ({ error: { message: 'Supabase not configured' } }),
+        signOut: async () => {}
+      }}>
+        {children}
+      </AuthContext.Provider>
+    )
+  }
+
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
