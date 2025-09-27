@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
 import AppLayout from '@/components/app-layout'
 import { useSubscription } from '@/lib/subscription-context'
+import LogoUpload from '@/components/LogoUpload'
 import { 
   Settings as SettingsIcon, 
   User, 
@@ -64,6 +65,7 @@ function SettingsContent() {
       weeklyReport: true,
     },
   })
+  const [userLogo, setUserLogo] = useState<string>('')
 
   // Ensure notifications object is always properly initialized
   const safeNotifications = formData.notifications || {
@@ -99,6 +101,12 @@ function SettingsContent() {
             await fetchUserPreferences()
           } catch (err) {
             console.error('User preferences fetch failed:', err)
+          }
+          
+          try {
+            await fetchUserLogo()
+          } catch (err) {
+            console.error('User logo fetch failed:', err)
           }
         }
       } catch (err) {
@@ -162,6 +170,22 @@ function SettingsContent() {
     } catch (error) {
       console.error('Error fetching user preferences:', error)
       // Don't throw the error, just log it to prevent ErrorBoundary from catching it
+    }
+  }
+
+  const fetchUserLogo = async () => {
+    try {
+      const response = await fetch('/api/user/profile')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.avatar_url) {
+          setUserLogo(data.avatar_url)
+        }
+      } else {
+        console.error('Failed to fetch user profile:', response.status)
+      }
+    } catch (error) {
+      console.error('Error fetching user logo:', error)
     }
   }
 
@@ -621,6 +645,18 @@ function SettingsContent() {
                         />
                       </div>
                     </div>
+                  </div>
+
+                  {/* Logo Upload Section */}
+                  <div className="bg-gray-50 rounded-2xl p-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Company Logo</h4>
+                    <p className="text-sm text-gray-600 mb-6">
+                      Upload your company logo to personalize your experience. This will be displayed in your dashboard and promotional materials.
+                    </p>
+                    <LogoUpload 
+                      currentLogo={userLogo}
+                      onLogoChange={setUserLogo}
+                    />
                   </div>
 
                   {!isGoogleUser && (
