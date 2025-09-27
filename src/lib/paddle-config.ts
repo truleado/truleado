@@ -229,6 +229,20 @@ export class PaddleAPI {
         }
       }
 
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(data.customerEmail)) {
+        throw new Error(`Invalid email format: ${data.customerEmail}`)
+      }
+
+      // Validate URLs
+      try {
+        new URL(data.successUrl)
+        new URL(data.cancelUrl)
+      } catch (urlError) {
+        throw new Error(`Invalid URL format: ${urlError instanceof Error ? urlError.message : 'Unknown error'}`)
+      }
+
       console.log('Paddle API request data:', JSON.stringify(apiData, null, 2))
 
       // Create checkout session using Paddle API v2

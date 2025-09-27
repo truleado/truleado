@@ -38,8 +38,8 @@ export async function POST(request: NextRequest) {
     const protocol = request.headers.get('x-forwarded-proto') || 'https'
     const host = originHeader && !originHeader.includes('http') ? `${protocol}://${originHeader}` : originHeader
     const baseUrl = host || process.env.NEXT_PUBLIC_APP_URL || ''
-    // Include multiple possible placeholders so success page can activate reliably
-    const successUrl = `${baseUrl}/billing/success?transaction_id={transaction_id}&session_id={transaction_id}&checkout_id={checkout_id}`
+    // Use proper Paddle URL parameters
+    const successUrl = `${baseUrl}/billing/success`
     const cancelUrl = `${baseUrl}/billing/cancel`
     
     console.log('Using URLs:', { baseUrl, successUrl, cancelUrl })
@@ -98,17 +98,36 @@ export async function POST(request: NextRequest) {
     })
     
     const sessionId = session?.id || session?.data?.id
-    const checkoutUrl = 
-      session?.checkout_url ||
-      session?.url ||
-      session?.redirect_url ||
-      session?.data?.checkout_url ||
-      session?.data?.attributes?.url ||
-      session?.data?.attributes?.checkout_url ||
-      session?.links?.checkout ||
-      session?.links?.self
+    
+    // Extract checkout URL from various possible response formats
+    let checkoutUrl = null
+    
+    // Try different possible locations for checkout URL
+    if (session?.checkout_url) {
+      checkoutUrl = session.checkout_url
+    } else if (session?.url) {
+      checkoutUrl = session.url
+    } else if (session?.redirect_url) {
+      checkoutUrl = session.redirect_url
+    } else if (session?.data?.checkout_url) {
+      checkoutUrl = session.data.checkout_url
+    } else if (session?.data?.url) {
+      checkoutUrl = session.data.url
+    } else if (session?.data?.attributes?.url) {
+      checkoutUrl = session.data.attributes.url
+    } else if (session?.data?.attributes?.checkout_url) {
+      checkoutUrl = session.data.attributes.checkout_url
+    } else if (session?.links?.checkout) {
+      checkoutUrl = session.links.checkout
+    } else if (session?.links?.self) {
+      checkoutUrl = session.links.self
+    }
 
-    console.log('Checkout session created:', { sessionId, checkoutUrl })
+    console.log('Checkout session created:', { 
+      sessionId, 
+      checkoutUrl,
+      rawSession: JSON.stringify(session, null, 2)
+    })
 
     if (!checkoutUrl) {
       console.error('No checkout URL returned from Paddle. Raw session:', JSON.stringify(session))
