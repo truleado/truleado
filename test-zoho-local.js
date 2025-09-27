@@ -8,7 +8,7 @@ async function testZohoIntegration() {
     // Test 1: Check if we can get an access token
     console.log('1️⃣ Testing access token generation...');
     
-    const tokenResponse = await fetch('https://accounts.zoho.com/oauth/v2/token', {
+    const tokenResponse = await fetch('https://accounts.zoho.in/oauth/v2/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -17,7 +17,7 @@ async function testZohoIntegration() {
         grant_type: 'refresh_token',
         client_id: '1000.82DRWH7GU91XIPF7ZN9Q3W9KZ770GY',
         client_secret: '30c61a291d791a0d1caa6e2ce193d069be007d6ea9',
-        refresh_token: 'YOUR_NEW_REFRESH_TOKEN_HERE',
+        refresh_token: '1000.1aa3bd63937b5fb65d8e970165babc99.4df927f0368af5b8807bea0ee715c8cb',
       }),
     });
 
@@ -48,7 +48,7 @@ async function testZohoIntegration() {
       Custom_Field_3: 'trial'
     };
 
-    const contactResponse = await fetch('https://www.zohoapis.com/crm/v2/Contacts', {
+    const contactResponse = await fetch('https://www.zohoapis.in/crm/v2/Contacts', {
       method: 'POST',
       headers: {
         'Authorization': `Zoho-oauthtoken ${tokenData.access_token}`,

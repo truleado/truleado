@@ -31,7 +31,7 @@ export class ZohoCRMService {
       clientSecret: process.env.ZOHO_CLIENT_SECRET || '',
       refreshToken: process.env.ZOHO_REFRESH_TOKEN || '',
       redirectUri: process.env.ZOHO_REDIRECT_URI || 'https://truleado.com/auth/zoho/callback',
-      apiDomain: process.env.ZOHO_API_DOMAIN || 'https://www.zohoapis.com'
+      apiDomain: process.env.ZOHO_API_DOMAIN || 'https://www.zohoapis.in'
     }
   }
 
@@ -42,7 +42,7 @@ export class ZohoCRMService {
     }
 
     try {
-      const response = await fetch('https://accounts.zoho.com/oauth/v2/token', {
+      const response = await fetch('https://accounts.zoho.in/oauth/v2/token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
