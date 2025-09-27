@@ -13,21 +13,14 @@ export async function POST(request: NextRequest) {
 
     console.log('📧 Sending upgrade thank you email to:', email, 'for:', name, 'plan:', planType)
 
-    // Try verified domain first, fallback to default domain for testing
-    const fromAddress = process.env.NODE_ENV === 'production' 
-      ? 'Truleado <noreply@truleado.com>' 
-      : 'Truleado <onboarding@resend.dev>'
-    
-    const toAddress = process.env.NODE_ENV === 'production' 
-      ? [email] 
-      : ['truleado@gmail.com'] // Send to your email for testing
+    // Use verified domain for all emails
+    const fromAddress = 'Truleado <noreply@truleado.com>'
+    const toAddress = [email] // Send to the actual user's email
 
     const { data, error } = await resend.emails.send({
       from: fromAddress,
       to: toAddress,
-      subject: process.env.NODE_ENV === 'production' 
-        ? `Thank you for upgrading to ${planType}! 🎉`
-        : `Thank you for upgrading to ${planType}! 🎉 (Test for ${email})`,
+      subject: `Thank you for upgrading to ${planType}! 🎉`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h1 style="color: #2563eb; text-align: center;">Thank you for upgrading, ${name}! 🎉</h1>
