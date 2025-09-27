@@ -66,11 +66,19 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Add SDK status check
+    const sdkStatus = {
+      paddleInstance: paddleAPI ? 'exists' : 'null',
+      hasPaddleProperty: paddleAPI && 'paddle' in paddleAPI ? 'yes' : 'no',
+      paddleValue: paddleAPI && 'paddle' in paddleAPI ? (paddleAPI.paddle ? 'initialized' : 'null') : 'unknown'
+    }
+
     return NextResponse.json({
       success: true,
       config,
       priceTest,
-      checkoutTest
+      checkoutTest,
+      sdkStatus
     })
 
   } catch (error) {

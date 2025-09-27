@@ -31,33 +31,25 @@ console.log('Paddle Config Loaded:', {
 // Initialize Paddle SDK with error handling
 let paddle: Paddle | null = null
 
-async function initializePaddleSDK() {
-  try {
-    if (paddleConfig.apiKey) {
-      console.log('Initializing Paddle SDK with API key:', paddleConfig.apiKey.substring(0, 8) + '...')
-      console.log('Environment:', paddleConfig.environment)
-      
-      // Try dynamic import to ensure proper loading
-      const { Paddle } = await import('@paddle/paddle-node-sdk')
-      
-      paddle = new Paddle(paddleConfig.apiKey, {
-        environment: paddleConfig.environment === 'production' ? 'production' : 'sandbox'
-      })
-      console.log('Paddle SDK initialized successfully')
-      console.log('SDK object:', paddle)
-      console.log('SDK checkoutSessions:', paddle.checkoutSessions)
-    } else {
-      console.warn('Paddle API key not found, SDK not initialized')
-    }
-  } catch (error) {
-    console.error('Failed to initialize Paddle SDK:', error)
-    console.error('Error details:', error)
-    paddle = null
+try {
+  if (paddleConfig.apiKey) {
+    console.log('Initializing Paddle SDK with API key:', paddleConfig.apiKey.substring(0, 8) + '...')
+    console.log('Environment:', paddleConfig.environment)
+    
+    paddle = new Paddle(paddleConfig.apiKey, {
+      environment: paddleConfig.environment === 'production' ? 'production' : 'sandbox'
+    })
+    console.log('Paddle SDK initialized successfully')
+    console.log('SDK object:', paddle)
+    console.log('SDK checkoutSessions:', paddle.checkoutSessions)
+  } else {
+    console.warn('Paddle API key not found, SDK not initialized')
   }
+} catch (error) {
+  console.error('Failed to initialize Paddle SDK:', error)
+  console.error('Error details:', error)
+  paddle = null
 }
-
-// Initialize SDK
-initializePaddleSDK()
 
 // Paddle API Client
 export class PaddleAPI {
@@ -71,14 +63,7 @@ export class PaddleAPI {
     this.paddle = paddle || null
   }
 
-  private async ensureSDKInitialized() {
-    // Wait for SDK initialization if it's still in progress
-    let attempts = 0
-    while (!this.paddle && attempts < 10) {
-      await new Promise(resolve => setTimeout(resolve, 100))
-      attempts++
-    }
-    
+  private ensureSDKInitialized() {
     if (!this.paddle) {
       throw new Error('Paddle SDK not initialized. Please check your PADDLE_API_KEY environment variable.')
     }
@@ -205,7 +190,7 @@ export class PaddleAPI {
         }
 
         console.log('Paddle SDK request data:', JSON.stringify(checkoutData, null, 2))
-        const sdk = await this.ensureSDKInitialized()
+        const sdk = this.ensureSDKInitialized()
         session = await sdk.checkoutSessions.create(checkoutData)
       }
       
@@ -235,7 +220,7 @@ export class PaddleAPI {
   async getPrice(priceId: string) {
     try {
       console.log('Fetching price using Paddle SDK:', priceId)
-      const sdk = await this.ensureSDKInitialized()
+      const sdk = this.ensureSDKInitialized()
       const price = await sdk.prices.get(priceId)
       console.log('Price retrieved successfully:', price)
       return price
@@ -276,7 +261,7 @@ export class PaddleAPI {
     console.log('Creating Paddle customer using SDK:', data.email)
     
     try {
-      const sdk = await this.ensureSDKInitialized()
+      const sdk = this.ensureSDKInitialized()
       const customer = await sdk.customers.create({
         email: data.email,
         name: data.name,
@@ -306,7 +291,7 @@ export class PaddleAPI {
   async listCustomers(options: { email?: string; limit?: number } = {}) {
     try {
       console.log('Listing customers with options:', options)
-      const sdk = await this.ensureSDKInitialized()
+      const sdk = this.ensureSDKInitialized()
       const customers = sdk.customers.list({
         email: options.email ? [options.email] : undefined,
         perPage: options.limit || 10
@@ -325,7 +310,7 @@ export class PaddleAPI {
       console.log('Searching for customer by email:', email)
       
       // Try the search with email filter
-      const sdk = await this.ensureSDKInitialized()
+      const sdk = this.ensureSDKInitialized()
       const customers = sdk.customers.list({
         email: [email],
         perPage: 10
@@ -368,7 +353,7 @@ export class PaddleAPI {
     
     try {
       // In Paddle, subscriptions are created via transactions with recurring items
-      const sdk = await this.ensureSDKInitialized()
+      const sdk = this.ensureSDKInitialized()
       const transaction = await sdk.transactions.create({
         customerId: data.customerId,
         items: [
