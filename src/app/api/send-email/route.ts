@@ -13,10 +13,21 @@ export async function POST(request: NextRequest) {
 
     console.log('📧 Sending welcome email to:', email, 'for:', name)
 
+    // Try verified domain first, fallback to default domain for testing
+    const fromAddress = process.env.NODE_ENV === 'production' 
+      ? 'Truleado <noreply@truleado.com>' 
+      : 'Truleado <onboarding@resend.dev>'
+    
+    const toAddress = process.env.NODE_ENV === 'production' 
+      ? [email] 
+      : ['truleado@gmail.com'] // Send to your email for testing
+
     const { data, error } = await resend.emails.send({
-      from: 'Truleado <onboarding@resend.dev>',
-      to: ['truleado@gmail.com'], // Send to your email for testing
-      subject: `Welcome to Truleado! 🚀 (Test for ${email})`,
+      from: fromAddress,
+      to: toAddress,
+      subject: process.env.NODE_ENV === 'production' 
+        ? 'Welcome to Truleado! 🚀'
+        : `Welcome to Truleado! 🚀 (Test for ${email})`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h1 style="color: #2563eb; text-align: center;">Welcome to Truleado, ${name}! 🎉</h1>
