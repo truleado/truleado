@@ -117,15 +117,22 @@ function SettingsContent() {
       const response = await fetch('/api/user/preferences')
       if (response.ok) {
         const data = await response.json()
-        if (data.preferences) {
+        if (data.preferences && typeof data.preferences === 'object') {
           setFormData(prev => ({
             ...prev,
-            notifications: data.preferences
+            notifications: {
+              email: data.preferences.email ?? true,
+              newLeads: data.preferences.newLeads ?? true,
+              weeklyReport: data.preferences.weeklyReport ?? true,
+            }
           }))
         }
+      } else {
+        console.error('Failed to fetch user preferences:', response.status)
       }
     } catch (error) {
       console.error('Error fetching user preferences:', error)
+      // Don't throw the error, just log it to prevent ErrorBoundary from catching it
     }
   }
 
@@ -432,22 +439,27 @@ function SettingsContent() {
         }
       } else if (section === 'notifications') {
         // Update notification preferences
-        const response = await fetch('/api/user/preferences', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            notifications: formData.notifications,
-          }),
-        })
+        try {
+          const response = await fetch('/api/user/preferences', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              notifications: formData.notifications,
+            }),
+          })
 
-        if (response.ok) {
-          setShowSuccessMessage(true)
-          setTimeout(() => setShowSuccessMessage(false), 3000)
-        } else {
-          const error = await response.json()
-          alert(`Failed to update notifications: ${error.message || 'Unknown error'}`)
+          if (response.ok) {
+            setShowSuccessMessage(true)
+            setTimeout(() => setShowSuccessMessage(false), 3000)
+          } else {
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+            alert(`Failed to update notifications: ${errorData.error || 'Unknown error'}`)
+          }
+        } catch (error) {
+          console.error('Error updating notifications:', error)
+          alert('Failed to update notifications. Please try again.')
         }
       }
     } catch (error) {
@@ -761,7 +773,7 @@ function SettingsContent() {
                         </div>
                         <input
                           type="checkbox"
-                          checked={formData.notifications.email}
+                          checked={formData.notifications?.email ?? true}
                           onChange={(e) => setFormData({
                             ...formData,
                             notifications: { ...formData.notifications, email: e.target.checked }
@@ -782,7 +794,7 @@ function SettingsContent() {
                         </div>
                         <input
                           type="checkbox"
-                          checked={formData.notifications.newLeads}
+                          checked={formData.notifications?.newLeads ?? true}
                           onChange={(e) => setFormData({
                             ...formData,
                             notifications: { ...formData.notifications, newLeads: e.target.checked }
@@ -803,7 +815,7 @@ function SettingsContent() {
                         </div>
                         <input
                           type="checkbox"
-                          checked={formData.notifications.weeklyReport}
+                          checked={formData.notifications?.weeklyReport ?? true}
                           onChange={(e) => setFormData({
                             ...formData,
                             notifications: { ...formData.notifications, weeklyReport: e.target.checked }
