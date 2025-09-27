@@ -3,15 +3,14 @@ export async function sendWelcomeEmailDirect(email: string, name: string) {
   try {
     console.log('📧 Sending welcome email to:', email)
     
-    const response = await fetch('/api/send-welcome-email-direct', {
+    const response = await fetch('/api/send-email-simple', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         email,
-        name,
-        trialEndDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 1 day from now
+        name
       }),
     })
 
