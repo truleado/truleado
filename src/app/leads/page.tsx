@@ -716,20 +716,5 @@ function LeadsContent() {
 }
 
 export default function Leads() {
-  return (
-    <Suspense fallback={
-      <AppLayout>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
-              <Target className="w-6 h-6 text-white" />
-            </div>
-            <p className="text-gray-600 font-medium">Loading leads...</p>
-          </div>
-        </div>
-      </AppLayout>
-    }>
-      <LeadsContent />
-    </Suspense>
-  )
+  return <LeadsContent />
 }

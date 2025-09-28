@@ -1207,19 +1207,6 @@ function SettingsContent() {
 }
 
 export default function Settings() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <SettingsIcon className="w-6 h-6 text-white" />
-          </div>
-          <p className="text-gray-600 font-medium">Loading settings...</p>
-        </div>
-      </div>
-    }>
-      <SettingsContent />
-    </Suspense>
-  )
+  return <SettingsContent />
 }
 
