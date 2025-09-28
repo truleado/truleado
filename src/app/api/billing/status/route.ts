@@ -32,6 +32,8 @@ export async function GET(request: NextRequest) {
 
     // Calculate next billing date for active subscriptions
     let nextBillingDate = ''
+    let isRecurring = false
+    
     if (profile.subscription_status === 'active' && profile.subscription_ends_at) {
       const subscriptionEndsAt = new Date(profile.subscription_ends_at)
       nextBillingDate = subscriptionEndsAt.toLocaleDateString('en-US', {
@@ -39,6 +41,12 @@ export async function GET(request: NextRequest) {
         month: 'long',
         day: 'numeric'
       })
+      
+      // Check if this is a recurring subscription
+      // If subscription_ends_at is more than 30 days from now, it's likely recurring
+      const now = new Date()
+      const daysUntilRenewal = Math.ceil((subscriptionEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+      isRecurring = daysUntilRenewal > 30 || profile.paddle_subscription_id !== null
     }
 
     // Mock invoice history for active subscribers
@@ -68,9 +76,11 @@ export async function GET(request: NextRequest) {
       paddle_customer_id: profile.paddle_customer_id,
       paddle_subscription_id: profile.paddle_subscription_id,
       next_billing_date: nextBillingDate,
-      amount: '$30.00',
+      is_recurring: isRecurring,
+      amount: '$29.00',
       payment_method: 'Card ending in 4242',
-      invoices: invoices
+      invoices: invoices,
+      billing_cycle: isRecurring ? 'Monthly' : 'One-time'
     })
   } catch (error) {
     console.error('Billing status error:', error)

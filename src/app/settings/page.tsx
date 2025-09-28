@@ -918,6 +918,9 @@ function SettingsContent() {
                         <div className="text-sm text-gray-600">
                           <p className="font-medium text-gray-900">$29/month</p>
                           <p>Next billing: {billingInfo.nextBillingDate || 'N/A'}</p>
+                          {billingInfo.isRecurring && (
+                            <p className="text-xs text-green-600 font-medium">✓ Recurring subscription</p>
+                          )}
                         </div>
                       )}
                     </div>
@@ -940,12 +943,22 @@ function SettingsContent() {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">Amount</span>
-                          <span className="text-sm font-medium text-gray-900">{billingInfo.amount}/month</span>
+                          <span className="text-sm font-medium text-gray-900">{billingInfo.amount}/{billingInfo.billingCycle || 'month'}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">Billing cycle</span>
+                          <span className="text-sm font-medium text-gray-900">{billingInfo.billingCycle || 'Monthly'}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">Next billing</span>
                           <span className="text-sm font-medium text-gray-900">{billingInfo.nextBillingDate || 'N/A'}</span>
                         </div>
+                        {billingInfo.isRecurring && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600">Status</span>
+                            <span className="text-sm font-medium text-green-600">✓ Auto-renewal enabled</span>
+                          </div>
+                        )}
                       </div>
                       <div className="mt-4 pt-4 border-t border-gray-200">
                         <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
