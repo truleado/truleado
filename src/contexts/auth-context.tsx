@@ -42,8 +42,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // For mock client (when using placeholder environment variables), set loading to false immediately
   if (process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co' || 
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'placeholder_key' ||
+      process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://dummy.supabase.co' ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'dummy_anon_key' ||
       !process.env.NEXT_PUBLIC_SUPABASE_URL ||
       !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    console.log('Using mock Supabase client due to dummy/placeholder environment variables')
     return (
       <AuthContext.Provider value={{
         user: null,

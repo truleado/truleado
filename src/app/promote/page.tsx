@@ -48,6 +48,33 @@ export default function PromotePage() {
     })
   }
 
+  // Handle case where authentication is stuck loading (e.g., with dummy env vars)
+  // Direct check for dummy environment variables to bypass authentication context issues
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://dummy.supabase.co' || 
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'dummy_anon_key') {
+    return (
+      <AppLayout>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto px-6">
+            <div className="w-20 h-20 bg-gradient-to-r from-orange-100 to-red-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <Megaphone className="w-10 h-10 text-orange-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h2>
+            <p className="text-gray-600 mb-6">
+              Please sign in to access promotional tools.
+            </p>
+            <button
+              onClick={() => window.location.href = '/auth/signin'}
+              className="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              Sign In
+            </button>
+          </div>
+        </div>
+      </AppLayout>
+    )
+  }
+
   useEffect(() => {
     if (user) {
       fetchProducts()

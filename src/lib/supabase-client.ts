@@ -18,8 +18,12 @@ export function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('Supabase credentials not found. Please set up your environment variables.')
+  if (!supabaseUrl || !supabaseAnonKey || 
+      supabaseUrl === 'https://dummy.supabase.co' || 
+      supabaseAnonKey === 'dummy_anon_key' ||
+      supabaseUrl === 'https://placeholder.supabase.co' || 
+      supabaseAnonKey === 'placeholder_key') {
+    console.warn('Supabase credentials not found or using dummy values. Please set up your environment variables.')
     // Return a mock client that won't crash the app
     return {
       auth: {
