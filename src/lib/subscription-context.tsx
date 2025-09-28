@@ -63,6 +63,15 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     }
   }, [authLoading])
 
+  // Handle dummy environment variables - set loading to false immediately
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://dummy.supabase.co' || 
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'dummy_anon_key') {
+      console.log('Using mock subscription context due to dummy environment variables')
+      setIsLoading(false)
+    }
+  }, [])
+
   const value: SubscriptionContextType = {
     user,
     subscriptionStatus: user?.subscription_status || 'trial',
