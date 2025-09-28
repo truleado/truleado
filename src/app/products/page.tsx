@@ -4,6 +4,9 @@ import { useAuth } from '@/contexts/auth-context'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
 import AppLayout from '@/components/app-layout'
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
 import { 
   Plus, 
   Package, 

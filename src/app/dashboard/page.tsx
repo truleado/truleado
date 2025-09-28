@@ -6,8 +6,12 @@ import { useSubscription } from '@/lib/subscription-context'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import AppLayout from '@/components/app-layout'
+
 import PaddleCheckout from '@/components/PaddleCheckout'
 import Link from 'next/link'
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
 import { 
   TrendingUp, 
   Users, 

@@ -6,6 +6,9 @@ import { useSubscription } from '@/lib/subscription-context'
 import AppLayout from '@/components/app-layout'
 import { Megaphone, Package, Copy, Edit3, Check, Loader2, ExternalLink, Star } from 'lucide-react'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 interface Product {
   id: string
   name: string
@@ -33,21 +36,16 @@ export default function PromotePage() {
   const [copiedPost, setCopiedPost] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Debug logging
-  console.log('PromotePage Debug:', {
-    user: !!user,
-    authLoading,
-    subscriptionLoading,
-    accessLevel,
-    canAccessPromote: canAccess('promote_products'),
-    productsCount: products.length
-  })
-
-  // Error boundary for debugging
-  try {
-    // This will help catch any errors in the component
-  } catch (error) {
-    console.error('PromotePage Error:', error)
+  // Debug logging (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('PromotePage Debug:', {
+      user: !!user,
+      authLoading,
+      subscriptionLoading,
+      accessLevel,
+      canAccessPromote: canAccess('promote_products'),
+      productsCount: products.length
+    })
   }
 
   useEffect(() => {

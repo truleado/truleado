@@ -5,6 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
 import AppLayout from '@/components/app-layout'
 import { useSubscription } from '@/lib/subscription-context'
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
 import { 
   Settings as SettingsIcon, 
   User, 
