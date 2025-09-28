@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { useSubscription } from '@/lib/subscription-context'
+import { AccessGuard, UpgradeButton } from '@/components/AccessGuard'
 import AppLayout from '@/components/app-layout'
 import { Megaphone, Package, Copy, Edit3, Check, Loader2, ExternalLink, Star } from 'lucide-react'
 
@@ -205,8 +206,27 @@ export default function PromotePage() {
   }
 
   return (
-    <AppLayout>
-      <div className="space-y-6">
+    <AccessGuard 
+      feature="promote_products" 
+      fallback={
+        <AppLayout>
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+            <div className="text-center max-w-md mx-auto px-6">
+              <div className="w-20 h-20 bg-gradient-to-r from-orange-100 to-red-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Megaphone className="w-10 h-10 text-orange-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Trial Expired</h2>
+              <p className="text-gray-600 mb-6">
+                Your free trial has ended. Upgrade to Pro to continue generating promotional posts and unlock all features.
+              </p>
+              <UpgradeButton />
+            </div>
+          </div>
+        </AppLayout>
+      }
+    >
+      <AppLayout>
+        <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -451,5 +471,6 @@ export default function PromotePage() {
         )}
       </div>
     </AppLayout>
+    </AccessGuard>
   )
 }

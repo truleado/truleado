@@ -69,7 +69,15 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'dummy_anon_key') {
       console.log('Using mock subscription context due to dummy environment variables')
       setIsLoading(false)
-      setAccessLevel('trial') // Give trial access for dummy env vars
+      // Create a mock user with trial status for dummy env vars
+      setUser({
+        id: 'mock-user-id',
+        email: 'demo@truleado.com',
+        subscription_status: 'trial',
+        trial_ends_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
+        trial_count: 1,
+        last_trial_at: new Date().toISOString()
+      } as UserWithSubscription)
       return // Exit early to prevent further processing
     }
   }, [])

@@ -259,8 +259,27 @@ function LeadsContent() {
   }
 
   return (
-    <AppLayout>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <AccessGuard 
+      feature="view_leads" 
+      fallback={
+        <AppLayout>
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+            <div className="text-center max-w-md mx-auto px-6">
+              <div className="w-20 h-20 bg-gradient-to-r from-orange-100 to-red-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Users className="w-10 h-10 text-orange-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Trial Expired</h2>
+              <p className="text-gray-600 mb-6">
+                Your free trial has ended. Upgrade to Pro to continue accessing leads and unlock all features.
+              </p>
+              <UpgradeButton />
+            </div>
+          </div>
+        </AppLayout>
+      }
+    >
+      <AppLayout>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="mb-8">
@@ -692,6 +711,7 @@ function LeadsContent() {
         )}
       </div>
     </AppLayout>
+    </AccessGuard>
   )
 }
 
