@@ -28,23 +28,13 @@ interface GeneratedPost {
 export default function PromotePage() {
   const { user, loading: authLoading } = useAuth()
   const { canAccess, accessLevel, isLoading: subscriptionLoading } = useSubscription()
-  const [products, setProducts] = useState<Product[]>([
-    {
-      id: 'mock-product-1',
-      name: 'Sample SaaS Product',
-      description: 'A powerful tool that helps businesses automate their workflows',
-      website_url: 'https://example.com',
-      subreddits: ['entrepreneur', 'startups', 'SaaS'],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
-  ])
+  const [products, setProducts] = useState<Product[]>([])
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [generatedPosts, setGeneratedPosts] = useState<GeneratedPost[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
   const [editingPost, setEditingPost] = useState<{ subreddit: string; field: 'title' | 'body' } | null>(null)
   const [copiedPost, setCopiedPost] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   // Debug logging (only in development)
   if (process.env.NODE_ENV === 'development') {
@@ -67,18 +57,25 @@ export default function PromotePage() {
 
   const fetchProducts = async () => {
     try {
-      // For now, always return mock products to keep it simple
-      setProducts([
-        {
-          id: 'mock-product-1',
-          name: 'Sample SaaS Product',
-          description: 'A powerful tool that helps businesses automate their workflows',
-          website_url: 'https://example.com',
-          subreddits: ['entrepreneur', 'startups', 'SaaS'],
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+      const response = await fetch('/api/products')
+      if (response.ok) {
+        const data = await response.json()
+        // The API returns { products: [...] }, so we need to extract the products array
+        if (data.products && Array.isArray(data.products)) {
+          setProducts(data.products)
+        } else {
+          console.error('Products data is not in expected format:', data)
+          setProducts([])
         }
-      ])
+      } else {
+        console.error('Failed to fetch products:', response.status)
+        // For development with dummy env vars, show a helpful message
+        if (response.status === 401) {
+          setProducts([])
+        } else {
+          setProducts([])
+        }
+      }
     } catch (error) {
       console.error('Failed to fetch products:', error)
       setProducts([])

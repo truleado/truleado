@@ -787,12 +787,33 @@ export class JobScheduler {
 
 // Global job scheduler instance
 let jobScheduler: JobScheduler | null = null
+let schedulerStarted = false
 
 export function getJobScheduler(): JobScheduler {
   if (!jobScheduler) {
     jobScheduler = new JobScheduler()
   }
   return jobScheduler
+}
+
+// Auto-start the job scheduler when the module is loaded
+export async function initializeJobScheduler() {
+  if (!schedulerStarted) {
+    try {
+      const scheduler = getJobScheduler()
+      await scheduler.start()
+      schedulerStarted = true
+      console.log('Job scheduler auto-started successfully')
+    } catch (error) {
+      console.error('Failed to auto-start job scheduler:', error)
+    }
+  }
+}
+
+// Initialize the scheduler immediately
+if (typeof window === 'undefined') {
+  // Only run on server side
+  initializeJobScheduler().catch(console.error)
 }
 
 // Job scheduler will be started manually when needed
