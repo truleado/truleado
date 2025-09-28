@@ -360,25 +360,25 @@ function LeadsContent() {
                     }`}
                     onClick={() => setSelectedProduct(product)}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4 flex-1">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-4 flex-1 min-w-0">
                         <div className="w-12 h-12 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
                           <Package className="w-6 h-6 text-blue-600" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <h3 className="font-semibold text-gray-900 truncate">{product.name}</h3>
+                          <div className="flex items-start space-x-3 mb-2">
+                            <h3 className="font-semibold text-gray-900 break-words leading-tight">{product.name}</h3>
                             {product.isFiltering && (
-                              <div className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                              <div className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 flex-shrink-0">
                                 <Activity className="w-3 h-3" />
                                 Filtering
                               </div>
                             )}
                           </div>
-                          <p className="text-gray-600 text-sm line-clamp-1 mb-2">
+                          <p className="text-gray-600 text-sm break-words leading-relaxed mb-3">
                             {product.description}
                           </p>
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <div className="flex items-center gap-4 text-sm text-gray-500 flex-wrap">
                             <span>{product.subreddits.length} subreddits</span>
                             <span>•</span>
                             <span className="capitalize">{product.status}</span>

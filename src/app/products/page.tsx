@@ -519,16 +519,27 @@ function ProductsContent() {
                   <div className="p-4 sm:p-6">
                     {/* Header Row */}
                     <div className="flex items-start justify-between mb-4 sm:mb-6">
-                      <div className="flex items-center min-w-0 flex-1">
+                      <div className="flex items-start min-w-0 flex-1">
                         <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
                           <Package className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                         </div>
                         <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-                          <h3 className="text-lg sm:text-xl font-bold text-gray-900 truncate">{product.name}</h3>
-                          <p className="text-xs sm:text-sm text-gray-500 font-medium">{product.status}</p>
+                          <h3 className="text-lg sm:text-xl font-bold text-gray-900 break-words leading-tight">{product.name}</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              product.status === 'active' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {product.status}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(product.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex space-x-1 sm:space-x-2 flex-shrink-0">
+                      <div className="flex space-x-1 sm:space-x-2 flex-shrink-0 ml-4">
                         <button 
                           onClick={() => handleEditProduct(product)}
                           className="p-1.5 sm:p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -547,27 +558,34 @@ function ProductsContent() {
                     </div>
                     
                     {/* Main Content Row */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                       {/* Left Column - Description and Basic Info */}
                       <div className="lg:col-span-1">
-                        <div className="mb-3 sm:mb-4">
-                          <p className="text-sm sm:text-base text-gray-600 leading-relaxed">{product.description}</p>
+                        <div className="mb-4 sm:mb-6">
+                          <h4 className="text-sm font-semibold text-gray-800 mb-2">Description</h4>
+                          <p className="text-sm sm:text-base text-gray-600 leading-relaxed break-words">{product.description}</p>
                         </div>
                         
-                        <div className="space-y-2 sm:space-y-3">
-                          <div className="flex items-center text-xs sm:text-sm text-gray-600">
-                            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+                        <div className="space-y-3 sm:space-y-4">
+                          <div className="flex items-start text-xs sm:text-sm text-gray-600">
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0 mt-0.5">
                               <Globe className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" />
                             </div>
-                            <a href={product.website} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition-colors font-medium truncate">
-                              {product.website}
-                            </a>
+                            <div className="min-w-0 flex-1">
+                              <span className="text-gray-500 text-xs">Website:</span>
+                              <a href={product.website} target="_blank" rel="noopener noreferrer" className="block hover:text-blue-600 transition-colors font-medium break-all text-xs sm:text-sm">
+                                {product.website}
+                              </a>
+                            </div>
                           </div>
                           <div className="flex items-center text-xs sm:text-sm text-gray-600">
                             <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
                               <Target className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" />
                             </div>
-                            <span className="font-medium">{product.subreddits.length} subreddits monitored</span>
+                            <div>
+                              <span className="text-gray-500 text-xs">Monitoring:</span>
+                              <span className="block font-medium">{product.subreddits.length} subreddits</span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -575,37 +593,37 @@ function ProductsContent() {
                       {/* Middle Column - AI Analysis Summary */}
                       <div className="lg:col-span-1">
                         <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg sm:rounded-xl p-3 sm:p-4 h-full">
-                          <div className="space-y-3 sm:space-y-4 text-xs sm:text-sm">
+                          <div className="space-y-4 sm:space-y-5">
                             <div>
-                              <div className="flex items-center mb-1.5 sm:mb-2">
-                                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-green-100 rounded-lg flex items-center justify-center mr-1.5 sm:mr-2">
+                              <div className="flex items-center mb-2 sm:mb-3">
+                                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-green-100 rounded-lg flex items-center justify-center mr-2">
                                   <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-green-600" />
                                 </div>
-                                <span className="font-semibold text-gray-800 text-xs sm:text-sm">Key Features</span>
+                                <span className="font-semibold text-gray-800 text-sm">Key Features</span>
                               </div>
-                              <div className="text-gray-600 space-y-0.5 sm:space-y-1">
+                              <div className="text-gray-600 space-y-1 sm:space-y-1.5">
                                 {product.features.slice(0, 3).map((feature, idx) => (
-                                  <div key={idx} className="truncate text-xs sm:text-sm">• {feature}</div>
+                                  <div key={idx} className="text-xs sm:text-sm break-words leading-relaxed">• {feature}</div>
                                 ))}
                                 {product.features.length > 3 && (
-                                  <div className="text-gray-500 font-medium text-xs sm:text-sm">+{product.features.length - 3} more</div>
+                                  <div className="text-gray-500 font-medium text-xs sm:text-sm">+{product.features.length - 3} more features</div>
                                 )}
                               </div>
                             </div>
                             
                             <div>
-                              <div className="flex items-center mb-1.5 sm:mb-2">
-                                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-red-100 rounded-lg flex items-center justify-center mr-1.5 sm:mr-2">
+                              <div className="flex items-center mb-2 sm:mb-3">
+                                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-red-100 rounded-lg flex items-center justify-center mr-2">
                                   <Target className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-red-600" />
                                 </div>
-                                <span className="font-semibold text-gray-800 text-xs sm:text-sm">Pain Points</span>
+                                <span className="font-semibold text-gray-800 text-sm">Pain Points</span>
                               </div>
-                              <div className="text-gray-600 space-y-0.5 sm:space-y-1">
+                              <div className="text-gray-600 space-y-1 sm:space-y-1.5">
                                 {product.painPoints.slice(0, 3).map((point, idx) => (
-                                  <div key={idx} className="truncate text-xs sm:text-sm">• {point}</div>
+                                  <div key={idx} className="text-xs sm:text-sm break-words leading-relaxed">• {point}</div>
                                 ))}
                                 {product.painPoints.length > 3 && (
-                                  <div className="text-gray-500 font-medium text-xs sm:text-sm">+{product.painPoints.length - 3} more</div>
+                                  <div className="text-gray-500 font-medium text-xs sm:text-sm">+{product.painPoints.length - 3} more pain points</div>
                                 )}
                               </div>
                             </div>
@@ -614,21 +632,30 @@ function ProductsContent() {
                       </div>
 
                       {/* Right Column - Ideal Customer and Actions */}
-                      <div className="lg:col-span-1">
-                        <div className="bg-blue-50 rounded-lg sm:rounded-xl p-3 sm:p-4 h-full">
+                      <div className="lg:col-span-1 xl:col-span-1">
+                        <div className="bg-blue-50 rounded-lg sm:rounded-xl p-3 sm:p-4 h-full flex flex-col">
                           <div className="flex items-start mb-3 sm:mb-4">
-                            <div className="w-5 h-5 sm:w-6 sm:h-6 bg-blue-100 rounded-lg flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
+                            <div className="w-5 h-5 sm:w-6 sm:h-6 bg-blue-100 rounded-lg flex items-center justify-center mr-2 flex-shrink-0">
                               <Users className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-600" />
                             </div>
                             <div className="min-w-0 flex-1">
-                              <span className="font-semibold text-gray-800 text-xs sm:text-sm">Ideal Customer:</span>
-                              <p className="text-gray-600 text-xs sm:text-sm mt-1 line-clamp-2">{product.idealCustomerProfile}</p>
+                              <span className="font-semibold text-gray-800 text-sm">Ideal Customer</span>
+                              <p className="text-gray-600 text-xs sm:text-sm mt-1 break-words leading-relaxed">{product.idealCustomerProfile}</p>
                             </div>
                           </div>
                           
-                          <div className="mt-auto">
-                            <div className="text-xs sm:text-sm text-gray-500 font-medium mb-2 sm:mb-3">
-                              Created {new Date(product.createdAt).toLocaleDateString()}
+                          <div className="mt-auto space-y-3">
+                            <div className="flex flex-wrap gap-2">
+                              {product.benefits.slice(0, 2).map((benefit, idx) => (
+                                <span key={idx} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                                  {benefit}
+                                </span>
+                              ))}
+                              {product.benefits.length > 2 && (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600">
+                                  +{product.benefits.length - 2} more
+                                </span>
+                              )}
                             </div>
                             <button className="w-full text-blue-600 hover:text-blue-700 text-xs sm:text-sm font-semibold hover:bg-blue-100 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-colors">
                               View Details
