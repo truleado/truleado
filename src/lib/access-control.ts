@@ -28,8 +28,8 @@ export const isSubscriptionActive = (user: UserWithSubscription): boolean => {
 export const getAccessLevel = (user: UserWithSubscription): AccessLevel => {
   if (!user) return 'none'
   
-  // Active subscription
-  if (user.subscription_status === 'active' && isSubscriptionActive(user)) {
+  // Active subscription - give full access regardless of subscription_ends_at
+  if (user.subscription_status === 'active') {
     return 'full'
   }
   
@@ -85,7 +85,7 @@ export const canAccessFeature = (user: UserWithSubscription, feature: string, cu
   // Special handling for add_products based on trial status
   if (feature === 'add_products') {
     // If user has active subscription, allow unlimited products
-    if (user.subscription_status === 'active' && isSubscriptionActive(user)) {
+    if (user.subscription_status === 'active') {
       return true
     }
     
@@ -116,7 +116,7 @@ export const canAccessFeature = (user: UserWithSubscription, feature: string, cu
   
   if (trialFeatures.includes(feature)) {
     // If user has active subscription, allow unlimited access
-    if (user.subscription_status === 'active' && isSubscriptionActive(user)) {
+    if (user.subscription_status === 'active') {
       return true
     }
     

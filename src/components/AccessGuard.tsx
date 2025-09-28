@@ -11,14 +11,32 @@ interface AccessGuardProps {
 }
 
 export function AccessGuard({ feature, children, fallback }: AccessGuardProps) {
-  const { canAccess, accessLevel, user } = useSubscription()
+  const { canAccess, accessLevel, user, isLoading } = useSubscription()
 
   console.log('AccessGuard debug:', {
     feature,
     canAccess: canAccess(feature),
     accessLevel,
-    user: user ? { id: user.id, subscription_status: user.subscription_status, trial_ends_at: user.trial_ends_at } : null
+    isLoading,
+    user: user ? { 
+      id: user.id, 
+      subscription_status: user.subscription_status, 
+      trial_ends_at: user.trial_ends_at,
+      subscription_ends_at: user.subscription_ends_at
+    } : null
   })
+
+  // Show loading state while subscription is being fetched
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (canAccess(feature)) {
     return <>{children}</>

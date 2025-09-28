@@ -13,6 +13,7 @@ interface SubscriptionContextType {
   isLoading: boolean
   refreshSubscription: () => Promise<void>
   canAccess: (feature: string, currentProductCount?: number) => boolean
+  forceRefresh: () => Promise<void>
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined)
@@ -51,14 +52,25 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     if (!authUser) return
 
     try {
+      console.log('Refreshing subscription for user:', authUser.id)
       const response = await fetch('/api/billing/status')
       if (response.ok) {
         const data = await response.json()
+        console.log('Subscription data received:', data)
         setUser({ ...authUser, ...data })
+      } else {
+        console.error('Failed to fetch subscription status:', response.status, response.statusText)
       }
     } catch (error) {
       console.error('Error refreshing subscription:', error)
     }
+  }
+
+  const forceRefresh = async () => {
+    console.log('Force refreshing subscription...')
+    setIsLoading(true)
+    await refreshSubscription()
+    setIsLoading(false)
   }
 
   useEffect(() => {
@@ -102,6 +114,26 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     }
   }, [isDummyEnv])
 
+  // Handle production users - fetch subscription status
+  useEffect(() => {
+    if (!isDummyEnv && !authLoading && authUser) {
+      console.log('Production environment - fetching subscription for user:', authUser.id)
+      refreshSubscription()
+    }
+  }, [isDummyEnv, authLoading, authUser])
+
+  // Add a periodic refresh for production users to ensure subscription status is up to date
+  useEffect(() => {
+    if (!isDummyEnv && authUser && !authLoading) {
+      const interval = setInterval(() => {
+        console.log('Periodic subscription refresh for user:', authUser.id)
+        refreshSubscription()
+      }, 30000) // Refresh every 30 seconds
+
+      return () => clearInterval(interval)
+    }
+  }, [isDummyEnv, authUser, authLoading])
+
   const value: SubscriptionContextType = {
     user,
     subscriptionStatus: user?.subscription_status || 'trial',
@@ -110,7 +142,8 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     showUpgradePrompt,
     isLoading,
     refreshSubscription,
-    canAccess
+    canAccess,
+    forceRefresh
   }
 
   return (
