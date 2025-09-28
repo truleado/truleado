@@ -23,8 +23,8 @@ interface GeneratedPost {
 }
 
 export default function PromotePage() {
-  const { user } = useAuth()
-  const { canAccess } = useSubscription()
+  const { user, loading: authLoading } = useAuth()
+  const { canAccess, accessLevel, isLoading: subscriptionLoading } = useSubscription()
   const [products, setProducts] = useState<Product[]>([])
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [generatedPosts, setGeneratedPosts] = useState<GeneratedPost[]>([])
@@ -32,6 +32,23 @@ export default function PromotePage() {
   const [editingPost, setEditingPost] = useState<{ subreddit: string; field: 'title' | 'body' } | null>(null)
   const [copiedPost, setCopiedPost] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // Debug logging
+  console.log('PromotePage Debug:', {
+    user: !!user,
+    authLoading,
+    subscriptionLoading,
+    accessLevel,
+    canAccessPromote: canAccess('promote_products'),
+    productsCount: products.length
+  })
+
+  // Error boundary for debugging
+  try {
+    // This will help catch any errors in the component
+  } catch (error) {
+    console.error('PromotePage Error:', error)
+  }
 
   useEffect(() => {
     if (user) {
@@ -125,11 +142,35 @@ export default function PromotePage() {
     }
   }
 
-  if (loading) {
+  if (authLoading || subscriptionLoading || loading) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center min-h-96">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        </div>
+      </AppLayout>
+    )
+  }
+
+  if (!user) {
+    return (
+      <AppLayout>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto px-6">
+            <div className="w-20 h-20 bg-gradient-to-r from-orange-100 to-red-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <Megaphone className="w-10 h-10 text-orange-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h2>
+            <p className="text-gray-600 mb-6">
+              Please sign in to access promotional tools.
+            </p>
+            <button
+              onClick={() => window.location.href = '/auth/signin'}
+              className="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              Sign In
+            </button>
+          </div>
         </div>
       </AppLayout>
     )

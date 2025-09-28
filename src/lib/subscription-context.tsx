@@ -53,17 +53,15 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     try {
-      if (user) {
-        setIsLoading(false)
-      } else if (!authLoading) {
-        // If auth is not loading and there's no user, we're done loading
+      if (!authLoading) {
+        // If auth is not loading, we're done loading regardless of user state
         setIsLoading(false)
       }
     } catch (error) {
       console.error('Subscription context error:', error)
       setIsLoading(false)
     }
-  }, [user, authLoading])
+  }, [authLoading])
 
   const value: SubscriptionContextType = {
     user,
