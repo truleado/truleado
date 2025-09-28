@@ -72,6 +72,31 @@ function ProductsContent() {
   const [modalTitle, setModalTitle] = useState('')
   const [productToDelete, setProductToDelete] = useState<string | null>(null)
   const [showRedditSuccess, setShowRedditSuccess] = useState(false)
+  
+  // Expanded sections state
+  const [expandedSections, setExpandedSections] = useState<{
+    [productId: string]: {
+      features: boolean
+      painPoints: boolean
+      benefits: boolean
+    }
+  }>({})
+
+  // Toggle expanded section
+  const toggleExpanded = (productId: string, section: 'features' | 'painPoints' | 'benefits') => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [productId]: {
+        ...prev[productId],
+        [section]: !prev[productId]?.[section]
+      }
+    }))
+  }
+
+  // Check if section is expanded
+  const isExpanded = (productId: string, section: 'features' | 'painPoints' | 'benefits') => {
+    return expandedSections[productId]?.[section] || false
+  }
 
   useEffect(() => {
     if (!loading && !user) {
@@ -602,11 +627,33 @@ function ProductsContent() {
                                 <span className="font-semibold text-gray-800 text-sm">Key Features</span>
                               </div>
                               <div className="text-gray-600 space-y-1 sm:space-y-1.5">
-                                {product.features.slice(0, 3).map((feature, idx) => (
+                                {(isExpanded(product.id, 'features') ? product.features : product.features.slice(0, 3)).map((feature, idx) => (
                                   <div key={idx} className="text-xs sm:text-sm break-words leading-relaxed">• {feature}</div>
                                 ))}
                                 {product.features.length > 3 && (
-                                  <div className="text-gray-500 font-medium text-xs sm:text-sm">+{product.features.length - 3} more features</div>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      toggleExpanded(product.id, 'features')
+                                    }}
+                                    className="text-blue-600 hover:text-blue-700 font-medium text-xs sm:text-sm transition-colors flex items-center gap-1"
+                                  >
+                                    {isExpanded(product.id, 'features') ? (
+                                      <>
+                                        <span>Show less</span>
+                                        <svg className="w-3 h-3 transform rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <span>+{product.features.length - 3} more features</span>
+                                        <svg className="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                      </>
+                                    )}
+                                  </button>
                                 )}
                               </div>
                             </div>
@@ -619,11 +666,33 @@ function ProductsContent() {
                                 <span className="font-semibold text-gray-800 text-sm">Pain Points</span>
                               </div>
                               <div className="text-gray-600 space-y-1 sm:space-y-1.5">
-                                {product.painPoints.slice(0, 3).map((point, idx) => (
+                                {(isExpanded(product.id, 'painPoints') ? product.painPoints : product.painPoints.slice(0, 3)).map((point, idx) => (
                                   <div key={idx} className="text-xs sm:text-sm break-words leading-relaxed">• {point}</div>
                                 ))}
                                 {product.painPoints.length > 3 && (
-                                  <div className="text-gray-500 font-medium text-xs sm:text-sm">+{product.painPoints.length - 3} more pain points</div>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      toggleExpanded(product.id, 'painPoints')
+                                    }}
+                                    className="text-blue-600 hover:text-blue-700 font-medium text-xs sm:text-sm transition-colors flex items-center gap-1"
+                                  >
+                                    {isExpanded(product.id, 'painPoints') ? (
+                                      <>
+                                        <span>Show less</span>
+                                        <svg className="w-3 h-3 transform rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <span>+{product.painPoints.length - 3} more pain points</span>
+                                        <svg className="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                      </>
+                                    )}
+                                  </button>
                                 )}
                               </div>
                             </div>
@@ -646,15 +715,35 @@ function ProductsContent() {
                           
                           <div className="mt-auto space-y-3">
                             <div className="flex flex-wrap gap-2">
-                              {product.benefits.slice(0, 2).map((benefit, idx) => (
+                              {(isExpanded(product.id, 'benefits') ? product.benefits : product.benefits.slice(0, 2)).map((benefit, idx) => (
                                 <span key={idx} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
                                   {benefit}
                                 </span>
                               ))}
                               {product.benefits.length > 2 && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600">
-                                  +{product.benefits.length - 2} more
-                                </span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    toggleExpanded(product.id, 'benefits')
+                                  }}
+                                  className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+                                >
+                                  {isExpanded(product.id, 'benefits') ? (
+                                    <>
+                                      <span>Show less</span>
+                                      <svg className="w-3 h-3 ml-1 transform rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                      </svg>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span>+{product.benefits.length - 2} more</span>
+                                      <svg className="w-3 h-3 ml-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                      </svg>
+                                    </>
+                                  )}
+                                </button>
                               )}
                             </div>
                             <button className="w-full text-blue-600 hover:text-blue-700 text-xs sm:text-sm font-semibold hover:bg-blue-100 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-colors">
