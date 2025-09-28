@@ -19,8 +19,27 @@ const SubscriptionContext = createContext<SubscriptionContextType | undefined>(u
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
   const { user: authUser, loading: authLoading } = useAuth()
-  const [user, setUser] = useState<UserWithSubscription | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  
+  // Check for dummy environment variables immediately
+  const isDummyEnv = process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://dummy.supabase.co' || 
+                     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'dummy_anon_key'
+
+  // Initialize with mock user if it's a dummy environment
+  const [user, setUser] = useState<UserWithSubscription | null>(() => {
+    if (isDummyEnv) {
+      return {
+        id: 'mock-user-id',
+        email: 'demo@truleado.com',
+        subscription_status: 'expired',
+        trial_ends_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 24 hours ago (expired)
+        trial_count: 1,
+        last_trial_at: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString()
+      } as UserWithSubscription
+    }
+    return null
+  })
+  
+  const [isLoading, setIsLoading] = useState(() => !isDummyEnv)
 
   const accessLevel = user ? getAccessLevel(user) : 'none'
   const trialTimeRemaining = user ? formatTrialTimeRemaining(user) : ''
@@ -65,22 +84,23 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   // Handle dummy environment variables - set loading to false immediately
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://dummy.supabase.co' || 
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'dummy_anon_key') {
+    if (isDummyEnv) {
       console.log('Using mock subscription context due to dummy environment variables')
       setIsLoading(false)
-      // Create a mock user with trial status for dummy env vars
-      setUser({
+      // Create a mock user with EXPIRED trial status for dummy env vars (for testing)
+      const mockUser = {
         id: 'mock-user-id',
         email: 'demo@truleado.com',
-        subscription_status: 'trial',
-        trial_ends_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
+        subscription_status: 'expired',
+        trial_ends_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 24 hours ago (expired)
         trial_count: 1,
-        last_trial_at: new Date().toISOString()
-      } as UserWithSubscription)
+        last_trial_at: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString()
+      } as UserWithSubscription
+      console.log('Setting mock user with expired trial:', mockUser)
+      setUser(mockUser)
       return // Exit early to prevent further processing
     }
-  }, [])
+  }, [isDummyEnv])
 
   const value: SubscriptionContextType = {
     user,

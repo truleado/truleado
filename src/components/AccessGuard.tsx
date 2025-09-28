@@ -11,7 +11,14 @@ interface AccessGuardProps {
 }
 
 export function AccessGuard({ feature, children, fallback }: AccessGuardProps) {
-  const { canAccess, accessLevel } = useSubscription()
+  const { canAccess, accessLevel, user } = useSubscription()
+
+  console.log('AccessGuard debug:', {
+    feature,
+    canAccess: canAccess(feature),
+    accessLevel,
+    user: user ? { id: user.id, subscription_status: user.subscription_status, trial_ends_at: user.trial_ends_at } : null
+  })
 
   if (canAccess(feature)) {
     return <>{children}</>
