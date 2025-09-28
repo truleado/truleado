@@ -35,6 +35,7 @@ export default function PromotePage() {
   const [editingPost, setEditingPost] = useState<{ subreddit: string; field: 'title' | 'body' } | null>(null)
   const [copiedPost, setCopiedPost] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [maxPostsReached, setMaxPostsReached] = useState(false)
 
   // Debug logging (only in development)
   if (process.env.NODE_ENV === 'development') {
@@ -48,6 +49,27 @@ export default function PromotePage() {
     })
   }
 
+
+  // Load saved posts from localStorage on component mount
+  useEffect(() => {
+    const savedPosts = localStorage.getItem('truleado-generated-posts')
+    if (savedPosts) {
+      try {
+        const parsedPosts = JSON.parse(savedPosts)
+        setGeneratedPosts(parsedPosts)
+        setMaxPostsReached(parsedPosts.length >= 50)
+      } catch (error) {
+        console.error('Failed to parse saved posts:', error)
+      }
+    }
+  }, [])
+
+  // Save posts to localStorage whenever generatedPosts changes
+  useEffect(() => {
+    if (generatedPosts.length > 0) {
+      localStorage.setItem('truleado-generated-posts', JSON.stringify(generatedPosts))
+    }
+  }, [generatedPosts])
 
   useEffect(() => {
     // Always fetch products to keep it simple
@@ -87,6 +109,12 @@ export default function PromotePage() {
   const generatePosts = async () => {
     if (!selectedProduct) return
 
+    // Check if we've reached the maximum number of posts
+    if (generatedPosts.length >= 50) {
+      setMaxPostsReached(true)
+      return
+    }
+
     setIsGenerating(true)
     try {
       const response = await fetch('/api/promote/generate-posts', {
@@ -105,7 +133,12 @@ export default function PromotePage() {
 
       if (response.ok) {
         const data = await response.json()
-        setGeneratedPosts(data.posts)
+        // Add new posts to existing ones instead of replacing
+        setGeneratedPosts(prev => {
+          const newPosts = [...prev, ...data.posts]
+          setMaxPostsReached(newPosts.length >= 50)
+          return newPosts
+        })
       } else {
         console.error('Failed to generate posts')
       }
@@ -134,6 +167,20 @@ export default function PromotePage() {
           : post
       )
     )
+  }
+
+  const deletePost = (postIndex: number) => {
+    setGeneratedPosts(prev => {
+      const newPosts = prev.filter((_, index) => index !== postIndex)
+      setMaxPostsReached(newPosts.length >= 50)
+      return newPosts
+    })
+  }
+
+  const clearAllPosts = () => {
+    setGeneratedPosts([])
+    setMaxPostsReached(false)
+    localStorage.removeItem('truleado-generated-posts')
   }
 
   const getPostTypeColor = (type: string) => {
@@ -223,23 +270,47 @@ export default function PromotePage() {
               )}
 
               {selectedProduct && (
-                <button
-                  onClick={generatePosts}
-                  disabled={isGenerating}
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Generating Posts...
-                    </>
-                  ) : (
-                    <>
-                      <Megaphone className="w-4 h-4 mr-2" />
-                      Generate Posts
-                    </>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <button
+                      onClick={generatePosts}
+                      disabled={isGenerating || maxPostsReached}
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Generating Posts...
+                        </>
+                      ) : maxPostsReached ? (
+                        <>
+                          <Megaphone className="w-4 h-4 mr-2" />
+                          Max Posts Reached (50)
+                        </>
+                      ) : (
+                        <>
+                          <Megaphone className="w-4 h-4 mr-2" />
+                          Generate Posts
+                        </>
+                      )}
+                    </button>
+                    
+                    {generatedPosts.length > 0 && (
+                      <div className="text-sm text-gray-600">
+                        {generatedPosts.length}/50 posts generated
+                      </div>
+                    )}
+                  </div>
+                  
+                  {generatedPosts.length > 0 && (
+                    <button
+                      onClick={clearAllPosts}
+                      className="inline-flex items-center px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                    >
+                      Clear All Posts
+                    </button>
                   )}
-                </button>
+                </div>
               )}
             </div>
           )}
@@ -248,7 +319,12 @@ export default function PromotePage() {
         {/* Generated Posts */}
         {generatedPosts.length > 0 && (
           <div className="space-y-6">
-            <h2 className="text-lg font-semibold text-gray-900">Generated Posts</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Generated Posts ({generatedPosts.length}/50)</h2>
+              <div className="text-sm text-gray-500">
+                Posts persist after page refresh
+              </div>
+            </div>
             
             {generatedPosts.map((post, index) => (
               <div key={`${post.subreddit}-${index}`} className="bg-white rounded-lg shadow p-6">
@@ -259,22 +335,33 @@ export default function PromotePage() {
                       {post.type.replace('-', ' ')}
                     </span>
                   </div>
-                  <button
-                    onClick={() => copyToClipboard(`${post.title}\n\n${post.body}`, `${post.subreddit}-${index}`)}
-                    className="inline-flex items-center px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-                  >
-                    {copiedPost === `${post.subreddit}-${index}` ? (
-                      <>
-                        <Check className="w-4 h-4 mr-1" />
-                        Copied!
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4 mr-1" />
-                        Copy
-                      </>
-                    )}
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => copyToClipboard(`${post.title}\n\n${post.body}`, `${post.subreddit}-${index}`)}
+                      className="inline-flex items-center px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+                    >
+                      {copiedPost === `${post.subreddit}-${index}` ? (
+                        <>
+                          <Check className="w-4 h-4 mr-1" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4 mr-1" />
+                          Copy
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => deletePost(index)}
+                      className="inline-flex items-center px-3 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                      title="Delete this post"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Post Title */}
