@@ -20,10 +20,14 @@ interface Product {
 }
 
 interface GeneratedPost {
+  id?: string
   subreddit: string
   title: string
   body: string
   type: 'educational' | 'problem-solution' | 'community' | 'promotional'
+  product_id?: string
+  created_at?: string
+  updated_at?: string
 }
 
 export default function PromotePage() {
@@ -50,26 +54,51 @@ export default function PromotePage() {
     })
   }
 
-  // Load saved posts from localStorage on component mount
+  // Load saved posts from database on component mount
   useEffect(() => {
-    const savedPosts = localStorage.getItem('truleado-generated-posts')
-    if (savedPosts) {
-      try {
-        const parsedPosts = JSON.parse(savedPosts)
-        setGeneratedPosts(parsedPosts)
-        setMaxPostsReached(parsedPosts.length >= 50)
-      } catch (error) {
-        console.error('Failed to parse saved posts:', error)
+    if (user) {
+      fetchPromotedPosts()
+    }
+  }, [user])
+
+  // Fetch promoted posts from database
+  const fetchPromotedPosts = async () => {
+    try {
+      const response = await fetch('/api/promoted-posts')
+      if (response.ok) {
+        const data = await response.json()
+        const posts = data.posts || []
+        setGeneratedPosts(posts)
+        setMaxPostsReached(posts.length >= 50)
+      } else {
+        console.error('Failed to fetch promoted posts:', response.status)
+        // Fallback to localStorage for development
+        const savedPosts = localStorage.getItem('truleado-generated-posts')
+        if (savedPosts) {
+          try {
+            const parsedPosts = JSON.parse(savedPosts)
+            setGeneratedPosts(parsedPosts)
+            setMaxPostsReached(parsedPosts.length >= 50)
+          } catch (error) {
+            console.error('Failed to parse saved posts:', error)
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching promoted posts:', error)
+      // Fallback to localStorage for development
+      const savedPosts = localStorage.getItem('truleado-generated-posts')
+      if (savedPosts) {
+        try {
+          const parsedPosts = JSON.parse(savedPosts)
+          setGeneratedPosts(parsedPosts)
+          setMaxPostsReached(parsedPosts.length >= 50)
+        } catch (error) {
+          console.error('Failed to parse saved posts:', error)
+        }
       }
     }
-  }, [])
-
-  // Save posts to localStorage whenever generatedPosts changes
-  useEffect(() => {
-    if (generatedPosts.length > 0) {
-      localStorage.setItem('truleado-generated-posts', JSON.stringify(generatedPosts))
-    }
-  }, [generatedPosts])
+  }
 
   useEffect(() => {
     // Always fetch products to keep it simple
@@ -133,11 +162,46 @@ export default function PromotePage() {
 
       if (response.ok) {
         const data = await response.json()
-        // Add new posts to existing ones instead of replacing
+        const newPosts = data.posts || []
+        
+        // Save each new post to the database
+        const savedPosts = []
+        for (const post of newPosts) {
+          try {
+            const saveResponse = await fetch('/api/promoted-posts', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                product_id: selectedProduct.id,
+                subreddit: post.subreddit,
+                title: post.title,
+                body: post.body,
+                post_type: post.type
+              }),
+            })
+            
+            if (saveResponse.ok) {
+              const savedPost = await saveResponse.json()
+              savedPosts.push(savedPost.post)
+            } else {
+              console.error('Failed to save post to database:', post.title)
+              // Still add to UI even if database save fails
+              savedPosts.push({ ...post, id: `temp-${Date.now()}-${Math.random()}` })
+            }
+          } catch (error) {
+            console.error('Error saving post to database:', error)
+            // Still add to UI even if database save fails
+            savedPosts.push({ ...post, id: `temp-${Date.now()}-${Math.random()}` })
+          }
+        }
+        
+        // Add new posts to existing ones
         setGeneratedPosts(prev => {
-          const newPosts = [...prev, ...data.posts]
-          setMaxPostsReached(newPosts.length >= 50)
-          return newPosts
+          const updatedPosts = [...prev, ...savedPosts]
+          setMaxPostsReached(updatedPosts.length >= 50)
+          return updatedPosts
         })
       } else {
         console.error('Failed to generate posts')
@@ -149,7 +213,25 @@ export default function PromotePage() {
     }
   }
 
-  const deletePost = (postIndex: number) => {
+  const deletePost = async (postIndex: number) => {
+    const postToDelete = generatedPosts[postIndex]
+    
+    // If the post has a real ID (not temp), delete from database
+    if (postToDelete.id && !postToDelete.id.startsWith('temp-')) {
+      try {
+        const response = await fetch(`/api/promoted-posts/${postToDelete.id}`, {
+          method: 'DELETE',
+        })
+        
+        if (!response.ok) {
+          console.error('Failed to delete post from database')
+        }
+      } catch (error) {
+        console.error('Error deleting post from database:', error)
+      }
+    }
+    
+    // Update UI regardless of database success
     setGeneratedPosts(prev => {
       const newPosts = prev.filter((_, index) => index !== postIndex)
       setMaxPostsReached(newPosts.length >= 50)
@@ -157,7 +239,25 @@ export default function PromotePage() {
     })
   }
 
-  const clearAllPosts = () => {
+  const clearAllPosts = async () => {
+    // Delete all posts from database
+    const postsToDelete = generatedPosts.filter(post => post.id && !post.id.startsWith('temp-'))
+    
+    for (const post of postsToDelete) {
+      try {
+        const response = await fetch(`/api/promoted-posts/${post.id}`, {
+          method: 'DELETE',
+        })
+        
+        if (!response.ok) {
+          console.error('Failed to delete post from database:', post.id)
+        }
+      } catch (error) {
+        console.error('Error deleting post from database:', error)
+      }
+    }
+    
+    // Clear UI and localStorage
     setGeneratedPosts([])
     setMaxPostsReached(false)
     localStorage.removeItem('truleado-generated-posts')
@@ -173,13 +273,38 @@ export default function PromotePage() {
     }
   }
 
-  const saveEdit = (postIndex: number, field: 'title' | 'body', value: string) => {
+  const saveEdit = async (postIndex: number, field: 'title' | 'body', value: string) => {
+    const postToUpdate = generatedPosts[postIndex]
+    
+    // Update UI immediately
     setGeneratedPosts(prev => 
       prev.map((post, index) => 
         index === postIndex ? { ...post, [field]: value } : post
       )
     )
     setEditingPost(null)
+    
+    // If the post has a real ID (not temp), save to database
+    if (postToUpdate.id && !postToUpdate.id.startsWith('temp-')) {
+      try {
+        const response = await fetch(`/api/promoted-posts/${postToUpdate.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: field === 'title' ? value : postToUpdate.title,
+            body: field === 'body' ? value : postToUpdate.body,
+          }),
+        })
+        
+        if (!response.ok) {
+          console.error('Failed to update post in database')
+        }
+      } catch (error) {
+        console.error('Error updating post in database:', error)
+      }
+    }
   }
 
   const getTypeColor = (type: string) => {
@@ -267,7 +392,7 @@ export default function PromotePage() {
                       setSelectedProduct(product || null)
                       setGeneratedPosts([])
                     }}
-                    className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                    className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base bg-white shadow-sm hover:shadow-md transition-all duration-200"
                   >
                     <option value="">Choose a product...</option>
                     {Array.isArray(products) && products.map((product) => (
