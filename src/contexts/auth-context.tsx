@@ -40,6 +40,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   // For mock client (when using placeholder environment variables), set loading to false immediately
+  console.log('Auth context - checking environment variables:', {
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  })
+  
   if (process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co' || 
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'placeholder_key' ||
       process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://dummy.supabase.co' ||
@@ -47,10 +52,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       !process.env.NEXT_PUBLIC_SUPABASE_URL ||
       !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     console.log('Using mock Supabase client due to dummy/placeholder environment variables')
+    console.log('Mock user created:', {
+      id: 'mock-user-id',
+      email: 'demo@truleado.com',
+      subscription_status: 'trial'
+    })
     return (
       <AuthContext.Provider value={{
-        user: null,
-        session: null,
+        user: {
+          id: 'mock-user-id',
+          email: 'demo@truleado.com',
+          subscription_status: 'trial',
+          trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        session: {
+          user: {
+            id: 'mock-user-id',
+            email: 'demo@truleado.com'
+          },
+          access_token: 'mock-token',
+          refresh_token: 'mock-refresh-token',
+          expires_at: Date.now() + 3600000,
+          expires_in: 3600,
+          token_type: 'bearer'
+        },
         loading: false,
         signIn: async () => ({ error: { message: 'Supabase not configured' } }),
         signUp: async () => ({ error: { message: 'Supabase not configured' } }),

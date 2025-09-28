@@ -69,6 +69,8 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'dummy_anon_key') {
       console.log('Using mock subscription context due to dummy environment variables')
       setIsLoading(false)
+      setAccessLevel('trial') // Give trial access for dummy env vars
+      return // Exit early to prevent further processing
     }
   }, [])
 
