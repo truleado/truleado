@@ -220,46 +220,46 @@ export default function PromotePage() {
         ) : (
           <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-                  <Megaphone className="w-8 h-8 mr-3 text-blue-600" />
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+                  <Megaphone className="w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3 text-blue-600" />
                   Promote Your Products
                 </h1>
-                <p className="text-gray-600 mt-1">
+                <p className="text-sm sm:text-base text-gray-600 mt-1">
                   Generate creative promotional posts for Reddit communities
                 </p>
               </div>
               <button
                 onClick={forceRefresh}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-xs sm:text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 self-start sm:self-auto"
               >
-                <Loader2 className="w-4 h-4 mr-2" />
+                <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                 Refresh Status
               </button>
             </div>
 
             {/* Product Selection */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Package className="w-5 h-5 mr-2" />
+            <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center">
+                <Package className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
                 Select Product
               </h2>
               
               {products.length === 0 ? (
-                <div className="text-center py-8">
-                  <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-4">No products found. Add a product first to generate promotional posts.</p>
+                <div className="text-center py-6 sm:py-8">
+                  <Package className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                  <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">No products found. Add a product first to generate promotional posts.</p>
                   <a
                     href="/products"
-                    className="inline-flex items-center text-blue-600 hover:text-blue-700"
+                    className="inline-flex items-center text-blue-600 hover:text-blue-700 text-sm sm:text-base"
                   >
                     Go to Products
-                    <ExternalLink className="w-4 h-4 ml-1" />
+                    <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
                   </a>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   <select
                     value={selectedProduct?.id || ''}
                     onChange={(e) => {
@@ -267,7 +267,7 @@ export default function PromotePage() {
                       setSelectedProduct(product || null)
                       setGeneratedPosts([])
                     }}
-                    className="input-base"
+                    className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                   >
                     <option value="">Choose a product...</option>
                     {Array.isArray(products) && products.map((product) => (
@@ -278,39 +278,39 @@ export default function PromotePage() {
                   </select>
 
                   {selectedProduct && (
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h3 className="font-medium text-gray-900 mb-2">{selectedProduct.name}</h3>
-                      <p className="text-gray-600 text-sm mb-3">{selectedProduct.description}</p>
-                      <div className="flex items-center text-sm text-gray-500">
-                        <span className="mr-4">Website: {selectedProduct.website_url}</span>
+                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                      <h3 className="font-medium text-gray-900 mb-1.5 sm:mb-2 text-sm sm:text-base">{selectedProduct.name}</h3>
+                      <p className="text-gray-600 text-xs sm:text-sm mb-2 sm:mb-3">{selectedProduct.description}</p>
+                      <div className="flex flex-col sm:flex-row sm:items-center text-xs sm:text-sm text-gray-500 gap-1 sm:gap-4">
+                        <span className="truncate">Website: {selectedProduct.website_url}</span>
                         <span>Target Subreddits: {selectedProduct.subreddits.length}</span>
                       </div>
                     </div>
                   )}
 
                   {selectedProduct && (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                         <button
                           onClick={generatePosts}
                           disabled={isGenerating || maxPostsReached}
-                          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                         >
                           {isGenerating ? (
                             <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 animate-spin" />
                               Generating...
                             </>
                           ) : (
                             <>
-                              <Star className="w-4 h-4 mr-2" />
+                              <Star className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                               Generate Posts
                             </>
                           )}
                         </button>
                         
                         {generatedPosts.length > 0 && (
-                          <div className="text-sm text-gray-600">
+                          <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
                             {generatedPosts.length}/50 posts generated
                           </div>
                         )}
@@ -319,7 +319,7 @@ export default function PromotePage() {
                       {generatedPosts.length > 0 && (
                         <button
                           onClick={clearAllPosts}
-                          className="text-red-600 hover:text-red-700 text-sm font-medium"
+                          className="text-red-600 hover:text-red-700 text-xs sm:text-sm font-medium self-center sm:self-auto"
                         >
                           Clear All
                         </button>

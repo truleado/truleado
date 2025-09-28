@@ -45,13 +45,13 @@ export default function Home() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center">
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center shadow-lg">
                   <img src="/truleadologo.png" alt="Truleado" className="w-full h-full object-contain" />
                 </div>
-                <span className="ml-3 text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Truleado</span>
+                <span className="ml-2 sm:ml-3 text-lg sm:text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Truleado</span>
               </div>
             </div>
-            <div className="flex items-center space-x-6">
+            <div className="hidden sm:flex items-center space-x-4 lg:space-x-6">
               <Link 
                 href="/pricing" 
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
@@ -66,7 +66,16 @@ export default function Home() {
               </Link>
               <Link 
                 href="/auth/signup" 
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 lg:px-6 py-2 lg:py-2.5 rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                Get Started
+              </Link>
+            </div>
+            {/* Mobile menu button */}
+            <div className="sm:hidden">
+              <Link 
+                href="/auth/signup" 
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg"
               >
                 Get Started
               </Link>
@@ -76,51 +85,51 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative py-20 lg:py-32 overflow-hidden">
+      <section className="relative py-12 sm:py-20 lg:py-32 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 via-indigo-600/5 to-purple-600/5"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-800 text-sm font-medium mb-6">
-              <Sparkles className="w-4 h-4 mr-2" />
+            <div className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-blue-100 text-blue-800 text-xs sm:text-sm font-medium mb-4 sm:mb-6">
+              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
               AI-Powered Lead Generation
             </div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight px-4">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 mb-3 sm:mb-4 md:mb-6 leading-tight px-2 sm:px-4">
               Find Quality Leads on
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"> Reddit</span>
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent block sm:inline"> Reddit</span>
             </h1>
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 mb-6 sm:mb-8 max-w-4xl mx-auto leading-relaxed px-4">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-gray-600 mb-6 sm:mb-8 max-w-4xl mx-auto leading-relaxed px-2 sm:px-4">
               Monitor Reddit for mentions of your product and get notified when potential customers are looking for solutions like yours. 
               <span className="font-semibold text-gray-800"> Powered by AI analysis.</span>
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12 px-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8 md:mb-12 px-2 sm:px-4">
               <Link 
                 href="/auth/signup" 
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 flex items-center justify-center transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 rounded-lg sm:rounded-xl md:rounded-2xl text-sm sm:text-base md:text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 flex items-center justify-center transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
               >
                 Start Free Trial
-                <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
+                <ArrowRight className="ml-1.5 sm:ml-2 w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
               </Link>
               <Link 
                 href="/pricing" 
-                className="border-2 border-gray-200 text-gray-700 px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold hover:bg-gray-50 hover:border-gray-300 flex items-center justify-center transition-all duration-200"
+                className="border-2 border-gray-200 text-gray-700 px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 rounded-lg sm:rounded-xl md:rounded-2xl text-sm sm:text-base md:text-lg font-semibold hover:bg-gray-50 hover:border-gray-300 flex items-center justify-center transition-all duration-200"
               >
                 View Pricing
               </Link>
             </div>
             
             {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 max-w-3xl mx-auto px-4">
+            <div className="grid grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-3xl mx-auto px-2 sm:px-4">
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">1000+</div>
-                <div className="text-sm sm:text-base text-gray-600">Leads Found Daily</div>
+                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">1000+</div>
+                <div className="text-xs sm:text-sm md:text-base text-gray-600">Leads Found Daily</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">95%</div>
-                <div className="text-sm sm:text-base text-gray-600">Accuracy Rate</div>
+                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">95%</div>
+                <div className="text-xs sm:text-sm md:text-base text-gray-600">Accuracy Rate</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">24/7</div>
-                <div className="text-sm sm:text-base text-gray-600">Monitoring</div>
+                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">24/7</div>
+                <div className="text-xs sm:text-sm md:text-base text-gray-600">Monitoring</div>
               </div>
             </div>
           </div>
@@ -128,54 +137,54 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-white">
+      <section className="py-12 sm:py-16 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-8 sm:mb-12 md:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
               How Truleado Works
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-2">
               Our AI-powered platform monitors Reddit conversations to find the perfect opportunities for your product.
             </p>
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             <div className="text-center group">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-200">
-                <Target className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-200">
+                <Target className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
               </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Define Your Product</h3>
-              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">Define Your Product</h3>
+              <p className="text-sm sm:text-base text-gray-600 leading-relaxed px-2">
                 Add your product details and let our AI understand what problems you solve and who your ideal customers are.
               </p>
             </div>
             
             <div className="text-center group">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-200">
-                <Search className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-200">
+                <Search className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
               </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Monitor Reddit</h3>
-              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">Monitor Reddit</h3>
+              <p className="text-sm sm:text-base text-gray-600 leading-relaxed px-2">
                 We scan all relevant subreddits 24/7 to find discussions where people need your solution.
               </p>
             </div>
             
             <div className="text-center group">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-200">
-                <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-200">
+                <Zap className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
               </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Get Notified</h3>
-              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">Get Notified</h3>
+              <p className="text-sm sm:text-base text-gray-600 leading-relaxed px-2">
                 Receive instant notifications with full context from Reddit conversations when high-intent prospects appear.
               </p>
             </div>
             
             <div className="text-center group">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-200">
-                <Megaphone className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-200">
+                <Megaphone className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
               </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Promote Your Product</h3>
-              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">Promote Your Product</h3>
+              <p className="text-sm sm:text-base text-gray-600 leading-relaxed px-2">
                 Generate highly engaging Reddit posts tailored to each subreddit's rules and culture to promote your product.
               </p>
             </div>
@@ -184,88 +193,88 @@ export default function Home() {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+      <section className="py-12 sm:py-16 md:py-20 bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 md:gap-16 items-center">
             <div>
-              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
                 Why Choose Truleado?
               </h2>
-              <p className="text-lg text-gray-600 mb-8">
+              <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">
                 Stop wasting time on cold outreach. Find customers who are already looking for your solution.
               </p>
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 <div className="flex items-start group">
-                  <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                    <CheckCircle className="h-6 w-6 text-green-600" />
+                  <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-xl flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                    <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                   </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Real Conversation Context</h3>
-                    <p className="text-gray-600">Get the exact Reddit post that proves they're interested in your solution.</p>
+                  <div className="ml-3 sm:ml-4">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">Real Conversation Context</h3>
+                    <p className="text-sm sm:text-base text-gray-600">Get the exact Reddit post that proves they're interested in your solution.</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start group">
-                  <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                    <Brain className="h-6 w-6 text-blue-600" />
+                  <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                    <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                   </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">AI-Powered Analysis</h3>
-                    <p className="text-gray-600">Our AI filters out noise and finds only the most relevant opportunities.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start group">
-                  <div className="flex-shrink-0 w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                    <Clock className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Continuous Monitoring</h3>
-                    <p className="text-gray-600">Background jobs run 24/7 to find new leads as they appear.</p>
+                  <div className="ml-3 sm:ml-4">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">AI-Powered Analysis</h3>
+                    <p className="text-sm sm:text-base text-gray-600">Our AI filters out noise and finds only the most relevant opportunities.</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start group">
-                  <div className="flex-shrink-0 w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-                    <Shield className="h-6 w-6 text-indigo-600" />
+                  <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                    <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
                   </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Easy Integration</h3>
-                    <p className="text-gray-600">Works seamlessly with your existing workflow and tools.</p>
+                  <div className="ml-3 sm:ml-4">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">Continuous Monitoring</h3>
+                    <p className="text-sm sm:text-base text-gray-600">Background jobs run 24/7 to find new leads as they appear.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start group">
+                  <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-indigo-100 rounded-xl flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+                    <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
+                  </div>
+                  <div className="ml-3 sm:ml-4">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">Easy Integration</h3>
+                    <p className="text-sm sm:text-base text-gray-600">Works seamlessly with your existing workflow and tools.</p>
                   </div>
                 </div>
               </div>
             </div>
             
-            <div className="bg-white rounded-3xl p-8 shadow-2xl">
-              <div className="space-y-8">
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl">
+              <div className="space-y-6 sm:space-y-8">
                 <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
-                    <Globe className="h-6 w-6 text-white" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                    <Globe className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
-                  <div className="ml-4">
-                    <p className="text-2xl font-bold text-gray-900">All</p>
-                    <p className="text-gray-600">Subreddits Monitored</p>
+                  <div className="ml-3 sm:ml-4">
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">All</p>
+                    <p className="text-sm sm:text-base text-gray-600">Subreddits Monitored</p>
                   </div>
                 </div>
                 
                 <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center">
-                    <TrendingUp className="h-6 w-6 text-white" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
-                  <div className="ml-4">
-                    <p className="text-2xl font-bold text-gray-900">24/7</p>
-                    <p className="text-gray-600">Continuous Monitoring</p>
+                  <div className="ml-3 sm:ml-4">
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">24/7</p>
+                    <p className="text-sm sm:text-base text-gray-600">Continuous Monitoring</p>
                   </div>
                 </div>
                 
                 <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
-                    <Brain className="h-6 w-6 text-white" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
-                  <div className="ml-4">
-                    <p className="text-2xl font-bold text-gray-900">AI-Powered</p>
-                    <p className="text-gray-600">Smart Lead Filtering</p>
+                  <div className="ml-3 sm:ml-4">
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">AI-Powered</p>
+                    <p className="text-sm sm:text-base text-gray-600">Smart Lead Filtering</p>
                   </div>
                 </div>
               </div>

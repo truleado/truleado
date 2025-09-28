@@ -451,13 +451,13 @@ function ProductsContent() {
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
+          <div className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2">
                   Products
                 </h1>
-                <p className="text-lg text-gray-600">
+                <p className="text-base sm:text-lg text-gray-600">
                   Manage your SaaS products and configure lead generation settings.
                 </p>
               </div>
@@ -465,9 +465,9 @@ function ProductsContent() {
                 <UpgradeButton feature="add_products">
                   <button
                     onClick={handleAddProductClick}
-                    className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                    className="inline-flex items-center px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg sm:rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"
                   >
-                    <Plus className="w-5 h-5 mr-2" />
+                    <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
                     Add Product
                   </button>
                 </UpgradeButton>
@@ -513,59 +513,59 @@ function ProductsContent() {
               </UpgradeButton>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {products.map((product) => (
-                <div key={product.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden hover:shadow-2xl transition-all duration-300">
-                  <div className="p-6">
+                <div key={product.id} className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden hover:shadow-2xl transition-all duration-300">
+                  <div className="p-4 sm:p-6">
                     {/* Header Row */}
-                    <div className="flex items-start justify-between mb-6">
-                      <div className="flex items-center">
-                        <div className="w-12 h-12 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center">
-                          <Package className="w-6 h-6 text-blue-600" />
+                    <div className="flex items-start justify-between mb-4 sm:mb-6">
+                      <div className="flex items-center min-w-0 flex-1">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+                          <Package className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                         </div>
-                        <div className="ml-4">
-                          <h3 className="text-xl font-bold text-gray-900">{product.name}</h3>
-                          <p className="text-sm text-gray-500 font-medium">{product.status}</p>
+                        <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                          <h3 className="text-lg sm:text-xl font-bold text-gray-900 truncate">{product.name}</h3>
+                          <p className="text-xs sm:text-sm text-gray-500 font-medium">{product.status}</p>
                         </div>
                       </div>
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-1 sm:space-x-2 flex-shrink-0">
                         <button 
                           onClick={() => handleEditProduct(product)}
-                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="p-1.5 sm:p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title="Edit product"
                         >
-                          <Edit className="w-4 h-4" />
+                          <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </button>
                         <button 
                           onClick={() => handleDeleteProduct(product.id)}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-1.5 sm:p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="Delete product"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </button>
                       </div>
                     </div>
                     
                     {/* Main Content Row */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                       {/* Left Column - Description and Basic Info */}
                       <div className="lg:col-span-1">
-                        <div className="mb-4">
-                          <p className="text-gray-600 leading-relaxed">{product.description}</p>
+                        <div className="mb-3 sm:mb-4">
+                          <p className="text-sm sm:text-base text-gray-600 leading-relaxed">{product.description}</p>
                         </div>
                         
-                        <div className="space-y-3">
-                          <div className="flex items-center text-sm text-gray-600">
-                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
-                              <Globe className="w-4 h-4 text-gray-600" />
+                        <div className="space-y-2 sm:space-y-3">
+                          <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+                              <Globe className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" />
                             </div>
                             <a href={product.website} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition-colors font-medium truncate">
                               {product.website}
                             </a>
                           </div>
-                          <div className="flex items-center text-sm text-gray-600">
-                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
-                              <Target className="w-4 h-4 text-gray-600" />
+                          <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+                              <Target className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" />
                             </div>
                             <span className="font-medium">{product.subreddits.length} subreddits monitored</span>
                           </div>
@@ -574,38 +574,38 @@ function ProductsContent() {
 
                       {/* Middle Column - AI Analysis Summary */}
                       <div className="lg:col-span-1">
-                        <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-4 h-full">
-                          <div className="space-y-4 text-sm">
+                        <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg sm:rounded-xl p-3 sm:p-4 h-full">
+                          <div className="space-y-3 sm:space-y-4 text-xs sm:text-sm">
                             <div>
-                              <div className="flex items-center mb-2">
-                                <div className="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center mr-2">
-                                  <Zap className="w-3 h-3 text-green-600" />
+                              <div className="flex items-center mb-1.5 sm:mb-2">
+                                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-green-100 rounded-lg flex items-center justify-center mr-1.5 sm:mr-2">
+                                  <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-green-600" />
                                 </div>
-                                <span className="font-semibold text-gray-800">Key Features</span>
+                                <span className="font-semibold text-gray-800 text-xs sm:text-sm">Key Features</span>
                               </div>
-                              <div className="text-gray-600 space-y-1">
+                              <div className="text-gray-600 space-y-0.5 sm:space-y-1">
                                 {product.features.slice(0, 3).map((feature, idx) => (
-                                  <div key={idx} className="truncate">• {feature}</div>
+                                  <div key={idx} className="truncate text-xs sm:text-sm">• {feature}</div>
                                 ))}
                                 {product.features.length > 3 && (
-                                  <div className="text-gray-500 font-medium">+{product.features.length - 3} more</div>
+                                  <div className="text-gray-500 font-medium text-xs sm:text-sm">+{product.features.length - 3} more</div>
                                 )}
                               </div>
                             </div>
                             
                             <div>
-                              <div className="flex items-center mb-2">
-                                <div className="w-6 h-6 bg-red-100 rounded-lg flex items-center justify-center mr-2">
-                                  <Target className="w-3 h-3 text-red-600" />
+                              <div className="flex items-center mb-1.5 sm:mb-2">
+                                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-red-100 rounded-lg flex items-center justify-center mr-1.5 sm:mr-2">
+                                  <Target className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-red-600" />
                                 </div>
-                                <span className="font-semibold text-gray-800">Pain Points</span>
+                                <span className="font-semibold text-gray-800 text-xs sm:text-sm">Pain Points</span>
                               </div>
-                              <div className="text-gray-600 space-y-1">
+                              <div className="text-gray-600 space-y-0.5 sm:space-y-1">
                                 {product.painPoints.slice(0, 3).map((point, idx) => (
-                                  <div key={idx} className="truncate">• {point}</div>
+                                  <div key={idx} className="truncate text-xs sm:text-sm">• {point}</div>
                                 ))}
                                 {product.painPoints.length > 3 && (
-                                  <div className="text-gray-500 font-medium">+{product.painPoints.length - 3} more</div>
+                                  <div className="text-gray-500 font-medium text-xs sm:text-sm">+{product.painPoints.length - 3} more</div>
                                 )}
                               </div>
                             </div>
@@ -615,22 +615,22 @@ function ProductsContent() {
 
                       {/* Right Column - Ideal Customer and Actions */}
                       <div className="lg:col-span-1">
-                        <div className="bg-blue-50 rounded-xl p-4 h-full">
-                          <div className="flex items-start mb-4">
-                            <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center mr-2 flex-shrink-0">
-                              <Users className="w-3 h-3 text-blue-600" />
+                        <div className="bg-blue-50 rounded-lg sm:rounded-xl p-3 sm:p-4 h-full">
+                          <div className="flex items-start mb-3 sm:mb-4">
+                            <div className="w-5 h-5 sm:w-6 sm:h-6 bg-blue-100 rounded-lg flex items-center justify-center mr-1.5 sm:mr-2 flex-shrink-0">
+                              <Users className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-600" />
                             </div>
-                            <div>
-                              <span className="font-semibold text-gray-800 text-sm">Ideal Customer:</span>
-                              <p className="text-gray-600 text-sm mt-1">{product.idealCustomerProfile}</p>
+                            <div className="min-w-0 flex-1">
+                              <span className="font-semibold text-gray-800 text-xs sm:text-sm">Ideal Customer:</span>
+                              <p className="text-gray-600 text-xs sm:text-sm mt-1 line-clamp-2">{product.idealCustomerProfile}</p>
                             </div>
                           </div>
                           
                           <div className="mt-auto">
-                            <div className="text-sm text-gray-500 font-medium mb-3">
+                            <div className="text-xs sm:text-sm text-gray-500 font-medium mb-2 sm:mb-3">
                               Created {new Date(product.createdAt).toLocaleDateString()}
                             </div>
-                            <button className="w-full text-blue-600 hover:text-blue-700 text-sm font-semibold hover:bg-blue-100 px-3 py-2 rounded-lg transition-colors">
+                            <button className="w-full text-blue-600 hover:text-blue-700 text-xs sm:text-sm font-semibold hover:bg-blue-100 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-colors">
                               View Details
                             </button>
                           </div>
@@ -646,39 +646,39 @@ function ProductsContent() {
           {/* Add Product Modal */}
           {showAddModal && (
             <div className="fixed inset-0 z-50 overflow-y-auto">
-              <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+              <div className="flex min-h-full items-end justify-center p-2 sm:p-4 text-center sm:items-center">
                 <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={() => setShowAddModal(false)} />
                 
-                <div className="relative transform overflow-hidden rounded-2xl bg-white px-6 pb-6 pt-6 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-8">
+                <div className="relative transform overflow-hidden rounded-xl sm:rounded-2xl bg-white px-4 sm:px-6 pb-4 sm:pb-6 pt-4 sm:pt-6 text-left shadow-2xl transition-all sm:my-8 w-full max-w-2xl sm:p-8">
                   <div>
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-100 to-indigo-100">
-                      <Package className="h-8 w-8 text-blue-600" />
+                    <div className="mx-auto flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-100 to-indigo-100">
+                      <Package className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
                     </div>
-                    <div className="mt-6 text-center">
-                      <h3 className="text-2xl font-bold leading-6 text-gray-900">
+                    <div className="mt-4 sm:mt-6 text-center">
+                      <h3 className="text-xl sm:text-2xl font-bold leading-6 text-gray-900">
                         Analyze Your Product
                       </h3>
-                      <div className="mt-3">
-                        <p className="text-lg text-gray-600">
+                      <div className="mt-2 sm:mt-3">
+                        <p className="text-sm sm:text-base lg:text-lg text-gray-600">
                           Enter your website URL and our AI will analyze it to extract product details, features, benefits, and ideal customer profile.
                         </p>
                       </div>
                     </div>
                   </div>
                 
-                  <form onSubmit={handleAddProduct} className="mt-8 space-y-8">
+                  <form onSubmit={handleAddProduct} className="mt-6 sm:mt-8 space-y-6 sm:space-y-8">
                     {/* Website URL Input */}
                     <div>
-                      <label htmlFor="website" className="block text-lg font-semibold text-gray-900 mb-3">
+                      <label htmlFor="website" className="block text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3">
                         Website URL
                       </label>
-                      <div className="flex gap-3">
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                         <input
                           type="url"
                           id="website"
                           value={newProduct.website}
                           onChange={(e) => setNewProduct({ ...newProduct, website: e.target.value })}
-                          className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-lg"
+                          className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base lg:text-lg"
                           placeholder="https://yourproduct.com"
                           required
                         />
@@ -686,7 +686,7 @@ function ProductsContent() {
                           type="button"
                           onClick={handleAnalyzeWebsite}
                           disabled={!newProduct.website || isAnalyzing}
-                          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
+                          className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg sm:rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-all duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"
                         >
                           {isAnalyzing ? (
                             <div className="flex items-center">

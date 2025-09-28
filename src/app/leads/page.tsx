@@ -282,30 +282,30 @@ function LeadsContent() {
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
+          <div className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2">
                   Leads Dashboard
                 </h1>
-                <p className="text-lg text-gray-600">
+                <p className="text-base sm:text-lg text-gray-600">
                   Discover and manage potential customers from Reddit discussions.
                 </p>
               </div>
               
               {/* Reddit Connection Status */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 {redditConnected ? (
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-green-100 text-green-800 border border-green-200">
-                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold bg-green-100 text-green-800 border border-green-200">
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-500"></div>
                     <span>Reddit Connected</span>
                   </div>
                 ) : (
                   <button
                     onClick={() => setShowRedditConnectionModal(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-red-100 text-red-800 border border-red-200 hover:bg-red-200 transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold bg-red-100 text-red-800 border border-red-200 hover:bg-red-200 transition-colors cursor-pointer"
                   >
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-500"></div>
                     <span>Reddit Not Connected</span>
                   </button>
                 )}
@@ -426,26 +426,26 @@ function LeadsContent() {
           )}
 
           {/* Filters */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-gray-200/50 p-6 mb-8">
-            <div className="flex flex-col lg:flex-row gap-4">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-200/50 p-4 sm:p-6 mb-6 sm:mb-8">
+            <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
               <div className="flex-1">
                 <div className="relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
                   <input
                     type="text"
                     placeholder="Search leads..."
                     value={searchTerm}
                     onChange={(e) => setFilterTerm(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full pl-9 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-sm sm:text-base"
                   />
                 </div>
               </div>
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-1.5 sm:gap-2 flex-wrap">
                 {['all', 'new', 'contacted'].map((status) => (
                   <button
                     key={status}
                     onClick={() => setFilter(status as any)}
-                    className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-200 ${
+                    className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl transition-all duration-200 ${
                       filter === status
                         ? 'bg-blue-100 text-blue-700 border-2 border-blue-200'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-2 border-transparent'
@@ -455,12 +455,12 @@ function LeadsContent() {
                   </button>
                 ))}
               </div>
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-1.5 sm:gap-2 flex-wrap">
                 {['all', 'post', 'comment'].map((type) => (
                   <button
                     key={type}
                     onClick={() => setTypeFilter(type as any)}
-                    className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-200 ${
+                    className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl transition-all duration-200 ${
                       typeFilter === type
                         ? 'bg-green-100 text-green-700 border-2 border-green-200'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-2 border-transparent'
