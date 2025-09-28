@@ -458,9 +458,14 @@ export default function Pricing() {
           {/* Bottom Section */}
           <div className="border-t border-gray-800 mt-12 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center">
-              <p className="text-gray-400 text-sm">
-                © 2025 Truleado. All rights reserved.
-              </p>
+              <div className="text-center md:text-left">
+                <p className="text-gray-400 text-sm mb-2">
+                  Made with <span className="text-yellow-400">☕</span> on <span className="text-blue-400">🌍</span>
+                </p>
+                <p className="text-gray-400 text-sm">
+                  © 2014 – 2025 Truleado Inc.
+                </p>
+              </div>
               <div className="mt-4 md:mt-0 flex space-x-6">
                 <a href="/support" className="text-gray-400 hover:text-white transition-colors text-sm">Support</a>
               </div>
