@@ -40,7 +40,7 @@ export const getAccessLevel = (user: UserWithSubscription): AccessLevel => {
   
   // Expired trial or cancelled subscription
   if (user.subscription_status === 'expired' || user.subscription_status === 'cancelled') {
-    return 'limited'
+    return 'none'
   }
   
   // Past due subscription
