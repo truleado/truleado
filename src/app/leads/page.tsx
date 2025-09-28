@@ -716,5 +716,18 @@ function LeadsContent() {
 }
 
 export default function Leads() {
-  return <LeadsContent />
+  return (
+    <Suspense fallback={
+      <AppLayout>
+        <div className="min-h-screen flex items-center justify-center bg-white">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading leads...</p>
+          </div>
+        </div>
+      </AppLayout>
+    }>
+      <LeadsContent />
+    </Suspense>
+  )
 }

@@ -33,9 +33,15 @@ export const metadata: Metadata = {
     ],
   },
   manifest: '/site.webmanifest',
-  themeColor: '#148cfc',
-  viewport: 'width=device-width, initial-scale=1',
 };
+
+export function generateViewport() {
+  return {
+    width: 'device-width',
+    initialScale: 1,
+    themeColor: '#148cfc',
+  }
+}
 
 export default function RootLayout({
   children,
@@ -62,7 +68,6 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/favicon-apple-touch-icon.png" />
         <link rel="mask-icon" href="/favicon.svg" color="#148cfc" />
         <link rel="manifest" href="/site.webmanifest" />
-        <meta name="theme-color" content="#148cfc" />
         <meta name="msapplication-TileColor" content="#148cfc" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
         
