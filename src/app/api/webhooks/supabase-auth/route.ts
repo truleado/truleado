@@ -106,6 +106,24 @@ export async function POST(request: NextRequest) {
     const trialEndDate = new Date()
     trialEndDate.setDate(trialEndDate.getDate() + 1)
 
+    // Set up trial for the user
+    const { error: trialError } = await supabase
+      .from('profiles')
+      .update({
+        subscription_status: 'trial',
+        trial_ends_at: trialEndDate.toISOString(),
+        trial_count: 1,
+        last_trial_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+
+    if (trialError) {
+      console.error('Error setting up trial for user:', trialError)
+      return NextResponse.json({ error: 'Failed to set up trial' }, { status: 500 })
+    }
+
+    console.log('Trial set up for user:', userId, 'trial ends at:', trialEndDate.toISOString())
+
     // Send welcome email using the new service
     const emailResult = await sendWelcomeEmailDirect(userEmail, userName || 'User')
 
