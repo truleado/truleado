@@ -76,8 +76,12 @@ function ResetPasswordForm() {
           {/* Logo */}
           <div className="text-center mb-8">
             <Link href="/" className="inline-flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-r from-[#148cfc] to-[#0d7ce8] rounded-lg flex items-center justify-center">
-                <Filter className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+                <img 
+                  src="/truleadologo.png" 
+                  alt="Truleado" 
+                  className="w-full h-full object-contain" 
+                />
               </div>
               <span className="text-2xl font-bold text-gray-900">Truleado</span>
             </Link>
@@ -107,8 +111,12 @@ function ResetPasswordForm() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-r from-[#148cfc] to-[#0d7ce8] rounded-lg flex items-center justify-center">
-              <Filter className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+              <img 
+                src="/truleadologo.png" 
+                alt="Truleado" 
+                className="w-full h-full object-contain" 
+              />
             </div>
             <span className="text-2xl font-bold text-gray-900">Truleado</span>
           </Link>

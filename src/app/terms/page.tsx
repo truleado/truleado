@@ -10,8 +10,12 @@ export default function TermsOfService() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <Link href="/" className="flex items-center">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <Filter className="w-5 h-5 text-white" />
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center">
+                  <img 
+                    src="/truleadologo.png" 
+                    alt="Truleado" 
+                    className="w-full h-full object-contain" 
+                  />
                 </div>
                 <span className="ml-2 text-xl font-semibold text-gray-900">Truleado</span>
               </Link>

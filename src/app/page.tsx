@@ -458,8 +458,12 @@ export default function Home() {
             {/* Company Info */}
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center mb-6">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center">
-                  <Filter className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center">
+                  <img 
+                    src="/truleadologo.png" 
+                    alt="Truleado" 
+                    className="w-full h-full object-contain" 
+                  />
                 </div>
                 <span className="ml-3 text-xl font-bold text-white">Truleado</span>
               </div>
