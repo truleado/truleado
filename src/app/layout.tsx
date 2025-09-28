@@ -10,26 +10,26 @@ export const metadata: Metadata = {
   description: "Stop cold emailing strangers. Discover relevant Reddit discussions where people are actively seeking solutions your SaaS product provides.",
   icons: {
     icon: [
-      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/favicon-48x48.png', sizes: '48x48', type: 'image/png' },
-      { url: '/favicon-64x64.png', sizes: '64x64', type: 'image/png' },
-      { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
-      { url: '/favicon-128x128.png', sizes: '128x128', type: 'image/png' },
-      { url: '/favicon-144x144.png', sizes: '144x144', type: 'image/png' },
-      { url: '/favicon-152x152.png', sizes: '152x152', type: 'image/png' },
-      { url: '/favicon-android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/favicon-256x256.png', sizes: '256x256', type: 'image/png' },
-      { url: '/favicon-384x384.png', sizes: '384x384', type: 'image/png' },
-      { url: '/favicon-512x512.png', sizes: '512x512', type: 'image/png' },
-      { url: '/favicon.png', sizes: 'any' },
+      { url: '/favicon-16x16.png?v=2', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png?v=2', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-48x48.png?v=2', sizes: '48x48', type: 'image/png' },
+      { url: '/favicon-64x64.png?v=2', sizes: '64x64', type: 'image/png' },
+      { url: '/favicon-96x96.png?v=2', sizes: '96x96', type: 'image/png' },
+      { url: '/favicon-128x128.png?v=2', sizes: '128x128', type: 'image/png' },
+      { url: '/favicon-144x144.png?v=2', sizes: '144x144', type: 'image/png' },
+      { url: '/favicon-152x152.png?v=2', sizes: '152x152', type: 'image/png' },
+      { url: '/favicon-android-chrome-192x192.png?v=2', sizes: '192x192', type: 'image/png' },
+      { url: '/favicon-256x256.png?v=2', sizes: '256x256', type: 'image/png' },
+      { url: '/favicon-384x384.png?v=2', sizes: '384x384', type: 'image/png' },
+      { url: '/favicon-512x512.png?v=2', sizes: '512x512', type: 'image/png' },
+      { url: '/favicon.png?v=2', sizes: 'any' },
     ],
-    shortcut: '/favicon.ico',
+    shortcut: '/favicon.ico?v=2',
     apple: [
-      { url: '/favicon-apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/favicon-apple-touch-icon.png?v=2', sizes: '180x180', type: 'image/png' },
     ],
     other: [
-      { rel: 'mask-icon', url: '/favicon.svg', color: '#148cfc' },
+      { rel: 'mask-icon', url: '/favicon.svg?v=2', color: '#148cfc' },
     ],
   },
   manifest: '/site.webmanifest',
@@ -52,24 +52,25 @@ export default function RootLayout({
     <html lang="en">
       <head>
         {/* Favicon Configuration */}
-        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
-        <link rel="icon" type="image/png" sizes="64x64" href="/favicon-64x64.png" />
-        <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
-        <link rel="icon" type="image/png" sizes="128x128" href="/favicon-128x128.png" />
-        <link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png" />
-        <link rel="icon" type="image/png" sizes="152x152" href="/favicon-152x152.png" />
-        <link rel="icon" type="image/png" sizes="192x192" href="/favicon-android-chrome-192x192.png" />
-        <link rel="icon" type="image/png" sizes="256x256" href="/favicon-256x256.png" />
-        <link rel="icon" type="image/png" sizes="384x384" href="/favicon-384x384.png" />
-        <link rel="icon" type="image/png" sizes="512x512" href="/favicon-android-chrome-512x512.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/favicon-apple-touch-icon.png" />
-        <link rel="mask-icon" href="/favicon.svg" color="#148cfc" />
-        <link rel="manifest" href="/site.webmanifest" />
+        <link rel="icon" href="/favicon.ico?v=2" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2" />
+        <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=2" />
+        <link rel="icon" type="image/png" sizes="64x64" href="/favicon-64x64.png?v=2" />
+        <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=2" />
+        <link rel="icon" type="image/png" sizes="128x128" href="/favicon-128x128.png?v=2" />
+        <link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png?v=2" />
+        <link rel="icon" type="image/png" sizes="152x152" href="/favicon-152x152.png?v=2" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/favicon-android-chrome-192x192.png?v=2" />
+        <link rel="icon" type="image/png" sizes="256x256" href="/favicon-256x256.png?v=2" />
+        <link rel="icon" type="image/png" sizes="384x384" href="/favicon-384x384.png?v=2" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/favicon-android-chrome-512x512.png?v=2" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/favicon-apple-touch-icon.png?v=2" />
+        <link rel="mask-icon" href="/favicon.svg?v=2" color="#148cfc" />
+        <link rel="manifest" href="/site.webmanifest?v=2" />
         <meta name="msapplication-TileColor" content="#148cfc" />
-        <meta name="msapplication-config" content="/browserconfig.xml" />
+        <meta name="msapplication-config" content="/browserconfig.xml?v=2" />
         
         {/* Google Fonts - Inter (similar to Söhne) */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />

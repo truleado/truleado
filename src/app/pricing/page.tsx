@@ -463,7 +463,7 @@ export default function Pricing() {
                   Made with <span className="text-yellow-400">☕</span> on <span className="text-blue-400">🌍</span>
                 </p>
                 <p className="text-gray-400 text-sm">
-                  © 2014 – 2025 Truleado Inc.
+                  © 2025 Truleado Inc.
                 </p>
               </div>
               <div className="mt-4 md:mt-0 flex space-x-6">
