@@ -219,72 +219,128 @@ export class JobScheduler {
     }
   }
 
-  // Execute Reddit monitoring job
+  // Execute Reddit monitoring job with retry logic
   private async executeRedditMonitoringJob(job: BackgroundJob, product: Product) {
     console.log(`Starting Reddit monitoring for product: ${product.name}`)
     
-    try {
-      console.log(`Initializing Reddit client for user: ${job.user_id}`)
-      const redditClient = getRedditClient(job.user_id)
-      
-      // Wait a bit for the client to initialize
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // Check if client is properly initialized
-      console.log(`Reddit client initialized: ${redditClient.isInitialized}`)
-      
-      if (!redditClient.isInitialized) {
-        throw new Error('Reddit account not connected. Please connect your Reddit account to search for leads.')
-      }
-      
-      const searchTerms = redditClient.generateSearchTerms(product)
-      console.log(`Generated search terms: ${searchTerms.slice(0, 5).join(', ')}...`)
-      
-      let totalLeadsFound = 0
-      
-      // Search in each subreddit
-      for (const subreddit of product.subreddits) {
-        console.log(`Searching in r/${subreddit} for product: ${product.name}`)
+    const maxRetries = 3
+    let retryCount = 0
+    
+    while (retryCount < maxRetries) {
+      try {
+        console.log(`Initializing Reddit client for user: ${job.user_id} (attempt ${retryCount + 1})`)
+        const redditClient = getRedditClient(job.user_id)
         
-        try {
-          // Use advanced search with multiple strategies for better results
-          const posts = await this.searchSubredditAdvanced(redditClient, subreddit, searchTerms, product)
+        // Wait a bit for the client to initialize
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        // Check if client is properly initialized
+        console.log(`Reddit client initialized: ${redditClient.isInitialized}`)
+        
+        if (!redditClient.isInitialized) {
+          throw new Error('Reddit account not connected. Please connect your Reddit account to search for leads.')
+        }
+        
+        const searchTerms = redditClient.generateSearchTerms(product)
+        console.log(`Generated search terms: ${searchTerms.slice(0, 5).join(', ')}...`)
+        
+        let totalLeadsFound = 0
+        
+        // Search in each subreddit with retry logic
+        for (const subreddit of product.subreddits) {
+          console.log(`Searching in r/${subreddit} for product: ${product.name}`)
           
-          console.log(`Found ${posts.length} posts in r/${subreddit}`)
-          
-          // Process each post
-          for (const post of posts) {
-            const relevanceScore = await this.calculateRelevanceScore(post, product)
-            console.log(`Post "${post.title}" - Relevance score: ${relevanceScore}`)
+          try {
+            // Use advanced search with multiple strategies for better results
+            const posts = await this.searchSubredditAdvancedWithRetry(redditClient, subreddit, searchTerms, product)
             
-            // Only save leads with score >= 8 (higher threshold for better quality)
-            if (relevanceScore >= 8) {
-              await this.saveLead(job.user_id, product.id, post, relevanceScore, 'post')
-              totalLeadsFound++
-              console.log(`Saved post lead: ${post.title} (Score: ${relevanceScore})`)
-            }
+            console.log(`Found ${posts.length} posts in r/${subreddit}`)
+            
+            // Process each post
+            for (const post of posts) {
+              try {
+                const relevanceScore = await this.calculateRelevanceScore(post, product)
+                console.log(`Post "${post.title}" - Relevance score: ${relevanceScore}`)
+                
+                // Only save leads with score >= 7 (slightly lower threshold for more leads)
+                if (relevanceScore >= 7) {
+                  await this.saveLead(job.user_id, product.id, post, relevanceScore, 'post')
+                  totalLeadsFound++
+                  console.log(`Saved post lead: ${post.title} (Score: ${relevanceScore})`)
+                }
 
-            // Also search comments in this post for additional leads
-            try {
-              const commentLeads = await this.searchPostComments(redditClient, post, product, job.user_id)
-              totalLeadsFound += commentLeads
-              console.log(`Found ${commentLeads} comment leads in post: ${post.title}`)
-            } catch (commentError) {
-              console.error(`Error searching comments in post ${post.id}:`, commentError)
-              // Continue with other posts even if comment search fails
+                // Also search comments in this post for additional leads
+                try {
+                  const commentLeads = await this.searchPostComments(redditClient, post, product, job.user_id)
+                  totalLeadsFound += commentLeads
+                  console.log(`Found ${commentLeads} comment leads in post: ${post.title}`)
+                } catch (commentError) {
+                  console.error(`Error searching comments in post ${post.id}:`, commentError)
+                  // Continue with other posts even if comment search fails
+                }
+              } catch (postError) {
+                console.error(`Error processing post ${post.id}:`, postError)
+                // Continue with other posts
+              }
             }
+          } catch (subredditError) {
+            console.error(`Error searching in r/${subreddit}:`, subredditError)
+            
+            // If it's a rate limit error, wait longer before retrying
+            if (subredditError.message?.includes('rate limit') || subredditError.message?.includes('429')) {
+              console.log('Rate limit detected, waiting 60 seconds...')
+              await new Promise(resolve => setTimeout(resolve, 60000))
+            }
+            
+            // Continue with other subreddits
           }
-        } catch (subredditError) {
-          console.error(`Error searching in r/${subreddit}:`, subredditError)
-          // Continue with other subreddits
+        }
+        
+        console.log(`Reddit monitoring completed for product: ${product.name}. Found ${totalLeadsFound} leads.`)
+        
+        // If we get here, the job completed successfully
+        return
+        
+      } catch (error) {
+        retryCount++
+        console.error(`Error in Reddit monitoring for product ${product.name} (attempt ${retryCount}):`, error)
+        
+        if (retryCount < maxRetries) {
+          const waitTime = Math.pow(2, retryCount) * 1000 // Exponential backoff
+          console.log(`Retrying in ${waitTime}ms...`)
+          await new Promise(resolve => setTimeout(resolve, waitTime))
+        } else {
+          console.error(`Max retries reached for product ${product.name}. Job will be marked as failed.`)
+          throw error
         }
       }
-      
-      console.log(`Reddit monitoring completed for product: ${product.name}. Found ${totalLeadsFound} leads.`)
-    } catch (error) {
-      console.error(`Error in Reddit monitoring for product ${product.name}:`, error)
-      throw error
     }
+  }
+
+  // Advanced subreddit search with retry logic
+  private async searchSubredditAdvancedWithRetry(redditClient: any, subreddit: string, searchTerms: string[], product: any): Promise<any[]> {
+    const maxRetries = 3
+    let retryCount = 0
+    
+    while (retryCount < maxRetries) {
+      try {
+        return await this.searchSubredditAdvanced(redditClient, subreddit, searchTerms, product)
+      } catch (error) {
+        retryCount++
+        console.error(`Error searching r/${subreddit} (attempt ${retryCount}):`, error)
+        
+        if (retryCount < maxRetries) {
+          const waitTime = Math.pow(2, retryCount) * 1000 // Exponential backoff
+          console.log(`Retrying r/${subreddit} search in ${waitTime}ms...`)
+          await new Promise(resolve => setTimeout(resolve, waitTime))
+        } else {
+          console.error(`Max retries reached for r/${subreddit}. Returning empty results.`)
+          return []
+        }
+      }
+    }
+    
+    return []
   }
 
   // Advanced subreddit search with multiple strategies
@@ -788,6 +844,7 @@ export class JobScheduler {
 // Global job scheduler instance
 let jobScheduler: JobScheduler | null = null
 let schedulerStarted = false
+let healthCheckInterval: NodeJS.Timeout | null = null
 
 export function getJobScheduler(): JobScheduler {
   if (!jobScheduler) {
@@ -804,9 +861,94 @@ export async function initializeJobScheduler() {
       await scheduler.start()
       schedulerStarted = true
       console.log('Job scheduler auto-started successfully')
+      
+      // Start health check to ensure scheduler stays running
+      startHealthCheck()
     } catch (error) {
       console.error('Failed to auto-start job scheduler:', error)
+      // Retry after 30 seconds
+      setTimeout(() => {
+        schedulerStarted = false
+        initializeJobScheduler().catch(console.error)
+      }, 30000)
     }
+  }
+}
+
+// Health check to ensure scheduler stays running
+function startHealthCheck() {
+  if (healthCheckInterval) {
+    clearInterval(healthCheckInterval)
+  }
+  
+  healthCheckInterval = setInterval(async () => {
+    try {
+      const scheduler = getJobScheduler()
+      
+      if (!scheduler.isRunning) {
+        console.log('Job scheduler stopped unexpectedly, restarting...')
+        schedulerStarted = false
+        await initializeJobScheduler()
+      }
+      
+      // Also check for failed jobs and restart them
+      await checkAndRestartFailedJobs()
+    } catch (error) {
+      console.error('Health check error:', error)
+    }
+  }, 300000) // Check every 5 minutes
+}
+
+// Check for failed jobs and restart them
+async function checkAndRestartFailedJobs() {
+  try {
+    const scheduler = getJobScheduler()
+    if (!scheduler.supabase) {
+      await scheduler.initialize()
+    }
+    
+    // Get all jobs that have been in error state for more than 1 hour
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+    
+    const { data: failedJobs, error } = await scheduler.supabase
+      .from('background_jobs')
+      .select('*')
+      .eq('status', 'error')
+      .lt('updated_at', oneHourAgo)
+    
+    if (error) {
+      console.error('Error checking failed jobs:', error)
+      return
+    }
+    
+    if (failedJobs && failedJobs.length > 0) {
+      console.log(`Found ${failedJobs.length} failed jobs to restart`)
+      
+      for (const job of failedJobs) {
+        try {
+          // Reset job to active and schedule for immediate run
+          const { error: updateError } = await scheduler.supabase
+            .from('background_jobs')
+            .update({
+              status: 'active',
+              error_message: null,
+              next_run: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', job.id)
+          
+          if (updateError) {
+            console.error(`Failed to restart job ${job.id}:`, updateError)
+          } else {
+            console.log(`Restarted failed job ${job.id} for user ${job.user_id}`)
+          }
+        } catch (jobError) {
+          console.error(`Error restarting job ${job.id}:`, jobError)
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error in checkAndRestartFailedJobs:', error)
   }
 }
 
@@ -815,5 +957,3 @@ if (typeof window === 'undefined') {
   // Only run on server side
   initializeJobScheduler().catch(console.error)
 }
-
-// Job scheduler will be started manually when needed

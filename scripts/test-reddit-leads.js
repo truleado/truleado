@@ -90,27 +90,33 @@ async function runRedditLeadsTest() {
     console.log('\n3️⃣ Job Scheduler already running - skipping start')
   }
   
-  // Test 4: Check for products and trigger lead discovery
+  // Test 4: Ensure daily leads are working
   if (diagnostic.success && diagnostic.data.products.count > 0) {
-    console.log('\n4️⃣ Triggering Lead Discovery...')
+    console.log('\n4️⃣ Ensuring Daily Lead Discovery...')
     
-    for (const product of diagnostic.data.products.products) {
-      console.log(`   Triggering for product: ${product.name} (${product.subreddits} subreddits)`)
+    const ensureDailyLeads = await testEndpoint('/api/debug/ensure-daily-leads', {
+      method: 'POST'
+    })
+    
+    if (ensureDailyLeads.success) {
+      console.log('✅ Daily lead discovery ensured')
+      console.log(`   - Scheduler Started: ${ensureDailyLeads.data.results.schedulerStarted ? 'Yes' : 'No'}`)
+      console.log(`   - Jobs Created: ${ensureDailyLeads.data.results.jobsCreated}`)
+      console.log(`   - Jobs Reactivated: ${ensureDailyLeads.data.results.jobsReactivated}`)
+      console.log(`   - Active Jobs: ${ensureDailyLeads.data.results.activeJobs}`)
       
-      const triggerDiscovery = await testEndpoint('/api/debug/trigger-lead-discovery', {
-        method: 'POST',
-        body: JSON.stringify({ productId: product.id })
-      })
-      
-      if (triggerDiscovery.success) {
-        console.log(`   ✅ Lead discovery triggered for ${product.name}`)
-      } else {
-        console.log(`   ❌ Failed to trigger lead discovery for ${product.name}`)
-        console.log(`   Error: ${triggerDiscovery.error}`)
+      if (ensureDailyLeads.data.results.errors.length > 0) {
+        console.log('   Errors:')
+        ensureDailyLeads.data.results.errors.forEach(error => {
+          console.log(`   - ❌ ${error}`)
+        })
       }
+    } else {
+      console.log('❌ Failed to ensure daily lead discovery')
+      console.log(`   Error: ${ensureDailyLeads.error}`)
     }
   } else {
-    console.log('\n4️⃣ No products found - skipping lead discovery trigger')
+    console.log('\n4️⃣ No products found - skipping daily lead discovery setup')
   }
   
   // Test 5: Wait and check for new leads
