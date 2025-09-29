@@ -956,4 +956,20 @@ async function checkAndRestartFailedJobs() {
 if (typeof window === 'undefined') {
   // Only run on server side
   initializeJobScheduler().catch(console.error)
+  
+  // Also try to start scheduler on any API call (for serverless environments)
+  // This ensures scheduler starts even if the module loading approach fails
+  process.nextTick(async () => {
+    try {
+      const scheduler = getJobScheduler()
+      if (!scheduler.isRunning) {
+        console.log('Auto-starting job scheduler on process.nextTick...')
+        await scheduler.start()
+        schedulerStarted = true
+        startHealthCheck()
+      }
+    } catch (error) {
+      console.error('Failed to auto-start scheduler on process.nextTick:', error)
+    }
+  })
 }
