@@ -45,17 +45,39 @@ export class JobScheduler {
     
     // Use service role key if available, otherwise use anon key
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     
-    if (!supabaseKey) {
-      throw new Error('No Supabase key found')
+    if (!supabaseKey || !supabaseUrl) {
+      console.error('Missing Supabase credentials:', {
+        hasUrl: !!supabaseUrl,
+        hasKey: !!supabaseKey,
+        url: supabaseUrl,
+        keyPrefix: supabaseKey?.substring(0, 10) + '...'
+      })
+      throw new Error('No Supabase credentials found')
     }
     
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      supabaseKey
-    )
+    this.supabase = createClient(supabaseUrl, supabaseKey)
     
     console.log('Job scheduler initialized with Supabase client')
+    
+    // Test the connection
+    try {
+      const { data, error } = await this.supabase
+        .from('background_jobs')
+        .select('count')
+        .limit(1)
+      
+      if (error) {
+        console.error('Supabase connection test failed:', error)
+        throw new Error(`Supabase connection failed: ${error.message}`)
+      }
+      
+      console.log('Supabase connection test successful')
+    } catch (testError) {
+      console.error('Supabase connection test error:', testError)
+      throw testError
+    }
   }
 
   // Start the job scheduler

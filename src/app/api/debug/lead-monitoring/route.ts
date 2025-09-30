@@ -6,11 +6,19 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
     
+    // For testing, we'll work without authentication first
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
+    // If no user, return basic system status
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ 
+        error: 'No authenticated user',
+        system: {
+          supabaseConnected: !!supabase,
+          timestamp: new Date().toISOString()
+        }
+      }, { status: 401 })
     }
 
     // 1. Check job scheduler status
