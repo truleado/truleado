@@ -41,7 +41,6 @@ interface DashboardStats {
   subredditsMonitored: number
   leadsThisWeek: number
   leadsToday: number
-  conversionRate: number
 }
 
 interface RecentActivity {
@@ -67,8 +66,7 @@ export default function Dashboard() {
     activeProducts: 0,
     subredditsMonitored: 0,
     leadsThisWeek: 0,
-    leadsToday: 0,
-    conversionRate: 0
+    leadsToday: 0
   })
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
   const [trends, setTrends] = useState<TrendData[]>([])
@@ -261,8 +259,8 @@ export default function Dashboard() {
     {
       name: 'This Week',
       value: stats.leadsThisWeek.toString(),
-      change: stats.conversionRate > 0 ? `${stats.conversionRate}% conversion` : '0% conversion',
-      changeType: stats.conversionRate > 0 ? 'positive' : 'neutral',
+      change: stats.leadsThisWeek > 0 ? 'New leads' : 'No leads',
+      changeType: stats.leadsThisWeek > 0 ? 'positive' : 'neutral',
       icon: TrendingUp,
       color: 'from-orange-500 to-orange-600',
       bgColor: 'bg-orange-50',

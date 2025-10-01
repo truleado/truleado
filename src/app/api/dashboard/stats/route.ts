@@ -78,16 +78,12 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching today leads:', todayLeadsError)
     }
 
-    // Calculate conversion rate (placeholder - you can implement actual conversion tracking)
-    const conversionRate = totalLeads && totalLeads > 0 ? Math.round((leadsThisWeek || 0) / totalLeads * 100) : 0
-
     const stats = {
       totalLeads: totalLeads || 0,
       activeProducts: activeProducts || 0,
       subredditsMonitored,
       leadsThisWeek: leadsThisWeek || 0,
-      leadsToday: leadsToday || 0,
-      conversionRate: Math.min(conversionRate, 100) // Cap at 100%
+      leadsToday: leadsToday || 0
     }
 
     return NextResponse.json(stats)
