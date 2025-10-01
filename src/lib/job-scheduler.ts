@@ -260,7 +260,7 @@ export class JobScheduler {
         console.log(`Reddit client initialized: ${redditClient.isInitialized}`)
         
         if (!redditClient.isInitialized) {
-          throw new Error('Reddit account not connected. Please connect your Reddit account to search for leads.')
+          throw new Error('Reddit account not connected or token expired. Please reconnect your Reddit account to search for leads.')
         }
         
         const searchTerms = redditClient.generateSearchTerms(product)

@@ -118,10 +118,19 @@ export class RedditClient {
 
       console.log(`Found Reddit tokens for user: ${apiKeys.reddit_username}`)
 
-      // Check if token is expired
-      if (apiKeys.reddit_token_expires_at && new Date(apiKeys.reddit_token_expires_at) <= new Date()) {
-        console.warn('Reddit OAuth token expired. Reddit search will be disabled.')
-        return
+      // Check if token is expired and try to refresh if needed
+      const isTokenExpired = apiKeys.reddit_token_expires_at && 
+        new Date(apiKeys.reddit_token_expires_at) <= new Date()
+
+      if (isTokenExpired) {
+        console.log('Reddit OAuth token expired. Attempting to refresh...')
+        const refreshResult = await this.refreshRedditToken(apiKeys.reddit_refresh_token)
+        if (!refreshResult.success) {
+          console.warn('Failed to refresh Reddit token. Reddit search will be disabled.')
+          return
+        }
+        // Update apiKeys with new token data
+        Object.assign(apiKeys, refreshResult.tokens)
       }
 
       const userAgent = 'Truleado Lead Discovery Bot 1.0'
@@ -148,10 +157,124 @@ export class RedditClient {
     }
   }
 
+  // Refresh Reddit OAuth token
+  private async refreshRedditToken(refreshToken: string): Promise<{ success: boolean; tokens?: any; error?: string }> {
+    try {
+      const clientId = process.env.REDDIT_OAUTH_CLIENT_ID
+      const clientSecret = process.env.REDDIT_OAUTH_CLIENT_SECRET
+
+      if (!clientId || !clientSecret) {
+        return { success: false, error: 'Reddit OAuth credentials not found' }
+      }
+
+      console.log('Refreshing Reddit OAuth token...')
+
+      const response = await fetch('https://www.reddit.com/api/v1/access_token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+          'User-Agent': 'Truleado Lead Discovery Bot 1.0'
+        },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: refreshToken
+        })
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Reddit token refresh failed:', response.status, errorText)
+        return { success: false, error: `HTTP ${response.status}: ${errorText}` }
+      }
+
+      const data = await response.json()
+
+      if (data.error) {
+        console.error('Reddit API error during token refresh:', data.error)
+        return { success: false, error: data.error }
+      }
+
+      console.log('Reddit token refreshed successfully')
+
+      // Update tokens in database
+      const { createClient } = await import('@supabase/supabase-js')
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
+
+      const newTokens = {
+        reddit_access_token: data.access_token,
+        reddit_token_expires_at: new Date(Date.now() + data.expires_in * 1000).toISOString(),
+        updated_at: new Date().toISOString()
+      }
+
+      const { error: updateError } = await supabase
+        .from('api_keys')
+        .update(newTokens)
+        .eq('user_id', this.userId)
+
+      if (updateError) {
+        console.error('Failed to update refreshed tokens in database:', updateError)
+        return { success: false, error: 'Failed to save refreshed tokens' }
+      }
+
+      return { success: true, tokens: newTokens }
+    } catch (error) {
+      console.error('Error refreshing Reddit token:', error)
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+    }
+  }
+
+  // Check and refresh token if needed before making API calls
+  private async ensureValidToken(): Promise<boolean> {
+    try {
+      if (!this.userId) return false
+
+      const { createClient } = await import('@supabase/supabase-js')
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
+
+      const { data: apiKeys, error } = await supabase
+        .from('api_keys')
+        .select('reddit_access_token, reddit_refresh_token, reddit_token_expires_at')
+        .eq('user_id', this.userId)
+        .single()
+
+      if (error || !apiKeys || !apiKeys.reddit_access_token) {
+        return false
+      }
+
+      // Check if token expires in the next 5 minutes (proactive refresh)
+      const expiresAt = new Date(apiKeys.reddit_token_expires_at)
+      const fiveMinutesFromNow = new Date(Date.now() + 5 * 60 * 1000)
+
+      if (expiresAt <= fiveMinutesFromNow) {
+        console.log('Reddit token expires soon. Refreshing proactively...')
+        const refreshResult = await this.refreshRedditToken(apiKeys.reddit_refresh_token)
+        return refreshResult.success
+      }
+
+      return true
+    } catch (error) {
+      console.error('Error checking token validity:', error)
+      return false
+    }
+  }
+
   // Search for posts in specific subreddits
   async searchPosts(options: RedditSearchOptions): Promise<RedditPost[]> {
     if (!this.isInitialized || !this.client) {
       throw new Error('Reddit account not connected. Please connect your Reddit account to search for leads.')
+    }
+
+    // Ensure token is valid before making API calls
+    const tokenValid = await this.ensureValidToken()
+    if (!tokenValid) {
+      throw new Error('Reddit token is invalid or expired. Please reconnect your Reddit account.')
     }
 
     try {
@@ -224,6 +347,12 @@ export class RedditClient {
       throw new Error('Reddit account not connected. Please connect your Reddit account to search for leads.')
     }
 
+    // Ensure token is valid before making API calls
+    const tokenValid = await this.ensureValidToken()
+    if (!tokenValid) {
+      throw new Error('Reddit token is invalid or expired. Please reconnect your Reddit account.')
+    }
+
     try {
       const subredditInstance = this.client.getSubreddit(subreddit)
       const posts = await subredditInstance.getHot({ limit })
@@ -268,6 +397,12 @@ export class RedditClient {
   async getPostComments(postId: string): Promise<any[]> {
     if (!this.isInitialized || !this.client) {
       throw new Error('Reddit account not connected. Please connect your Reddit account to search for leads.')
+    }
+
+    // Ensure token is valid before making API calls
+    const tokenValid = await this.ensureValidToken()
+    if (!tokenValid) {
+      throw new Error('Reddit token is invalid or expired. Please reconnect your Reddit account.')
     }
 
     try {
