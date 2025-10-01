@@ -197,6 +197,33 @@ function LeadsContent() {
     }
   }
 
+  const handleStatusUpdate = async (leadId: string, newStatus: string) => {
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          leadId,
+          status: newStatus,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update lead status')
+      }
+
+      // Update the lead in the local state
+      setLeads(prev => prev.map(lead => 
+        lead.id === leadId ? { ...lead, status: newStatus as any } : lead
+      ))
+    } catch (error) {
+      console.error('Failed to update lead status:', error)
+      alert('Failed to update lead status. Please try again.')
+    }
+  }
+
   const filteredLeads = leads.filter(lead => {
     const matchesFilter = filter === 'all' || lead.status === filter
     const matchesType = typeFilter === 'all' || lead.leadType === typeFilter
@@ -312,6 +339,39 @@ function LeadsContent() {
               </div>
             </div>
           </div>
+
+          {/* Lead Statistics - Moved to top */}
+          {leads.length > 0 && (
+            <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-gray-200/50 p-8 mb-8">
+              <h3 className="text-2xl font-bold text-gray-900 mb-6">Lead Statistics</h3>
+              <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-blue-600 mb-2">
+                    {leads.filter(l => l.status === 'new').length}
+                  </div>
+                  <div className="text-sm text-gray-600 font-medium">New</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-yellow-600 mb-2">
+                    {leads.filter(l => l.status === 'contacted').length}
+                  </div>
+                  <div className="text-sm text-gray-600 font-medium">Contacted</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-green-600 mb-2">
+                    {leads.filter(l => l.status === 'interested').length}
+                  </div>
+                  <div className="text-sm text-gray-600 font-medium">Interested</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-red-600 mb-2">
+                    {leads.filter(l => l.status === 'not_interested').length}
+                  </div>
+                  <div className="text-sm text-gray-600 font-medium">Not Interested</div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Products Section */}
           <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-gray-200/50 p-8 mb-8">
@@ -610,8 +670,20 @@ function LeadsContent() {
                     </div>
                   )}
 
-                  {/* Action button */}
-                  <div className="flex justify-end">
+                  {/* Action buttons */}
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={lead.status}
+                        onChange={(e) => handleStatusUpdate(lead.id, e.target.value)}
+                        className="text-xs px-2 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      >
+                        <option value="new">New</option>
+                        <option value="contacted">Contacted</option>
+                        <option value="interested">Interested</option>
+                        <option value="not_interested">Not Interested</option>
+                      </select>
+                    </div>
                     <a
                       href={lead.url}
                       target="_blank"
@@ -627,38 +699,6 @@ function LeadsContent() {
             </div>
           )}
 
-          {/* Stats */}
-          {leads.length > 0 && (
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-gray-200/50 p-8 mt-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">Lead Statistics</h3>
-              <div className="grid grid-cols-2 gap-6 sm:grid-cols-2">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600 mb-2">
-                    {leads.filter(l => l.status === 'new').length}
-                  </div>
-                  <div className="text-sm text-gray-600 font-medium">New</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-yellow-600 mb-2">
-                    {leads.filter(l => l.status === 'contacted').length}
-                  </div>
-                  <div className="text-sm text-gray-600 font-medium">Contacted</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-green-600 mb-2">
-                    {leads.filter(l => l.status === 'interested').length}
-                  </div>
-                  <div className="text-sm text-gray-600 font-medium">Interested</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-red-600 mb-2">
-                    {leads.filter(l => l.status === 'not_interested').length}
-                  </div>
-                  <div className="text-sm text-gray-600 font-medium">Not Interested</div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Reddit Connection Modal */}
