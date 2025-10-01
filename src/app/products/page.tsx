@@ -338,7 +338,7 @@ function ProductsContent() {
   const handleDeleteProduct = (productId: string) => {
     setProductToDelete(productId)
     setModalTitle('Delete Product')
-    setModalMessage('Are you sure you want to delete this product? This action cannot be undone.')
+    setModalMessage('⚠️ WARNING: Deleting this product will permanently delete ALL associated leads and this action cannot be undone.\n\nThis includes:\n• All lead data and AI analysis\n• Lead status and notes\n• Comment and post leads\n\nAre you absolutely sure you want to proceed?')
     setShowDeleteModal(true)
   }
 
@@ -575,7 +575,7 @@ function ProductsContent() {
                         <button 
                           onClick={() => handleDeleteProduct(product.id)}
                           className="p-1.5 sm:p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete product"
+                          title="Delete product (will also delete all associated leads)"
                         >
                           <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </button>
@@ -1417,9 +1417,9 @@ function ProductsContent() {
           onClose={() => setShowDeleteModal(false)}
           title={modalTitle}
           message={modalMessage}
-          type="warning"
+          type="error"
           showCancel={true}
-          confirmText="Delete"
+          confirmText="Yes, Delete Everything"
           cancelText="Cancel"
           onConfirm={confirmDeleteProduct}
         />
