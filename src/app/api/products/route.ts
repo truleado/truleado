@@ -33,12 +33,16 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Product creation API called')
     const supabase = await createClient()
     
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
+    console.log('Auth check:', { user: user?.id, authError })
+    
     if (authError || !user) {
+      console.error('Authentication failed:', authError)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -69,9 +73,11 @@ export async function POST(request: NextRequest) {
     }
 
     const productData = await request.json()
+    console.log('Product data received:', { name: productData.name, website: productData.website })
     
     // Validate required fields
     if (!productData.name || !productData.website) {
+      console.error('Validation failed:', { name: productData.name, website: productData.website })
       return NextResponse.json({ error: 'Product name and website are required' }, { status: 400 })
     }
 
@@ -90,6 +96,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert product into database
+    console.log('Inserting product:', product)
     const { data, error } = await supabase
       .from('products')
       .insert([product])
@@ -98,8 +105,10 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Database error:', error)
-      return NextResponse.json({ error: 'Failed to create product' }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to create product', details: error.message }, { status: 500 })
     }
+    
+    console.log('Product created successfully:', data)
 
     // Check if Reddit account is connected before starting lead discovery
     let leadDiscoveryStarted = false

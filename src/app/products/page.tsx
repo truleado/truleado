@@ -265,7 +265,7 @@ function ProductsContent() {
           statusText: response.statusText,
           error: errorData
         })
-        throw new Error(errorData.error || 'Failed to create product')
+        throw new Error(errorData.details || errorData.error || 'Failed to create product')
       }
 
       const data = await response.json()
