@@ -56,6 +56,7 @@ function SettingsContent() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isUpgrading, setIsUpgrading] = useState(false)
   const [isPollingUpgrade, setIsPollingUpgrade] = useState(false)
+  const [paymentSuccess, setPaymentSuccess] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     email: '',
     currentPassword: '',
@@ -191,14 +192,11 @@ function SettingsContent() {
     // Check for success/error parameters from OAuth redirect
     const success = urlParams.get('success')
     const error = urlParams.get('error')
-    const [paymentSuccess, setPaymentSuccess] = useState<string | null>(null)
     
     // Check payment success from localStorage on client side only
-    useEffect(() => {
-      const urlPaymentSuccess = urlParams.get('payment_success')
-      const localPaymentSuccess = localStorage.getItem('payment_success')
-      setPaymentSuccess(urlPaymentSuccess || localPaymentSuccess)
-    }, [])
+    const urlPaymentSuccess = urlParams.get('payment_success')
+    const localPaymentSuccess = localStorage.getItem('payment_success')
+    setPaymentSuccess(urlPaymentSuccess || localPaymentSuccess)
     
     if (success === 'reddit_connected') {
       // Refresh Reddit connection status after successful OAuth
