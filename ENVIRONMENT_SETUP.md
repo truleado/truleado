@@ -33,6 +33,10 @@ ZOHO_REFRESH_TOKEN=your-zoho-refresh-token
 
 # Optional: Cron Configuration
 CRON_SECRET=your-cron-secret-for-authentication
+
+# Optional: AI Analysis Configuration (Choose one or both)
+GOOGLE_GEMINI_API_KEY=your-google-gemini-api-key-here  # Recommended: Cheaper than OpenAI
+OPENAI_API_KEY=your-openai-api-key-here                # Alternative: More expensive
 ```
 
 ## **How to Get Supabase Credentials**
@@ -51,6 +55,20 @@ CRON_SECRET=your-cron-secret-for-authentication
 3. **Copy the following:**
    - **Client ID** → `REDDIT_OAUTH_CLIENT_ID`
    - **Client Secret** → `REDDIT_OAUTH_CLIENT_SECRET`
+
+## **How to Get AI API Keys (Optional)**
+
+### **Google Gemini API (Recommended - Cheaper)**
+1. **Go to https://makersuite.google.com/app/apikey**
+2. **Click "Create API Key"**
+3. **Copy the API key** → `GOOGLE_GEMINI_API_KEY`
+4. **Free tier**: 15 requests per minute, 1500 requests per day
+
+### **OpenAI API (Alternative - More Expensive)**
+1. **Go to https://platform.openai.com/api-keys**
+2. **Click "Create new secret key"**
+3. **Copy the API key** → `OPENAI_API_KEY`
+4. **Note**: Requires billing setup, no free tier
 
 ## **After Setting Up Environment Variables**
 

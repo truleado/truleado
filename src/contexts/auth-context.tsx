@@ -46,14 +46,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   // For mock client (when using placeholder environment variables), set loading to false immediately
-  // Only log once to reduce console spam
-  if (typeof window !== 'undefined' && !window.__authContextLogged) {
-    console.log('Auth context - checking environment variables:', {
-      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    })
-    window.__authContextLogged = true
-  }
+  // Only log once to reduce console spam - moved to useEffect to prevent hydration issues
+  useEffect(() => {
+    if (!window.__authContextLogged) {
+      console.log('Auth context - checking environment variables:', {
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      })
+      window.__authContextLogged = true
+    }
+  }, [])
   
   if (process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co' || 
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'placeholder_key' ||

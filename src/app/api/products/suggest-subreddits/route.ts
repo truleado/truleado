@@ -135,8 +135,9 @@ function getDefaultSubreddits(productInfo: any): string[] {
     ]
   }
   
-  // Analytics/Data tools - Target data-driven businesses
-  else if (text.includes('mixpanel') || text.includes('amplitude') || text.includes('segment') || text.includes('tableau') || (text.includes('analytics') && !text.includes('proposal')) || (text.includes('data') && (text.includes('insight') || text.includes('metric') || text.includes('dashboard')))) {
+  // Analytics/Data tools - Target data-driven businesses (but not project management tools)
+  else if ((text.includes('mixpanel') || text.includes('amplitude') || text.includes('segment') || text.includes('tableau') || (text.includes('analytics') && !text.includes('proposal'))) && 
+           !(text.includes('asana') || text.includes('trello') || text.includes('monday') || text.includes('notion'))) {
     subreddits = [
       'analytics',          // Analytics professionals seeking better tools
       'entrepreneur',       // Entrepreneurs needing business insights
@@ -178,23 +179,9 @@ function getDefaultSubreddits(productInfo: any): string[] {
     ]
   }
   
-  // Design/Creative tools - Target designers and product teams
-  else if (text.includes('design') || text.includes('figma') || text.includes('ui') || text.includes('ux') || text.includes('prototype')) {
-    subreddits = [
-      'userexperience',     // UX designers improving workflows
-      'web_design',         // Web designers collaborating on projects
-      'graphic_design',     // Graphic designers managing projects
-      'startups',           // Startups building product design teams
-      'webdev',             // Developers working with designers
-      'entrepreneur',       // Entrepreneurs needing design solutions
-      'productivity',       // Teams optimizing design workflows
-      'freelance'           // Freelance designers managing clients
-    ]
-  }
-  
-  
-  // Project Management tools - Target project managers and teams
-  else if (text.includes('project') || text.includes('task') || text.includes('team') || text.includes('collaboration') || text.includes('workflow')) {
+  // Project Management tools - Target project managers and teams (check first for highest specificity)
+  else if (text.includes('asana') || text.includes('trello') || text.includes('monday') || text.includes('notion') || text.includes('clickup') || text.includes('jira') ||
+           (text.includes('project') && (text.includes('task') || text.includes('team') || text.includes('collaboration') || text.includes('workflow')))) {
     subreddits = [
       'projectmanagement',  // Project managers optimizing workflows
       'entrepreneur',       // Entrepreneurs managing multiple projects
@@ -204,6 +191,20 @@ function getDefaultSubreddits(productInfo: any): string[] {
       'freelance',          // Freelancers juggling client projects
       'productivity',       // Teams improving collaboration
       'consulting'          // Consultants managing client work
+    ]
+  }
+
+  // Design/Creative tools - Target designers and product teams
+  else if ((text.includes('design') && !text.includes('project')) || text.includes('figma') || text.includes('ui') || text.includes('ux') || text.includes('prototype')) {
+    subreddits = [
+      'userexperience',     // UX designers improving workflows
+      'web_design',         // Web designers collaborating on projects
+      'graphic_design',     // Graphic designers managing projects
+      'startups',           // Startups building product design teams
+      'webdev',             // Developers working with designers
+      'entrepreneur',       // Entrepreneurs needing design solutions
+      'productivity',       // Teams optimizing design workflows
+      'freelance'           // Freelance designers managing clients
     ]
   }
   

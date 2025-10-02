@@ -16,8 +16,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 })
     }
 
-    // Return fast mock analysis for now
-    const analysis = getFastAnalysis(website)
+    // Try to fetch and analyze real website content
+    const analysis = await analyzeRealWebsite(website)
 
     return NextResponse.json(analysis)
   } catch (error) {
@@ -26,12 +26,388 @@ export async function POST(request: NextRequest) {
   }
 }
 
+async function analyzeRealWebsite(url: string) {
+  try {
+    // First try to fetch website content
+    const content = await fetchWebsiteContent(url)
+    
+  // If we have AI API keys, use AI analysis
+  const geminiApiKey = process.env.GOOGLE_GEMINI_API_KEY
+  const openaiApiKey = process.env.OPENAI_API_KEY
+  if ((geminiApiKey || openaiApiKey) && content) {
+    return await analyzeWithAI(content, url)
+  }
+    
+    // Fallback to intelligent analysis based on URL and basic content
+    const name = extractNameFromUrl(url)
+    return getIntelligentAnalysis(name, url.toLowerCase(), content)
+    
+  } catch (error) {
+    console.error('Real website analysis failed:', error)
+    // Fallback to basic analysis
+    const name = extractNameFromUrl(url)
+    return getIntelligentAnalysis(name, url.toLowerCase(), '')
+  }
+}
+
+async function fetchWebsiteContent(url: string): Promise<string> {
+  try {
+    console.log(`Fetching content from: ${url}`)
+    
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout
+    
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Connection': 'keep-alive'
+      },
+      signal: controller.signal
+    })
+    
+    clearTimeout(timeoutId)
+
+    if (!response.ok) {
+      console.error(`HTTP error: ${response.status} for ${url}`)
+      throw new Error(`HTTP ${response.status}`)
+    }
+
+    const html = await response.text()
+    console.log(`Fetched ${html.length} characters from ${url}`)
+    
+    // Extract text content from HTML
+    const textContent = extractTextFromHTML(html)
+    console.log(`Extracted ${textContent.length} characters of text content`)
+    
+    // Limit content size to avoid token limits
+    const limitedContent = textContent.slice(0, 8000)
+    console.log(`Limited content to ${limitedContent.length} characters`)
+    
+    return limitedContent
+    
+  } catch (error) {
+    console.error(`Failed to fetch website content from ${url}:`, error)
+    return ''
+  }
+}
+
+function extractTextFromHTML(html: string): string {
+  // Remove script and style elements
+  let text = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+  text = text.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+  text = text.replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, '')
+  
+  // Extract title and meta description first
+  const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i)
+  const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']*)["']/i)
+  
+  let priorityContent = ''
+  if (titleMatch) priorityContent += titleMatch[1] + '. '
+  if (descMatch) priorityContent += descMatch[1] + '. '
+  
+  // Extract headings (h1, h2, h3) for key features
+  const headings = html.match(/<h[1-6][^>]*>([^<]*)<\/h[1-6]>/gi) || []
+  const headingText = headings.map(h => h.replace(/<[^>]*>/g, '')).join('. ')
+  
+  // Extract button and link text for actions/features
+  const buttons = html.match(/<(button|a)[^>]*>([^<]*)<\/(button|a)>/gi) || []
+  const buttonText = buttons.map(b => b.replace(/<[^>]*>/g, '')).filter(t => t.length > 2 && t.length < 50).join('. ')
+  
+  // Focus on main content areas with better selectors
+  const contentSelectors = [
+    /<main[^>]*>([\s\S]*?)<\/main>/gi,
+    /<article[^>]*>([\s\S]*?)<\/article>/gi,
+    /<section[^>]*class[^>]*(?:hero|landing|about|features|benefits)[^>]*>([\s\S]*?)<\/section>/gi,
+    /<div[^>]*class[^>]*(?:content|main|hero|landing|about|features|benefits)[^>]*>([\s\S]*?)<\/div>/gi
+  ]
+  
+  let mainContent = ''
+  for (const regex of contentSelectors) {
+    let match
+    while ((match = regex.exec(html)) !== null) {
+      mainContent += match[1] + ' '
+    }
+  }
+  
+  // If no main content found, use body
+  if (!mainContent) {
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)
+    mainContent = bodyMatch ? bodyMatch[1] : html
+  }
+  
+  // Combine all content with priority
+  const fullContent = priorityContent + headingText + '. ' + buttonText + '. ' + mainContent
+  
+  // Remove HTML tags
+  text = fullContent.replace(/<[^>]*>/g, ' ')
+  
+  // Decode HTML entities
+  text = text.replace(/&nbsp;/g, ' ')
+  text = text.replace(/&amp;/g, '&')
+  text = text.replace(/&lt;/g, '<')
+  text = text.replace(/&gt;/g, '>')
+  text = text.replace(/&quot;/g, '"')
+  text = text.replace(/&#39;/g, "'")
+  text = text.replace(/&mdash;/g, '—')
+  text = text.replace(/&ndash;/g, '–')
+  
+  // Clean up whitespace and remove common noise
+  text = text.replace(/\s+/g, ' ')
+  text = text.replace(/\b(cookie|privacy|terms|subscribe|newsletter|footer|header|menu|navigation|login|signup|sign up|sign in)\b/gi, '')
+  text = text.trim()
+  
+  return text
+}
+
+async function analyzeWithAI(content: string, url: string): Promise<any> {
+  // Try Gemini first (cheaper), then fallback to OpenAI
+  const geminiApiKey = process.env.GOOGLE_GEMINI_API_KEY
+  const openaiApiKey = process.env.OPENAI_API_KEY
+  
+  if (geminiApiKey) {
+    try {
+      return await analyzeWithGemini(content, url)
+    } catch (error) {
+      console.error('Gemini analysis failed, trying OpenAI:', error)
+      // Continue to OpenAI fallback
+    }
+  }
+  
+  if (openaiApiKey) {
+    return await analyzeWithOpenAI(content, url)
+  }
+  
+  throw new Error('No AI API keys configured')
+}
+
+async function analyzeWithGemini(content: string, url: string): Promise<any> {
+  const geminiApiKey = process.env.GOOGLE_GEMINI_API_KEY
+  
+  if (!geminiApiKey) {
+    throw new Error('Google Gemini API key not configured')
+  }
+
+  const name = extractNameFromUrl(url)
+  
+  const prompt = `You are a product analyst specializing in Reddit lead discovery. Analyze this website and extract information to help identify prospects on Reddit who would be interested in this product.
+
+Website: ${url}
+Content: ${content}
+
+Provide a JSON response with this exact structure:
+{
+  "name": "Extract the actual product name from the website",
+  "description": "1-2 sentence description of what this product actually does based on the website content",
+  "features": ["Short feature 1", "Short feature 2", "Short feature 3", "Short feature 4", "Short feature 5"],
+  "benefits": ["Quantified benefit with % or number", "Quantified benefit with % or number", "Quantified benefit with % or number"],
+  "painPoints": ["Specific pain point this solves", "Specific pain point this solves", "Specific pain point this solves"],
+  "idealCustomerProfile": "Specific description of who uses this product (job titles, company types, industries)"
+}
+
+CRITICAL REQUIREMENTS:
+- Features: Keep each feature to 2-4 words maximum (e.g., "Real-time collaboration", "Automated workflows")
+- Benefits: MUST include numbers/percentages (e.g., "Reduce costs by 40%", "Save 10+ hours weekly")
+- Pain Points: Exactly 3 main problems this product solves (be specific, not generic)
+- Customer Profile: Focus on job titles, company sizes, and industries that would discuss this on Reddit
+
+Base everything on the actual website content provided. If the website is about project management, don't make it about payments. Extract what the product ACTUALLY does.`
+
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 4096,
+        }
+      }),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Unknown error')
+      console.error(`Gemini API error ${response.status}:`, errorText)
+      
+      if (response.status === 429) {
+        throw new Error('Gemini API rate limit exceeded. Please try again in a moment.')
+      } else if (response.status === 400) {
+        throw new Error('Gemini API request invalid. Please check your API key.')
+      } else {
+        throw new Error(`Gemini API error: ${response.status} - ${errorText}`)
+      }
+    }
+
+    const data = await response.json()
+    console.log('Gemini API response:', JSON.stringify(data, null, 2))
+    
+    const analysisText = data.candidates?.[0]?.content?.parts?.[0]?.text
+    const finishReason = data.candidates?.[0]?.finishReason
+
+    if (!analysisText) {
+      console.error('Gemini response structure:', data)
+      throw new Error('No analysis returned from Gemini')
+    }
+    
+    if (finishReason === 'MAX_TOKENS') {
+      console.warn('Gemini response was truncated due to token limit')
+      throw new Error('Gemini response truncated - trying OpenAI fallback')
+    }
+    
+    console.log('Gemini analysis text:', analysisText)
+
+    // Parse JSON response
+    let cleanText = analysisText.trim()
+    
+    // Remove markdown code blocks if present
+    if (cleanText.startsWith('```json')) {
+      cleanText = cleanText.replace(/^```json\s*/, '').replace(/\s*```$/, '')
+    } else if (cleanText.startsWith('```')) {
+      cleanText = cleanText.replace(/^```\s*/, '').replace(/\s*```$/, '')
+    }
+    
+    const analysis = JSON.parse(cleanText)
+    
+    // Validate the response structure
+    if (!analysis.name || !analysis.description || !analysis.features || !analysis.benefits || !analysis.painPoints || !analysis.idealCustomerProfile) {
+      throw new Error('Invalid analysis structure from Gemini')
+    }
+    
+    return analysis
+    
+  } catch (error) {
+    console.error('Gemini analysis error:', error)
+    // Return a more helpful error for rate limits
+    if (error instanceof Error && error.message.includes('rate limit')) {
+      throw error // Re-throw rate limit errors so user sees them
+    }
+    // Re-throw other errors to be handled by the caller
+    throw error
+  }
+}
+
+async function analyzeWithOpenAI(content: string, url: string): Promise<any> {
+  const openaiApiKey = process.env.OPENAI_API_KEY
+  
+  if (!openaiApiKey) {
+    throw new Error('OpenAI API key not configured')
+  }
+  
+  const name = extractNameFromUrl(url)
+  
+  const prompt = `You are a product analyst specializing in Reddit lead discovery. Analyze this website and extract information to help identify prospects on Reddit who would be interested in this product.
+
+Website: ${url}
+Content: ${content}
+
+Provide a JSON response with this exact structure:
+{
+  "name": "Extract the actual product name from the website",
+  "description": "1-2 sentence description of what this product actually does based on the website content",
+  "features": ["Short feature 1", "Short feature 2", "Short feature 3", "Short feature 4", "Short feature 5"],
+  "benefits": ["Quantified benefit with % or number", "Quantified benefit with % or number", "Quantified benefit with % or number"],
+  "painPoints": ["Specific pain point this solves", "Specific pain point this solves", "Specific pain point this solves"],
+  "idealCustomerProfile": "Specific description of who uses this product (job titles, company types, industries)"
+}
+
+CRITICAL REQUIREMENTS:
+- Features: Keep each feature to 2-4 words maximum (e.g., "Real-time collaboration", "Automated workflows")
+- Benefits: MUST include numbers/percentages (e.g., "Reduce costs by 40%", "Save 10+ hours weekly")
+- Pain Points: Exactly 3 main problems this product solves (be specific, not generic)
+- Customer Profile: Focus on job titles, company sizes, and industries that would discuss this on Reddit
+
+Base everything on the actual website content provided. If the website is about project management, don't make it about payments. Extract what the product ACTUALLY does.`
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert product analyst who creates detailed, impactful product analyses for lead generation. Always respond with valid JSON.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Unknown error')
+      console.error(`OpenAI API error ${response.status}:`, errorText)
+      
+      if (response.status === 429) {
+        throw new Error('OpenAI API rate limit exceeded. Please try again in a moment.')
+      } else if (response.status === 401) {
+        throw new Error('OpenAI API key is invalid or expired.')
+      } else {
+        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`)
+      }
+    }
+
+    const data = await response.json()
+    const analysisText = data.choices[0]?.message?.content
+
+    if (!analysisText) {
+      throw new Error('No analysis returned from OpenAI')
+    }
+
+    // Parse JSON response
+    let cleanText = analysisText.trim()
+    
+    // Remove markdown code blocks if present
+    if (cleanText.startsWith('```json')) {
+      cleanText = cleanText.replace(/^```json\s*/, '').replace(/\s*```$/, '')
+    } else if (cleanText.startsWith('```')) {
+      cleanText = cleanText.replace(/^```\s*/, '').replace(/\s*```$/, '')
+    }
+    
+    const analysis = JSON.parse(cleanText)
+    
+    // Validate the response structure
+    if (!analysis.name || !analysis.description || !analysis.features || !analysis.benefits || !analysis.painPoints || !analysis.idealCustomerProfile) {
+      throw new Error('Invalid analysis structure from OpenAI')
+    }
+    
+    return analysis
+    
+  } catch (error) {
+    console.error('OpenAI analysis error:', error)
+    // Return a more helpful error for rate limits
+    if (error instanceof Error && error.message.includes('rate limit')) {
+      throw error // Re-throw rate limit errors so user sees them
+    }
+    // Fallback to intelligent analysis for other errors
+    return getIntelligentAnalysis(name, url.toLowerCase(), content)
+  }
+}
+
 function getFastAnalysis(url: string) {
   const name = extractNameFromUrl(url)
   const domain = url.toLowerCase()
   
   // Analyze domain and name to provide relevant details
-  const analysis = getIntelligentAnalysis(name, domain)
+  const analysis = getIntelligentAnalysis(name, domain, '')
   
   return {
     name,
@@ -43,255 +419,227 @@ function getFastAnalysis(url: string) {
   }
 }
 
-function getIntelligentAnalysis(name: string, domain: string) {
-  const nameLower = name.toLowerCase()
+function getIntelligentAnalysis(name: string, domain: string, content: string = '') {
+  console.log(`Analyzing ${name} with content length: ${content.length}`)
   
-  // Payment/Finance tools
-  if (domain.includes('stripe') || domain.includes('paypal') || domain.includes('payment') || 
-      nameLower.includes('pay') || nameLower.includes('stripe') || nameLower.includes('billing')) {
-    return {
-      description: `${name} is a payment processing platform that helps businesses accept online payments, manage subscriptions, and handle complex billing scenarios with enterprise-grade security and compliance.`,
-      features: [
-        'One-click checkout optimization that reduces cart abandonment by 35%',
-        'Smart retry logic for failed payments with ML-powered recovery',
-        'Dynamic 3D Secure authentication based on risk assessment',
-        'Real-time fraud scoring with 99.9% accuracy',
-        'Automated dunning management for subscription renewals',
-        'Multi-party payment splits for marketplaces',
-        'Instant payouts to bank accounts in 40+ countries',
-        'Revenue recognition automation for SaaS metrics'
-      ],
-      benefits: [
-        'Recover 23% more revenue from failed subscription payments',
-        'Reduce checkout abandonment from 70% to 45% industry average',
-        'Save 15+ hours per week on manual payment reconciliation',
-        'Increase international conversion rates by 18% with local payment methods',
-        'Achieve PCI DSS compliance without internal security overhead'
-      ],
-      painPoints: [
-        'Losing $50K+ annually to failed subscription payments and involuntary churn',
-        'Spending 20+ hours per week manually reconciling payments across platforms',
-        'Cart abandonment rates above 65% due to complex checkout flows',
-        'Unable to expand internationally due to local payment method limitations',
-        'Constant worry about payment security breaches and compliance violations',
-        'High-value transactions getting falsely declined, losing enterprise customers',
-        'Marketplace sellers complaining about delayed payouts affecting cash flow'
-      ],
-      idealCustomerProfile: 'SaaS companies with $100K+ MRR struggling with payment failures, e-commerce stores losing revenue to cart abandonment, and marketplaces needing complex payment routing'
-    }
+  // If we have substantial content, do content-based analysis
+  if (content && content.length > 100) {
+    return analyzeContentIntelligently(name, domain, content)
   }
   
-  // Proposal/Sales tools
-  if (domain.includes('proposal') || nameLower.includes('proposal') || domain.includes('quote') ||
-      domain.includes('sales') || nameLower.includes('better')) {
-    return {
-      description: `${name} is a proposal automation platform that transforms how service businesses create, send, and close deals with interactive, trackable proposals that convert 3x better than traditional PDFs.`,
-      features: [
-        'AI-powered proposal content generation based on client industry and pain points',
-        'Interactive pricing calculators that let clients customize packages in real-time',
-        'Video testimonials and case studies embedded directly in proposals',
-        'Real-time notification when prospects view, share, or comment on proposals',
-        'One-click e-signature with automated contract generation',
-        'ROI calculators that show prospects exact value and payback period',
-        'Proposal analytics showing time spent on each section and drop-off points',
-        'CRM integration that auto-updates deal stages based on proposal engagement'
-      ],
-      benefits: [
-        'Increase proposal win rates from 20% to 65% with interactive content',
-        'Reduce proposal creation time from 8 hours to 45 minutes per proposal',
-        'Close deals 40% faster with real-time engagement tracking and follow-up triggers',
-        'Eliminate 90% of back-and-forth emails during the proposal process',
-        'Increase average deal size by 35% with dynamic pricing and upsell suggestions'
-      ],
-      painPoints: [
-        'Spending 2-3 days creating each proposal only to get ghosted by prospects',
-        'Losing deals to competitors who present more professional, interactive proposals',
-        'No visibility into whether prospects actually read proposals or where they lose interest',
-        'Constantly recreating similar proposals from scratch, wasting 10+ hours per week',
-        'Prospects asking for revisions that require starting over with formatting and design',
-        'Missing follow-up opportunities because you don\'t know when prospects view proposals',
-        'Losing enterprise deals because proposals look unprofessional compared to competitors'
-      ],
-      idealCustomerProfile: 'Agencies billing $500K+ annually frustrated with low proposal win rates, consultants charging $10K+ per project, and service businesses losing deals to better-presented competitors'
-    }
-  }
+  // Otherwise fall back to domain/name based analysis
+  return analyzeDomainBasedFallback(name, domain)
+}
+
+function analyzeContentIntelligently(name: string, domain: string, content: string) {
+  const textToAnalyze = `${name} ${domain} ${content}`.toLowerCase()
   
-  // CRM/Marketing tools
-  if (domain.includes('crm') || domain.includes('hubspot') || domain.includes('salesforce') ||
-      domain.includes('marketing') || nameLower.includes('customer')) {
-    return {
-      description: `${name} is an intelligent CRM platform that uses AI to predict which leads will convert, automates personalized outreach at scale, and identifies the exact moment prospects are ready to buy.`,
-      features: [
-        'AI lead scoring that predicts conversion probability with 87% accuracy',
-        'Behavioral trigger automation that sends personalized messages based on website activity',
-        'Intent data integration showing when prospects research competitors or solutions',
-        'Conversation intelligence that analyzes sales calls and suggests next best actions',
-        'Predictive pipeline forecasting with deal risk assessment',
-        'Automated lead nurturing sequences based on industry, company size, and behavior',
-        'Revenue attribution tracking across all touchpoints and campaigns',
-        'Account-based marketing orchestration for enterprise prospects'
-      ],
-      benefits: [
-        'Increase qualified lead conversion rates from 2% to 12% with AI scoring',
-        'Reduce sales cycle length by 35% with predictive timing insights',
-        'Generate 4x more pipeline with automated, personalized outreach sequences',
-        'Improve forecast accuracy from 60% to 92% with predictive analytics',
-        'Save 25+ hours per week on manual lead research and data entry'
-      ],
-      painPoints: [
-        'Sales team wasting time on leads that will never convert, missing quota by 30%+',
-        'Losing $200K+ in potential revenue because prospects go cold without proper nurturing',
-        'Unable to scale personalized outreach beyond 50 prospects per rep per week',
-        'No visibility into which marketing activities actually drive closed revenue',
-        'Reps spending 4+ hours daily on CRM data entry instead of selling',
-        'Missing buying signals from prospects who are actively researching solutions',
-        'Enterprise deals stalling because you can\'t engage all decision makers effectively'
-      ],
-      idealCustomerProfile: 'B2B companies with $1M+ revenue struggling to scale sales, marketing teams unable to prove ROI, and sales organizations missing quota due to poor lead quality'
-    }
-  }
+  // Extract actual features from content
+  const features = extractFeaturesFromContent(content)
+  const benefits = extractBenefitsFromContent(content)
+  const painPoints = extractPainPointsFromContent(content)
+  const description = generateDescriptionFromContent(name, content)
+  const customerProfile = generateCustomerProfileFromContent(content)
   
-  // Design/Creative tools
-  if (domain.includes('design') || domain.includes('figma') || domain.includes('canva') ||
-      nameLower.includes('design') || domain.includes('creative') || nameLower.includes('figma') ||
-      nameLower.includes('sketch') || nameLower.includes('adobe') || nameLower.includes('invision') ||
-      nameLower.includes('framer') || nameLower.includes('miro')) {
-    return {
-      description: `${name} is a collaborative design platform that transforms how product teams build user experiences, with AI-powered design assistance and real-time collaboration that eliminates the handoff between design and development.`,
-      features: [
-        'AI-powered design suggestions that generate layouts based on user behavior data',
-        'Component libraries with automatic design system enforcement across teams',
-        'Real-time multiplayer editing with voice chat and cursor tracking',
-        'Design-to-code automation that generates production-ready React/Vue components',
-        'User testing integration with heatmaps and session recordings built into prototypes',
-        'Advanced prototyping with micro-interactions and realistic data simulation',
-        'Version control with branching, merging, and conflict resolution for design files',
-        'Stakeholder review workflows with approval gates and automated handoff to developers'
-      ],
-      benefits: [
-        'Reduce design-to-development handoff time from 2 weeks to 2 days',
-        'Increase design consistency by 85% with automated component library enforcement',
-        'Cut prototype creation time from 3 days to 4 hours with AI assistance',
-        'Improve user experience metrics by 40% with integrated user testing feedback',
-        'Eliminate 90% of design revision cycles with real-time stakeholder collaboration'
-      ],
-      painPoints: [
-        'Developers constantly asking for design specs, slowing down product launches by weeks',
-        'Design inconsistencies across products because teams use different component variations',
-        'Spending 60% of design time on repetitive tasks instead of creative problem-solving',
-        'Stakeholders requesting changes after development has started, causing expensive rework',
-        'No way to validate designs with real users before spending months building features',
-        'Design files becoming outdated the moment development begins, creating confusion',
-        'Junior designers struggling to maintain brand consistency without constant senior oversight'
-      ],
-      idealCustomerProfile: 'Product teams at tech companies building user-facing applications, design systems teams at enterprises, and startups needing to move fast without sacrificing design quality'
-    }
-  }
-  
-  // Analytics/Data tools
-  if (domain.includes('analytics') || domain.includes('data') || domain.includes('insight') ||
-      nameLower.includes('analytic') || domain.includes('metric') || nameLower.includes('mixpanel') ||
-      nameLower.includes('amplitude') || nameLower.includes('segment') || nameLower.includes('tableau') ||
-      nameLower.includes('looker') || nameLower.includes('datadog')) {
-    return {
-      description: `${name} is an AI-powered analytics platform that automatically discovers hidden revenue opportunities, predicts customer behavior, and provides actionable recommendations that directly impact business growth.`,
-      features: [
-        'Automated anomaly detection that alerts you to revenue leaks within 5 minutes',
-        'Predictive customer lifetime value modeling with 94% accuracy',
-        'AI-generated insights that identify specific actions to increase revenue by 15-30%',
-        'Real-time cohort analysis showing exactly which user segments are most profitable',
-        'Automated A/B test analysis with statistical significance and business impact scoring',
-        'Cross-platform attribution that tracks customer journeys across 50+ touchpoints',
-        'Natural language query interface - ask questions in plain English, get instant answers',
-        'Automated executive reporting with key insights delivered to Slack/email daily'
-      ],
-      benefits: [
-        'Discover $500K+ in hidden revenue opportunities within first 30 days',
-        'Reduce customer acquisition cost by 40% by identifying highest-converting channels',
-        'Increase customer retention by 25% with predictive churn prevention',
-        'Save 20+ hours per week on manual data analysis and report creation',
-        'Make decisions 5x faster with instant answers to complex business questions'
-      ],
-      painPoints: [
-        'Losing $100K+ monthly to revenue leaks you can\'t identify in your current analytics',
-        'Spending $50K+ on marketing channels that don\'t actually drive profitable customers',
-        'Data team taking 2+ weeks to answer simple business questions, slowing down decisions',
-        'Unable to predict which customers will churn, losing 30%+ revenue annually',
-        'Executive team making gut decisions because data insights arrive too late',
-        'Wasting 40+ hours per week manually creating reports that nobody reads',
-        'Missing growth opportunities because insights are buried in complex dashboards'
-      ],
-      idealCustomerProfile: 'Growth-stage companies with $5M+ revenue drowning in data but starving for insights, marketing teams burning budget on ineffective channels, and executives making decisions without clear data'
-    }
-  }
-  
-  // Project Management tools
-  if (domain.includes('project') || domain.includes('task') || domain.includes('team') ||
-      nameLower.includes('project') || domain.includes('collaboration') || nameLower.includes('asana') ||
-      nameLower.includes('trello') || nameLower.includes('monday') || nameLower.includes('notion') ||
-      nameLower.includes('clickup') || nameLower.includes('jira') || nameLower.includes('slack')) {
-    return {
-      description: `${name} is an intelligent project management platform that uses AI to predict project risks, automatically optimizes resource allocation, and eliminates the chaos of managing complex projects across distributed teams.`,
-      features: [
-        'AI-powered project risk assessment that predicts delays 3 weeks in advance',
-        'Automated resource leveling that prevents team burnout and optimizes capacity',
-        'Smart dependency mapping that identifies critical path bottlenecks automatically',
-        'Real-time budget tracking with cost overrun predictions and mitigation suggestions',
-        'Intelligent task prioritization based on business impact and deadline urgency',
-        'Automated status reporting that generates executive updates from team activity',
-        'Cross-project portfolio optimization that maximizes ROI across all initiatives',
-        'Predictive timeline estimation based on team velocity and historical data'
-      ],
-      benefits: [
-        'Deliver projects 45% faster by eliminating resource conflicts and bottlenecks',
-        'Reduce project budget overruns from 30% to under 5% with predictive cost management',
-        'Increase team productivity by 60% with AI-optimized task assignments',
-        'Prevent 90% of project delays with early risk detection and mitigation',
-        'Save 15+ hours per week on status meetings and progress reporting'
-      ],
-      painPoints: [
-        'Projects consistently running 50%+ over budget due to poor resource planning',
-        'Team members burning out because workload distribution is completely unbalanced',
-        'Critical project dependencies discovered too late, causing 3-month delays',
-        'Executives blindsided by project failures because status reports were misleading',
-        'Unable to prioritize projects effectively, working on low-impact initiatives',
-        'Spending 20+ hours per week in status meetings instead of actual work',
-        'High-value projects failing because key team members are overallocated across initiatives'
-      ],
-      idealCustomerProfile: 'Engineering teams at tech companies managing complex product roadmaps, agencies juggling 20+ client projects, and enterprises struggling with cross-functional project coordination'
-    }
-  }
-  
-  // Default SaaS/Business tool - Make it more specific and impactful
   return {
-    description: `${name} is an intelligent business automation platform that eliminates repetitive work, connects disconnected systems, and scales operations without hiring additional staff.`,
-    features: [
-      'No-code workflow automation that connects 500+ business applications',
-      'AI-powered process optimization that identifies bottlenecks and suggests improvements',
-      'Smart document processing that extracts data from PDFs, emails, and forms automatically',
-      'Intelligent routing that assigns tasks to the right person based on workload and expertise',
-      'Real-time performance monitoring with alerts when processes deviate from normal patterns',
-      'Custom approval workflows with escalation rules and deadline management',
-      'Advanced analytics showing time saved, costs reduced, and efficiency gains',
-      'Mobile-first design enabling process management from anywhere'
-    ],
-    benefits: [
-      'Eliminate 25+ hours per week of manual, repetitive tasks across your team',
-      'Reduce operational costs by 35% without laying off employees',
-      'Increase process completion speed by 70% with automated handoffs',
-      'Prevent 95% of human errors in critical business processes',
-      'Scale operations to handle 3x more volume with the same team size'
-    ],
-    painPoints: [
-      'Team spending 40+ hours per week on manual data entry and repetitive tasks',
-      'Critical processes breaking down when key employees are out of office',
-      'Unable to scale operations without constantly hiring more administrative staff',
-      'Important tasks falling through the cracks because there\'s no systematic tracking',
-      'Customers frustrated by slow response times due to manual approval processes',
-      'Executives lacking visibility into operational efficiency and bottlenecks',
-      'Compliance issues arising from inconsistent manual processes'
-    ],
-    idealCustomerProfile: 'Growing companies with 50-500 employees drowning in manual processes, operations teams struggling to scale, and businesses losing customers due to slow, error-prone workflows'
+    name: name,
+    description: description,
+    features: features.slice(0, 5),
+    benefits: benefits.slice(0, 3),
+    painPoints: painPoints.slice(0, 3),
+    idealCustomerProfile: customerProfile
+  }
+}
+
+function extractFeaturesFromContent(content: string): string[] {
+  const features: string[] = []
+  
+  // Extract headings as potential features
+  const headings = content.match(/(?:^|\n)([A-Z][^.!?\n]{10,60})(?=\n|$)/g) || []
+  headings.forEach(heading => {
+    const clean = heading.trim().replace(/[^\w\s-]/g, '').substring(0, 40)
+    if (clean.length > 5 && clean.length < 40) {
+      features.push(clean)
+    }
+  })
+  
+  // Look for feature-indicating patterns
+  const featurePatterns = [
+    /(?:features?|capabilities?|tools?)[:\s]*([^.!?\n]{10,50})/gi,
+    /(?:you can|able to|allows? you to|helps? you)[:\s]*([^.!?\n]{10,50})/gi,
+    /(?:built-in|includes?|comes with|offers?)[:\s]*([^.!?\n]{10,50})/gi,
+    /(?:real-time|automated?|instant|smart|ai-powered)[:\s]*([^.!?\n]{5,40})/gi
+  ]
+  
+  for (const pattern of featurePatterns) {
+    let match
+    while ((match = pattern.exec(content)) !== null && features.length < 8) {
+      const feature = match[1].trim().replace(/[^\w\s-]/g, '').substring(0, 40)
+      if (feature.length > 5 && !features.some(f => f.toLowerCase().includes(feature.toLowerCase().substring(0, 8)))) {
+        features.push(feature)
+      }
+    }
+  }
+  
+  // Extract action words as features
+  if (features.length < 3) {
+    const actionWords = content.match(/\b(manage|create|build|track|monitor|analyze|automate|integrate|collaborate|share|sync|deploy|optimize|scale|secure)\s+[\w\s]{5,30}/gi) || []
+    actionWords.slice(0, 5).forEach(action => {
+      const cleanAction = action.replace(/[^\w\s]/g, '').substring(0, 30).trim()
+      if (cleanAction.length > 5 && !features.some(f => f.toLowerCase().includes(cleanAction.toLowerCase().substring(0, 8)))) {
+        features.push(cleanAction)
+      }
+    })
+  }
+  
+  return features.length > 0 ? features : ['Core functionality', 'User management', 'Data analytics', 'API access', 'Team collaboration']
+}
+
+function extractBenefitsFromContent(content: string): string[] {
+  const benefits: string[] = []
+  
+  // Look for quantified benefits
+  const benefitPatterns = [
+    /(?:save|reduce|increase|improve|boost|grow|cut|eliminate)[\s\w]*?(\d+(?:\.\d+)?%?[\s\w]*(?:time|cost|revenue|efficiency|productivity|speed|faster|slower|more|less))/gi,
+    /(\d+(?:\.\d+)?%?\s*(?:faster|quicker|more efficient|less time|cost savings|revenue increase|productivity gain))/gi,
+    /(?:up to|over|more than|less than|reduce by|increase by)\s*(\d+(?:\.\d+)?%?[\s\w]*)/gi
+  ]
+  
+  for (const pattern of benefitPatterns) {
+    let match
+    while ((match = pattern.exec(content)) !== null && benefits.length < 5) {
+      const benefit = match[1].trim()
+      if (benefit.length > 3 && !benefits.some(b => b.toLowerCase().includes(benefit.toLowerCase().substring(0, 8)))) {
+        benefits.push(`Achieve ${benefit}`)
+      }
+    }
+  }
+  
+  // Look for time-saving benefits
+  const timePatterns = /(?:save|reduce)[\s\w]*?(\d+\s*(?:hours?|minutes?|days?|weeks?))/gi
+  let timeMatch
+  while ((timeMatch = timePatterns.exec(content)) !== null && benefits.length < 5) {
+    benefits.push(`Save ${timeMatch[1]} weekly`)
+  }
+  
+  return benefits.length > 0 ? benefits : ['Increase productivity by 35%', 'Reduce manual work by 50%', 'Save 8+ hours weekly']
+}
+
+function extractPainPointsFromContent(content: string): string[] {
+  const painPoints: string[] = []
+  
+  // Look for problem-indicating phrases
+  const problemPatterns = [
+    /(?:problem|issue|challenge|struggle|difficult|hard|frustrating|annoying|time-consuming|manual|tedious)[\s\w]*?([^.!?\n]{15,80})/gi,
+    /(?:without|can't|cannot|unable to|difficult to|hard to|struggle to)[\s\w]*?([^.!?\n]{15,60})/gi,
+    /(?:waste|wasting|losing|lost)[\s\w]*?([^.!?\n]{10,60})/gi
+  ]
+  
+  for (const pattern of problemPatterns) {
+    let match
+    while ((match = pattern.exec(content)) !== null && painPoints.length < 5) {
+      const painPoint = match[1].trim().replace(/[^\w\s-]/g, '').substring(0, 60)
+      if (painPoint.length > 10 && !painPoints.some(p => p.toLowerCase().includes(painPoint.toLowerCase().substring(0, 15)))) {
+        painPoints.push(painPoint)
+      }
+    }
+  }
+  
+  return painPoints.length > 0 ? painPoints : ['Manual repetitive tasks', 'Disconnected team workflows', 'Lack of real-time collaboration']
+}
+
+function generateDescriptionFromContent(name: string, content: string): string {
+  // Try to extract a description from the first meaningful sentences
+  const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 20)
+  
+  for (const sentence of sentences.slice(0, 5)) {
+    const clean = sentence.trim()
+    if (clean.toLowerCase().includes(name.toLowerCase()) && clean.length > 30 && clean.length < 200) {
+      return clean + '.'
+    }
+  }
+  
+  // Look for description patterns
+  const descPatterns = [
+    new RegExp(`${name}\\s+(?:is|helps|enables|allows|provides)\\s+([^.!?]{20,150})`, 'i'),
+    /(?:platform|tool|service|solution)\\s+(?:that|to)\\s+([^.!?]{20,150})/i,
+    /(?:helps?|enables?|allows?)\\s+(?:you|users?|teams?|businesses?)\\s+(?:to\\s+)?([^.!?]{20,150})/i
+  ]
+  
+  for (const pattern of descPatterns) {
+    const match = content.match(pattern)
+    if (match && match[1]) {
+      return `${name} ${match[1].trim()}.`
+    }
+  }
+  
+  return `${name} is a platform that helps teams work more efficiently and collaborate better.`
+}
+
+function generateCustomerProfileFromContent(content: string): string {
+  // Look for mentions of target users
+  const userPatterns = [
+    /(?:for|designed for|built for|helps|perfect for)[\s\w]*?(developers?|designers?|teams?|businesses?|companies?|startups?|enterprises?|agencies?|freelancers?|managers?|engineers?)/gi,
+    /(?:developers?|designers?|teams?|businesses?|companies?|startups?|enterprises?|agencies?|freelancers?|managers?|engineers?)[\s\w]*?(?:use|love|choose|prefer|need)/gi
+  ]
+  
+  const mentionedUsers = new Set<string>()
+  for (const pattern of userPatterns) {
+    let match
+    while ((match = pattern.exec(content)) !== null) {
+      mentionedUsers.add(match[1].toLowerCase())
+    }
+  }
+  
+  if (mentionedUsers.size > 0) {
+    const users = Array.from(mentionedUsers).slice(0, 3).join(', ')
+    return `${users} looking to improve their workflows and productivity`
+  }
+  
+  return 'Growing businesses, remote teams, and professionals seeking better collaboration tools'
+}
+
+function analyzeDomainBasedFallback(name: string, domain: string) {
+  const nameLower = name.toLowerCase()
+  const textToAnalyze = `${nameLower} ${domain}`
+  
+  // Simple category-based analysis for when we don't have content
+  if (textToAnalyze.includes('payment') || textToAnalyze.includes('stripe') || textToAnalyze.includes('billing')) {
+    return {
+      name: name,
+      description: `${name} is a payment processing platform that helps businesses handle online transactions.`,
+      features: ['Payment processing', 'Subscription billing', 'Fraud detection', 'Multi-currency support', 'API integration'],
+      benefits: ['Reduce payment failures by 25%', 'Increase conversion by 15%', 'Save 10+ hours on reconciliation'],
+      painPoints: ['Payment failures losing revenue', 'Complex billing reconciliation', 'High cart abandonment rates'],
+      idealCustomerProfile: 'E-commerce businesses, SaaS companies, and online merchants processing payments'
+    }
+  } else if (textToAnalyze.includes('design') || textToAnalyze.includes('figma') || textToAnalyze.includes('ui')) {
+    return {
+      name: name,
+      description: `${name} is a design collaboration platform that helps teams create digital products.`,
+      features: ['Design collaboration', 'Prototyping tools', 'Component libraries', 'Version control', 'Real-time editing'],
+      benefits: ['Reduce design time by 40%', 'Improve team efficiency by 60%', 'Cut feedback cycles by 50%'],
+      painPoints: ['Design feedback scattered across tools', 'Version control conflicts', 'Slow design handoff'],
+      idealCustomerProfile: 'Design teams, product managers, and creative agencies building digital products'
+    }
+  } else if (textToAnalyze.includes('code') || textToAnalyze.includes('github') || textToAnalyze.includes('git')) {
+    return {
+      name: name,
+      description: `${name} is a development platform that helps teams build and manage software projects.`,
+      features: ['Version control', 'Code collaboration', 'Pull requests', 'Issue tracking', 'CI/CD integration'],
+      benefits: ['Deploy 3x faster', 'Reduce bugs by 45%', 'Save 15+ hours weekly'],
+      painPoints: ['Manual deployment processes', 'Code review bottlenecks', 'Lack of development visibility'],
+      idealCustomerProfile: 'Software developers, engineering teams, and tech companies building applications'
+    }
+  } else {
+    return {
+      name: name,
+      description: `${name} is a business platform that helps teams collaborate and work more efficiently.`,
+      features: ['Team collaboration', 'Project management', 'Data analytics', 'API access', 'User management'],
+      benefits: ['Increase productivity by 35%', 'Reduce manual work by 50%', 'Save 8+ hours weekly'],
+      painPoints: ['Manual repetitive tasks', 'Disconnected team workflows', 'Lack of real-time collaboration'],
+      idealCustomerProfile: 'Growing businesses, remote teams, and professionals seeking better collaboration tools'
+    }
   }
 }
 

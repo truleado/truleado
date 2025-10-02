@@ -35,93 +35,186 @@ export class AILeadAnalyzer {
   
   async analyzeLead(lead: LeadData, product: ProductData): Promise<LeadAnalysis> {
     try {
-      if (!openai) {
-        // Return mock analysis if OpenAI is not configured
-        return {
-          reasons: ['AI analysis not available - OpenAI not configured'],
-          sampleReply: 'Hello! I noticed your post about [topic]. I work with [product name] and think we might be able to help. Would you be interested in learning more?',
-          qualityScore: 0.5,
-          confidence: 0.3
+      // Try Gemini first (cheaper), then fallback to OpenAI
+      const geminiApiKey = process.env.GOOGLE_GEMINI_API_KEY
+      const openaiApiKey = process.env.OPENAI_API_KEY
+      
+      if (geminiApiKey) {
+        try {
+          console.log('Analyzing lead with Gemini...')
+          return await this.analyzeWithGemini(lead, product)
+        } catch (error) {
+          console.error('Gemini lead analysis failed, trying OpenAI:', error)
+          // Continue to OpenAI fallback
         }
       }
-
-      const prompt = this.buildAnalysisPrompt(lead, product)
       
-      const response = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content: "You are an expert sales and marketing analyst specializing in Reddit lead qualification. Analyze Reddit posts and comments to identify high-quality sales opportunities."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 1000
-      })
-
-      const analysis = this.parseAIResponse(response.choices[0].message.content || '')
-      return analysis
+      if (openaiApiKey && openai) {
+        try {
+          console.log('Analyzing lead with OpenAI...')
+          return await this.analyzeWithOpenAI(lead, product)
+        } catch (error) {
+          console.error('OpenAI lead analysis failed:', error)
+          // Continue to fallback analysis
+        }
+      }
+      
+      console.log('Using fallback analysis (no AI available)')
+      return this.getFallbackAnalysis(lead, product)
+      
     } catch (error) {
       console.error('AI lead analysis error:', error)
       return this.getFallbackAnalysis(lead, product)
     }
   }
 
+  private async analyzeWithGemini(lead: LeadData, product: ProductData): Promise<LeadAnalysis> {
+    const geminiApiKey = process.env.GOOGLE_GEMINI_API_KEY
+    
+    if (!geminiApiKey) {
+      throw new Error('Google Gemini API key not configured')
+    }
+
+    const prompt = this.buildAnalysisPrompt(lead, product)
+    
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 2048,
+          }
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => 'Unknown error')
+        console.error(`Gemini API error ${response.status}:`, errorText)
+        
+        if (response.status === 429) {
+          throw new Error('Gemini API rate limit exceeded. Please try again in a moment.')
+        } else if (response.status === 400) {
+          throw new Error('Gemini API request invalid. Please check your API key.')
+        } else {
+          throw new Error(`Gemini API error: ${response.status} - ${errorText}`)
+        }
+      }
+
+      const data = await response.json()
+      const analysisText = data.candidates?.[0]?.content?.parts?.[0]?.text
+      const finishReason = data.candidates?.[0]?.finishReason
+
+      if (!analysisText) {
+        console.error('Gemini response structure:', data)
+        throw new Error('No analysis returned from Gemini')
+      }
+      
+      if (finishReason === 'MAX_TOKENS') {
+        console.warn('Gemini response was truncated due to token limit')
+        throw new Error('Gemini response truncated - trying OpenAI fallback')
+      }
+
+      // Parse JSON response
+      let cleanText = analysisText.trim()
+      
+      // Remove markdown code blocks if present
+      if (cleanText.startsWith('```json')) {
+        cleanText = cleanText.replace(/^```json\s*/, '').replace(/\s*```$/, '')
+      } else if (cleanText.startsWith('```')) {
+        cleanText = cleanText.replace(/^```\s*/, '').replace(/\s*```$/, '')
+      }
+      
+      let analysis
+      try {
+        analysis = JSON.parse(cleanText)
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError)
+        console.error('Raw text:', cleanText)
+        throw new Error('Invalid JSON response from Gemini')
+      }
+      
+      // Validate the response structure
+      if (!analysis.reasons || !analysis.sampleReply || !analysis.qualityScore || !analysis.confidence) {
+        throw new Error('Invalid analysis structure from Gemini')
+      }
+      
+      return {
+        reasons: Array.isArray(analysis.reasons) ? analysis.reasons : [analysis.reasons],
+        sampleReply: analysis.sampleReply,
+        qualityScore: Math.min(Math.max(analysis.qualityScore || 5, 1), 10),
+        confidence: Math.min(Math.max(analysis.confidence || 5, 1), 10)
+      }
+      
+    } catch (error) {
+      console.error('Gemini lead analysis error:', error)
+      throw error
+    }
+  }
+
+  private async analyzeWithOpenAI(lead: LeadData, product: ProductData): Promise<LeadAnalysis> {
+    if (!openai) {
+      throw new Error('OpenAI not configured')
+    }
+
+    const prompt = this.buildAnalysisPrompt(lead, product)
+    
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert sales and marketing analyst specializing in Reddit lead qualification. Analyze Reddit posts and comments to identify high-quality sales opportunities."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000
+    })
+
+    const analysis = this.parseAIResponse(response.choices[0].message.content || '')
+    return analysis
+  }
+
   private buildAnalysisPrompt(lead: LeadData, product: ProductData): string {
     const leadContext = lead.leadType === 'comment' 
-      ? `Comment on post: "${lead.parentPostTitle}"\nComment: "${lead.content}"`
-      : `Post: "${lead.title}"\nContent: "${lead.content}"`
+      ? `Comment: "${lead.content}"`
+      : `Post: "${lead.title}" - ${lead.content}`
 
-    return `
-Analyze this Reddit ${lead.leadType} as a potential sales lead for ${product.name}.
+    // Truncate long content to fit token limits
+    const maxContentLength = 500
+    const truncatedContext = leadContext.length > maxContentLength 
+      ? leadContext.substring(0, maxContentLength) + "..."
+      : leadContext
 
-PRODUCT INFORMATION:
-- Name: ${product.name}
-- Description: ${product.description}
-- Features: ${product.features.join(', ')}
-- Benefits: ${product.benefits.join(', ')}
-- Pain Points We Solve: ${product.painPoints.join(', ')}
-- Ideal Customer: ${product.idealCustomerProfile}
+    return `Analyze this Reddit ${lead.leadType} for ${product.name} (${product.description.substring(0, 100)}...).
 
-REDDIT ${lead.leadType.toUpperCase()}:
-- Author: u/${lead.author}
-- Subreddit: r/${lead.subreddit}
-- Score: ${lead.score} upvotes
-- Comments: ${lead.numComments}
-- ${leadContext}
+REDDIT: u/${lead.author} in r/${lead.subreddit} (${lead.score} upvotes)
+${truncatedContext}
 
-Please provide:
-1. 3-5 specific reasons why this is a good lead (be specific about pain points, needs, or interests mentioned)
-2. A sample reply that's helpful, non-salesy, and adds value to the conversation. The reply should:
-   - Reference specific pain points or challenges mentioned in the ${lead.leadType}
-   - Mention relevant features or benefits from the product that address those challenges
-   - Offer genuine value or insights, not just promotion
-   - Be conversational and helpful, like a knowledgeable peer
-   - Include a subtle mention of how the product could help (without being pushy)
-   - Use specific product features/benefits that match the user's needs
-3. A quality score from 1-10 (10 being perfect fit)
-4. Confidence level from 1-10
+PRODUCT SOLVES: ${product.painPoints.slice(0, 2).join('; ')}
+BENEFITS: ${product.benefits.slice(0, 2).join('; ')}
 
-Format your response as JSON:
+Return JSON only:
 {
   "reasons": ["reason1", "reason2", "reason3"],
-  "sampleReply": "Your helpful reply here...",
+  "sampleReply": "Helpful reply mentioning ${product.name}",
   "qualityScore": 8,
   "confidence": 7
-}
-
-Focus on:
-- Specific pain points or needs mentioned
-- Buying intent signals
-- Authority and engagement level
-- Relevance to your product
-- Conversation context
-- How product features directly address the user's challenges
-`
+}`
   }
 
   private parseAIResponse(response: string): LeadAnalysis {

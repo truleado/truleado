@@ -95,15 +95,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       <body
         className="antialiased"
       >
-        {/* Google Tag Manager (noscript) */}
-        <noscript>
-          <iframe
-            src="https://www.googletagmanager.com/ns.html?id=GTM-M53L68M3"
-            height="0"
-            width="0"
-            style={{ display: 'none', visibility: 'hidden' }}
-          />
-        </noscript>
+        {/* Google Tag Manager (noscript) - moved to prevent hydration issues */}
+        <noscript
+          dangerouslySetInnerHTML={{
+            __html: `<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-M53L68M3" height="0" width="0" style="display:none;visibility:hidden"></iframe>`,
+          }}
+        />
         {/* End Google Tag Manager (noscript) */}
         
         <ErrorBoundary>
