@@ -8,13 +8,7 @@ export async function createClient() {
 
   if (!supabaseUrl || !supabaseAnonKey) {
     console.warn('Supabase credentials not found. Please set up your environment variables.')
-    // Return a mock client that won't crash the app
-    return {
-      auth: {
-        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-        getUser: () => Promise.resolve({ data: { user: null }, error: null })
-      }
-    } as any
+    throw new Error('Supabase credentials not configured')
   }
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {

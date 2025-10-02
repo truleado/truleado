@@ -4,6 +4,12 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { User, Session } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase-client'
 
+declare global {
+  interface Window {
+    __authContextLogged?: boolean
+  }
+}
+
 interface AuthContextType {
   user: User | null
   session: Session | null
@@ -40,10 +46,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   // For mock client (when using placeholder environment variables), set loading to false immediately
-  console.log('Auth context - checking environment variables:', {
-    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  })
+  // Only log once to reduce console spam
+  if (typeof window !== 'undefined' && !window.__authContextLogged) {
+    console.log('Auth context - checking environment variables:', {
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    })
+    window.__authContextLogged = true
+  }
   
   if (process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co' || 
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'placeholder_key' ||

@@ -52,17 +52,29 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     if (!authUser) return
 
     try {
-      console.log('Refreshing subscription for user:', authUser.id)
+      // Only log the first refresh to reduce console spam
+      if (!user) {
+        console.log('Refreshing subscription for user:', authUser.id)
+      }
       const response = await fetch('/api/billing/status')
       if (response.ok) {
         const data = await response.json()
-        console.log('Subscription data received:', data)
+        if (!user) {
+          console.log('Subscription data received:', data)
+        }
         setUser({ ...authUser, ...data })
+        setIsLoading(false) // Ensure loading is set to false after successful fetch
       } else {
         console.error('Failed to fetch subscription status:', response.status, response.statusText)
+        // Set a default user state even if API fails to prevent infinite loading
+        setUser({ ...authUser, subscription_status: 'trial', trial_ends_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() } as UserWithSubscription)
+        setIsLoading(false)
       }
     } catch (error) {
       console.error('Error refreshing subscription:', error)
+      // Set a default user state even if API fails to prevent infinite loading
+      setUser({ ...authUser, subscription_status: 'trial', trial_ends_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() } as UserWithSubscription)
+      setIsLoading(false)
     }
   }
 
@@ -122,13 +134,13 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     }
   }, [isDummyEnv, authLoading, authUser])
 
-  // Add a periodic refresh for production users to ensure subscription status is up to date
+  // Add a less frequent refresh for production users to ensure subscription status is up to date
   useEffect(() => {
     if (!isDummyEnv && authUser && !authLoading) {
       const interval = setInterval(() => {
         console.log('Periodic subscription refresh for user:', authUser.id)
         refreshSubscription()
-      }, 30000) // Refresh every 30 seconds
+      }, 300000) // Refresh every 5 minutes instead of 30 seconds
 
       return () => clearInterval(interval)
     }

@@ -13,21 +13,24 @@ interface AccessGuardProps {
 export function AccessGuard({ feature, children, fallback }: AccessGuardProps) {
   const { canAccess, accessLevel, user, isLoading } = useSubscription()
 
-  console.log('AccessGuard debug:', {
-    feature,
-    canAccess: canAccess(feature),
-    accessLevel,
-    isLoading,
-    user: user ? { 
-      id: user.id, 
-      subscription_status: user.subscription_status, 
-      trial_ends_at: user.trial_ends_at,
-      subscription_ends_at: user.subscription_ends_at
-    } : null
-  })
+  // Only log debug info for important features to reduce console spam
+  if (feature === 'view_products' || feature === 'add_products') {
+    console.log('AccessGuard debug:', {
+      feature,
+      canAccess: canAccess(feature),
+      accessLevel,
+      isLoading,
+      user: user ? { 
+        id: user.id, 
+        subscription_status: user.subscription_status, 
+        trial_ends_at: user.trial_ends_at,
+        subscription_ends_at: user.subscription_ends_at
+      } : null
+    })
+  }
 
-  // Show loading state while subscription is being fetched
-  if (isLoading) {
+  // Show loading state only for a short time to prevent choppy experience
+  if (isLoading && !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">

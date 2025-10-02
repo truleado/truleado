@@ -8,8 +8,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Product information is required' }, { status: 400 })
     }
 
-    // Find relevant subreddits based on product analysis
-    const subreddits = await findRelevantSubreddits({
+    // Find relevant subreddits based on product analysis (fast version)
+    const subreddits = getDefaultSubreddits({
       name,
       description,
       features,
@@ -117,41 +117,110 @@ Return ONLY a valid JSON array of subreddit names (without r/ prefix). Example: 
 }
 
 function getDefaultSubreddits(productInfo: any): string[] {
-  // Default subreddits based on common SaaS categories
-  const defaultSubreddits = [
-    'entrepreneur',
-    'smallbusiness',
-    'startups',
-    'saas',
-    'business',
-    'productivity',
-    'marketing',
-    'webdev'
-  ]
+  const text = `${productInfo.name} ${productInfo.description} ${productInfo.features?.join(' ') || ''} ${productInfo.painPoints?.join(' ') || ''} ${productInfo.idealCustomerProfile || ''}`.toLowerCase()
+  
+  let subreddits: string[] = []
 
-  // Add more specific subreddits based on keywords
-  const text = `${productInfo.name} ${productInfo.description} ${productInfo.features.join(' ')} ${productInfo.benefits.join(' ')}`.toLowerCase()
-
-  if (text.includes('marketing') || text.includes('social media')) {
-    defaultSubreddits.push('marketing', 'socialmedia')
+  // Proposal/Sales tools - Target sales professionals and agencies (check first for highest specificity)
+  if (text.includes('proposal')) {
+    subreddits = [
+      'sales',              // Sales professionals struggling with proposals
+      'freelance',          // Freelancers creating proposals for clients
+      'consulting',         // Consultants needing professional proposals
+      'entrepreneur',       // Business owners closing deals
+      'smallbusiness',      // Small businesses improving sales processes
+      'marketing',          // Marketing agencies creating client proposals
+      'webdev',             // Web developers/agencies pitching projects
+      'digitalnomad'        // Remote professionals winning clients
+    ]
   }
   
-  if (text.includes('design') || text.includes('ui') || text.includes('ux')) {
-    defaultSubreddits.push('design', 'uxdesign')
+  // Analytics/Data tools - Target data-driven businesses
+  else if (text.includes('mixpanel') || text.includes('amplitude') || text.includes('segment') || text.includes('tableau') || (text.includes('analytics') && !text.includes('proposal')) || (text.includes('data') && (text.includes('insight') || text.includes('metric') || text.includes('dashboard')))) {
+    subreddits = [
+      'analytics',          // Analytics professionals seeking better tools
+      'entrepreneur',       // Entrepreneurs needing business insights
+      'smallbusiness',      // Small businesses tracking performance
+      'marketing',          // Marketers measuring campaign ROI
+      'saas',               // SaaS companies tracking metrics
+      'startups',           // Startups making data-driven decisions
+      'ecommerce',          // E-commerce businesses analyzing sales
+      'webdev'              // Developers implementing analytics
+    ]
   }
   
-  if (text.includes('development') || text.includes('coding') || text.includes('programming')) {
-    defaultSubreddits.push('programming', 'webdev')
+  
+  // Payment/Finance tools - Target specific financial pain points
+  else if (text.includes('payment') || text.includes('stripe') || text.includes('billing') || text.includes('subscription') || text.includes('checkout')) {
+    subreddits = [
+      'ecommerce',           // E-commerce store owners dealing with payments
+      'shopify',             // Shopify merchants with payment issues
+      'entrepreneur',        // Entrepreneurs struggling with payment setup
+      'saas',               // SaaS founders dealing with subscription billing
+      'smallbusiness',      // Small businesses needing payment solutions
+      'webdev',             // Developers implementing payment systems
+      'startups',           // Startups setting up payment infrastructure
+      'digitalnomad'        // Online business owners needing global payments
+    ]
   }
   
-  if (text.includes('finance') || text.includes('accounting') || text.includes('money')) {
-    defaultSubreddits.push('personalfinance', 'investing')
+  // CRM/Marketing tools - Target marketing and sales teams
+  else if (text.includes('crm') || (text.includes('marketing') && text.includes('lead')) || text.includes('pipeline')) {
+    subreddits = [
+      'marketing',          // Marketing professionals managing campaigns
+      'sales',              // Sales teams tracking leads and customers
+      'entrepreneur',       // Entrepreneurs building customer relationships
+      'smallbusiness',      // Small businesses organizing customer data
+      'b2bsales',           // B2B sales professionals using CRM
+      'startups',           // Startups setting up sales processes
+      'digitalmarketing',   // Digital marketers tracking attribution
+      'saas'                // SaaS companies optimizing sales funnels
+    ]
   }
   
-  if (text.includes('health') || text.includes('fitness') || text.includes('wellness')) {
-    defaultSubreddits.push('fitness', 'health')
+  // Design/Creative tools - Target designers and product teams
+  else if (text.includes('design') || text.includes('figma') || text.includes('ui') || text.includes('ux') || text.includes('prototype')) {
+    subreddits = [
+      'userexperience',     // UX designers improving workflows
+      'web_design',         // Web designers collaborating on projects
+      'graphic_design',     // Graphic designers managing projects
+      'startups',           // Startups building product design teams
+      'webdev',             // Developers working with designers
+      'entrepreneur',       // Entrepreneurs needing design solutions
+      'productivity',       // Teams optimizing design workflows
+      'freelance'           // Freelance designers managing clients
+    ]
+  }
+  
+  
+  // Project Management tools - Target project managers and teams
+  else if (text.includes('project') || text.includes('task') || text.includes('team') || text.includes('collaboration') || text.includes('workflow')) {
+    subreddits = [
+      'projectmanagement',  // Project managers optimizing workflows
+      'entrepreneur',       // Entrepreneurs managing multiple projects
+      'startups',           // Startups coordinating team efforts
+      'smallbusiness',      // Small businesses organizing projects
+      'webdev',             // Development teams managing sprints
+      'freelance',          // Freelancers juggling client projects
+      'productivity',       // Teams improving collaboration
+      'consulting'          // Consultants managing client work
+    ]
+  }
+  
+  // Default business automation tools
+  else {
+    subreddits = [
+      'entrepreneur',       // Entrepreneurs automating operations
+      'smallbusiness',      // Small businesses streamlining processes
+      'productivity',       // Teams eliminating manual work
+      'startups',           // Startups scaling operations
+      'business',           // Business owners optimizing workflows
+      'saas',               // SaaS companies improving efficiency
+      'freelance',          // Freelancers automating admin tasks
+      'digitalnomad'        // Remote workers optimizing processes
+    ]
   }
 
   // Remove duplicates and return unique subreddits
-  return [...new Set(defaultSubreddits)].slice(0, 8)
+  return [...new Set(subreddits)].slice(0, 8)
 }

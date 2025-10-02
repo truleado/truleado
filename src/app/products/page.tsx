@@ -61,7 +61,6 @@ function ProductsContent() {
   const [isFindingSubreddits, setIsFindingSubreddits] = useState(false)
   const [isAddingProduct, setIsAddingProduct] = useState(false)
   const [isUpdatingProduct, setIsUpdatingProduct] = useState(false)
-  const [addProductProgress, setAddProductProgress] = useState(0)
   
   // Modal states
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
@@ -234,19 +233,8 @@ function ProductsContent() {
     }
 
     setIsAddingProduct(true)
-    setAddProductProgress(0)
 
     try {
-      // Simulate progress updates
-      const progressInterval = setInterval(() => {
-        setAddProductProgress(prev => {
-          if (prev >= 90) return prev
-          const increment = Math.random() * 15
-          const newProgress = prev + increment
-          return Math.min(newProgress, 90) // Cap at 90% until completion
-        })
-      }, 200)
-
       const response = await fetch('/api/products', {
         method: 'POST',
         headers: {
@@ -254,9 +242,6 @@ function ProductsContent() {
         },
         body: JSON.stringify(newProduct),
       })
-
-      clearInterval(progressInterval)
-      setAddProductProgress(100)
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
@@ -319,7 +304,6 @@ function ProductsContent() {
       setShowErrorModal(true)
     } finally {
       setIsAddingProduct(false)
-      setAddProductProgress(0)
     }
   }
 
@@ -1048,15 +1032,29 @@ function ProductsContent() {
                     {/* Progress Bar */}
                     {isAddingProduct && (
                       <div className="mt-6">
-                        <div className="flex items-center justify-between text-lg font-semibold text-gray-700 mb-3">
+                        <div className="flex items-center justify-center text-lg font-semibold text-gray-700">
                           <span>Adding product...</span>
-                          <span>{Math.round(addProductProgress)}%</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div 
-                            className="bg-gradient-to-r from-blue-600 to-indigo-600 h-3 rounded-full transition-all duration-300 ease-out"
-                            style={{ width: `${addProductProgress}%` }}
-                          ></div>
+                      </div>
+                    )}
+
+                    {/* Warning message when subreddits are not generated after analysis */}
+                    {newProduct.name && newProduct.description && newProduct.subreddits.length === 0 && (
+                      <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                        <div className="flex items-start">
+                          <div className="flex-shrink-0">
+                            <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <div className="ml-3">
+                            <h3 className="text-sm font-medium text-amber-800">
+                              Subreddits Required
+                            </h3>
+                            <div className="mt-2 text-sm text-amber-700">
+                              <p>Please generate subreddits first by clicking "Find Subreddits" button. This helps us identify the best Reddit communities for your product.</p>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -1064,7 +1062,7 @@ function ProductsContent() {
                     <div className="mt-8 flex flex-col sm:flex-row gap-4">
                       <button
                         type="submit"
-                        disabled={isAddingProduct}
+                        disabled={isAddingProduct || (newProduct.name && newProduct.description && newProduct.subreddits.length === 0)}
                         className="flex-1 inline-flex justify-center items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
                       >
                         {isAddingProduct ? (

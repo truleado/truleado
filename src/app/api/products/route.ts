@@ -110,39 +110,9 @@ export async function POST(request: NextRequest) {
     
     console.log('Product created successfully:', data)
 
-    // Check if Reddit account is connected before starting lead discovery
+    // Skip lead discovery for now to make product creation faster
+    // Lead discovery can be started manually from the dashboard
     let leadDiscoveryStarted = false
-    try {
-      const { createClient } = await import('@supabase/supabase-js')
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      )
-
-      const { data: apiKeys, error: apiKeysError } = await supabase
-        .from('api_keys')
-        .select('reddit_access_token')
-        .eq('user_id', user.id)
-        .single()
-
-      console.log(`Reddit connection check for user ${user.id}:`, { apiKeys, apiKeysError })
-
-      if (apiKeysError || !apiKeys?.reddit_access_token) {
-        console.log(`Reddit account not connected for user ${user.id}. Lead discovery will start after Reddit connection.`)
-        leadDiscoveryStarted = false
-      } else {
-        // Automatically start lead discovery for the new product
-        const { getJobScheduler } = await import('@/lib/job-scheduler')
-        const jobScheduler = getJobScheduler()
-        await jobScheduler.createJob(user.id, data.id, 'reddit_monitoring', 60)
-        console.log(`Auto-started lead discovery for product: ${data.name}`)
-        leadDiscoveryStarted = true
-      }
-    } catch (jobError) {
-      console.error('Failed to auto-start lead discovery:', jobError)
-      leadDiscoveryStarted = false
-      // Don't fail the product creation if job creation fails
-    }
 
     return NextResponse.json({ 
       success: true, 
