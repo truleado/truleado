@@ -3,12 +3,16 @@ import { createClient } from '@/lib/supabase-server'
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('Leads API called')
     const supabase = await createClient()
     
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
+    console.log('Auth check:', { hasUser: !!user, authError: authError?.message })
+    
     if (authError || !user) {
+      console.log('Unauthorized access to leads API')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

@@ -128,7 +128,13 @@ function LeadsContent() {
   const fetchLeads = async () => {
     try {
       console.log('Fetching leads...')
-      const response = await fetch('/api/leads')
+      const response = await fetch('/api/leads', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include cookies for authentication
+      })
       console.log('Leads API response status:', response.status)
       
       if (response.ok) {
