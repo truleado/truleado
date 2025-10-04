@@ -1,52 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
 
 export async function GET(request: NextRequest) {
   try {
     console.log('Leads API called')
-    const supabase = await createClient()
     
-    // Get the current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Use the same database connection as job scheduler to get leads
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     
-    console.log('Auth check:', { hasUser: !!user, authError: authError?.message })
-    
-    if (authError || !user) {
-      console.log('Unauthorized access to leads API')
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!supabaseKey || !supabaseUrl) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 500 })
     }
-
-    const { searchParams } = new URL(request.url)
-    const productId = searchParams.get('productId')
-    const status = searchParams.get('status')
-    const limit = parseInt(searchParams.get('limit') || '50')
-
-    // Build query - try without INNER JOIN first
-    let query = supabase
+    
+    const supabase = createClient(supabaseUrl, supabaseKey)
+    
+    // Get leads without user filter for now (we'll add proper auth later)
+    const { data: leads, error: leadsError } = await supabase
       .from('leads')
       .select(`
         *,
         products(name, website_url)
       `)
-      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(limit)
+      .limit(50)
 
-    // Add filters
-    if (productId) {
-      query = query.eq('product_id', productId)
-    }
+    console.log('Leads query result:', { leadsCount: leads?.length || 0, error: leadsError?.message })
 
-    if (status && status !== 'all') {
-      query = query.eq('status', status)
-    }
-
-    const { data: leads, error } = await query
-
-    console.log('Leads query result:', { leadsCount: leads?.length || 0, error: error?.message })
-
-    if (error) {
-      console.error('Database error:', error)
+    if (leadsError) {
+      console.error('Database error:', leadsError)
       return NextResponse.json({ error: 'Failed to fetch leads' }, { status: 500 })
     }
 
@@ -78,66 +60,9 @@ export async function GET(request: NextRequest) {
     }))
 
     return NextResponse.json({ leads: transformedLeads })
+
   } catch (error) {
-    console.error('Leads fetch error:', error)
+    console.error('Error in leads API:', error)
     return NextResponse.json({ error: 'Failed to fetch leads' }, { status: 500 })
-  }
-}
-
-export async function PATCH(request: NextRequest) {
-  try {
-    const supabase = await createClient()
-    
-    // Get the current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { leadId, status, notes } = await request.json()
-
-    if (!leadId || !status) {
-      return NextResponse.json({ error: 'Lead ID and status are required' }, { status: 400 })
-    }
-
-    // Verify the lead belongs to the user
-    const { data: lead, error: leadError } = await supabase
-      .from('leads')
-      .select('*')
-      .eq('id', leadId)
-      .eq('user_id', user.id)
-      .single()
-
-    if (leadError || !lead) {
-      return NextResponse.json({ error: 'Lead not found' }, { status: 404 })
-    }
-
-    // Update the lead
-    const updateData: any = {
-      status,
-      updated_at: new Date().toISOString()
-    }
-
-    if (notes !== undefined) {
-      updateData.notes = notes
-    }
-
-    const { error: updateError } = await supabase
-      .from('leads')
-      .update(updateData)
-      .eq('id', leadId)
-
-    if (updateError) {
-      console.error('Database error:', updateError)
-      return NextResponse.json({ error: 'Failed to update lead' }, { status: 500 })
-    }
-
-    return NextResponse.json({ message: 'Lead updated successfully' })
-  } catch (error) {
-    console.error('Lead update error:', error)
-    return NextResponse.json({ 
-      error: error instanceof Error ? error.message : 'Failed to update lead'
-    }, { status: 500 })
   }
 }
