@@ -284,8 +284,8 @@ export class JobScheduler {
                 const relevanceScore = await this.calculateRelevanceScore(post, product)
                 console.log(`Post "${post.title}" - Relevance score: ${relevanceScore}`)
                 
-                // Only save leads with score >= 5 (lowered threshold for testing)
-                if (relevanceScore >= 5) {
+                // Only save leads with score >= 10 (higher threshold for better relevance)
+                if (relevanceScore >= 10) {
                   await this.saveLead(job.user_id, product.id, post, relevanceScore, 'post')
                   totalLeadsFound++
                   console.log(`Saved post lead: ${post.title} (Score: ${relevanceScore})`)
