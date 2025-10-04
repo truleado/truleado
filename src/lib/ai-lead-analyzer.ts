@@ -1,4 +1,5 @@
 import OpenAI from 'openai'
+import { ErrorHandler } from './error-handler'
 
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -44,6 +45,7 @@ export class AILeadAnalyzer {
           console.log('Analyzing lead with Gemini...')
           return await this.analyzeWithGemini(lead, product)
         } catch (error) {
+          ErrorHandler.handleAiError(error, 'Gemini')
           console.error('Gemini lead analysis failed, trying OpenAI:', error)
           // Continue to OpenAI fallback
         }
@@ -54,6 +56,7 @@ export class AILeadAnalyzer {
           console.log('Analyzing lead with OpenAI...')
           return await this.analyzeWithOpenAI(lead, product)
         } catch (error) {
+          ErrorHandler.handleAiError(error, 'OpenAI')
           console.error('OpenAI lead analysis failed:', error)
           // Continue to fallback analysis
         }
@@ -162,7 +165,7 @@ export class AILeadAnalyzer {
       }
       
     } catch (error) {
-      console.error('Gemini lead analysis error:', error)
+      ErrorHandler.handleAiError(error, 'Gemini')
       throw error
     }
   }
