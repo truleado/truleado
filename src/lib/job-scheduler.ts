@@ -284,8 +284,8 @@ export class JobScheduler {
                 const relevanceScore = await this.calculateRelevanceScore(post, product)
                 console.log(`Post "${post.title}" - Relevance score: ${relevanceScore}`)
                 
-                // Only save leads with score >= 10 (higher threshold for better quality)
-                if (relevanceScore >= 10) {
+                // Only save leads with score >= 5 (lowered threshold for testing)
+                if (relevanceScore >= 5) {
                   await this.saveLead(job.user_id, product.id, post, relevanceScore, 'post')
                   totalLeadsFound++
                   console.log(`Saved post lead: ${post.title} (Score: ${relevanceScore})`)
@@ -774,8 +774,8 @@ export class JobScheduler {
 
         const commentScore = await this.calculateCommentRelevanceScore(comment, product)
         
-        // Only save comment leads with score >= 8 (higher threshold for better quality)
-        if (commentScore >= 8) {
+        // Only save comment leads with score >= 4 (lowered threshold for testing)
+        if (commentScore >= 4) {
           await this.saveLead(userId, product.id, post, commentScore, 'comment', comment)
           commentLeadsFound++
           console.log(`Saved comment lead: "${comment.body.substring(0, 50)}..." - Score: ${commentScore}`)
