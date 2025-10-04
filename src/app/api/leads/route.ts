@@ -15,15 +15,35 @@ export async function GET(request: NextRequest) {
     
     const supabase = createClient(supabaseUrl, supabaseKey)
     
-    // Get leads without user filter for now (we'll add proper auth later)
-    const { data: leads, error: leadsError } = await supabase
+    // Get query parameters for filtering
+    const { searchParams } = new URL(request.url)
+    const productId = searchParams.get('productId')
+    const status = searchParams.get('status')
+    const limit = parseInt(searchParams.get('limit') || '50')
+    
+    console.log('Leads API filters:', { productId, status, limit })
+    
+    // Build query with filters
+    let query = supabase
       .from('leads')
       .select(`
         *,
-        products(name, website_url)
+        products(name, website_url, subreddits)
       `)
       .order('created_at', { ascending: false })
-      .limit(50)
+      .limit(limit)
+    
+    // Add product filter if specified
+    if (productId && productId !== 'all') {
+      query = query.eq('product_id', productId)
+    }
+    
+    // Add status filter if specified
+    if (status && status !== 'all') {
+      query = query.eq('status', status)
+    }
+    
+    const { data: leads, error: leadsError } = await query
 
     console.log('Leads query result:', { leadsCount: leads?.length || 0, error: leadsError?.message })
 

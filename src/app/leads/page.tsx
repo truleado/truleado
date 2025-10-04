@@ -112,6 +112,15 @@ function LeadsContent() {
     }
   }, [user, redditConnectionChecked])
 
+  // Auto-select first product when products are loaded
+  useEffect(() => {
+    if (products.length > 0 && !selectedProduct) {
+      console.log('Auto-selecting first product:', products[0].name)
+      setSelectedProduct(products[0])
+      fetchLeads(products[0].id)
+    }
+  }, [products, selectedProduct])
+
   const checkRedditConnection = async () => {
     try {
       const response = await fetch('/api/auth/reddit/status')
@@ -126,10 +135,11 @@ function LeadsContent() {
     }
   }
 
-  const fetchLeads = async () => {
+  const fetchLeads = async (productId?: string) => {
     try {
-      console.log('Fetching leads...')
-      const response = await fetch('/api/leads', {
+      console.log('Fetching leads for product:', productId || 'all')
+      const url = productId ? `/api/leads?productId=${productId}` : '/api/leads'
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -433,6 +443,29 @@ function LeadsContent() {
               </div>
             ) : (
               <div className="space-y-4">
+                {/* Show All Products Option */}
+                <div 
+                  className={`border-2 rounded-2xl p-6 cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                    !selectedProduct 
+                      ? 'border-green-500 bg-green-50' 
+                      : 'border-gray-200 hover:border-gray-300 bg-white'
+                  }`}
+                  onClick={() => {
+                    setSelectedProduct(null)
+                    fetchLeads()
+                  }}
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Package className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">All Products</h3>
+                      <p className="text-gray-600">View leads from all products</p>
+                    </div>
+                  </div>
+                </div>
+                
                 {products.map((product) => (
                   <div 
                     key={product.id} 
@@ -441,7 +474,10 @@ function LeadsContent() {
                         ? 'border-blue-500 bg-blue-50' 
                         : 'border-gray-200 hover:border-gray-300 bg-white'
                     }`}
-                    onClick={() => setSelectedProduct(product)}
+                    onClick={() => {
+                      setSelectedProduct(product)
+                      fetchLeads(product.id)
+                    }}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4 flex-1 min-w-0">
