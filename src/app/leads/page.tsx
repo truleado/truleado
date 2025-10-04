@@ -102,6 +102,7 @@ function LeadsContent() {
   }, [user, loading, router])
 
   useEffect(() => {
+    console.log('User effect triggered:', { user: !!user, userId: user?.id, email: user?.email })
     if (user) {
       fetchProducts()
       fetchLeads()
