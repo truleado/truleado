@@ -201,6 +201,14 @@ export default function PromotePage() {
         setGeneratedPosts(prev => {
           const updatedPosts = [...prev, ...savedPosts]
           setMaxPostsReached(updatedPosts.length >= 50)
+          
+          // Save to localStorage as backup
+          try {
+            localStorage.setItem('truleado-generated-posts', JSON.stringify(updatedPosts))
+          } catch (error) {
+            console.warn('Failed to save posts to localStorage:', error)
+          }
+          
           return updatedPosts
         })
       } else {
@@ -235,6 +243,14 @@ export default function PromotePage() {
     setGeneratedPosts(prev => {
       const newPosts = prev.filter((_, index) => index !== postIndex)
       setMaxPostsReached(newPosts.length >= 50)
+      
+      // Update localStorage
+      try {
+        localStorage.setItem('truleado-generated-posts', JSON.stringify(newPosts))
+      } catch (error) {
+        console.warn('Failed to update localStorage:', error)
+      }
+      
       return newPosts
     })
   }
@@ -277,11 +293,20 @@ export default function PromotePage() {
     const postToUpdate = generatedPosts[postIndex]
     
     // Update UI immediately
-    setGeneratedPosts(prev => 
-      prev.map((post, index) => 
+    setGeneratedPosts(prev => {
+      const updatedPosts = prev.map((post, index) => 
         index === postIndex ? { ...post, [field]: value } : post
       )
-    )
+      
+      // Update localStorage
+      try {
+        localStorage.setItem('truleado-generated-posts', JSON.stringify(updatedPosts))
+      } catch (error) {
+        console.warn('Failed to update localStorage:', error)
+      }
+      
+      return updatedPosts
+    })
     setEditingPost(null)
     
     // If the post has a real ID (not temp), save to database
@@ -390,7 +415,7 @@ export default function PromotePage() {
                     onChange={(e) => {
                       const product = products.find(p => p.id === e.target.value)
                       setSelectedProduct(product || null)
-                      setGeneratedPosts([])
+                      // Don't clear generated posts when switching products - they should persist
                     }}
                     className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base bg-white shadow-sm hover:shadow-md transition-all duration-200"
                   >
