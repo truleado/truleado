@@ -603,7 +603,7 @@ function LeadsContent() {
               </h3>
               <p className="text-gray-600 mb-8 max-w-md mx-auto">
                 {leads.length === 0 
-                  ? 'Start searching for leads by selecting a product above and clicking "Start".'
+                  ? 'No leads found yet. Lead discovery runs automatically for your products.'
                   : 'Try adjusting your search or filter criteria.'
                 }
               </p>
