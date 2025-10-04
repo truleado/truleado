@@ -284,8 +284,8 @@ export class JobScheduler {
                 const relevanceScore = await this.calculateRelevanceScore(post, product)
                 console.log(`Post "${post.title}" - Relevance score: ${relevanceScore}`)
                 
-                // Only save leads with score >= 7 (slightly lower threshold for more leads)
-                if (relevanceScore >= 7) {
+                // Only save leads with score >= 10 (higher threshold for better quality)
+                if (relevanceScore >= 10) {
                   await this.saveLead(job.user_id, product.id, post, relevanceScore, 'post')
                   totalLeadsFound++
                   console.log(`Saved post lead: ${post.title} (Score: ${relevanceScore})`)
@@ -370,140 +370,380 @@ export class JobScheduler {
     const allPosts = new Map<string, any>()
     
     try {
-      // Strategy 1: Search with product name
+      // Strategy 1: Search with product name (exact and variations)
       if (product.name) {
-        const namePosts = await redditClient.searchPosts({
-          subreddit: subreddit,
-          query: product.name,
-          sort: 'relevance',
-          time: 'year',
-          limit: 50
-        })
-        namePosts.forEach((post: any) => allPosts.set(post.id, post))
+        const nameVariations = [
+          product.name,
+          `"${product.name}"`,
+          product.name.toLowerCase(),
+          product.name.split(' ')[0] // First word only
+        ]
+        
+        for (const nameQuery of nameVariations) {
+          try {
+            const namePosts = await redditClient.searchPosts({
+              subreddit: subreddit,
+              query: nameQuery,
+              sort: 'relevance',
+              time: 'year',
+              limit: 30
+            })
+            namePosts.forEach((post: any) => allPosts.set(post.id, post))
+          } catch (error) {
+            console.log(`Name search failed for "${nameQuery}":`, error.message)
+          }
+        }
       }
       
-      // Strategy 2: Search with key features
-      if (product.features && product.features.length > 0) {
-        const featurePosts = await redditClient.searchPosts({
-          subreddit: subreddit,
-          query: product.features.slice(0, 3).join(' OR '),
-          sort: 'relevance',
-          time: 'year',
-          limit: 50
-        })
-        featurePosts.forEach((post: any) => allPosts.set(post.id, post))
-      }
-      
-      // Strategy 3: Search with pain points
+      // Strategy 2: Search with pain points (most important for lead quality)
       if (product.pain_points && product.pain_points.length > 0) {
-        const painPointPosts = await redditClient.searchPosts({
-          subreddit: subreddit,
-          query: product.pain_points.slice(0, 3).join(' OR '),
-          sort: 'relevance',
-          time: 'year',
-          limit: 50
-        })
-        painPointPosts.forEach((post: any) => allPosts.set(post.id, post))
+        const painPointQueries = [
+          product.pain_points.slice(0, 2).join(' OR '),
+          product.pain_points.slice(0, 3).map(p => `"${p}"`).join(' OR '),
+          product.pain_points[0] + ' problem',
+          product.pain_points[0] + ' issue',
+          'struggling with ' + product.pain_points[0]
+        ]
+        
+        for (const painQuery of painPointQueries) {
+          try {
+            const painPosts = await redditClient.searchPosts({
+              subreddit: subreddit,
+              query: painQuery,
+              sort: 'relevance',
+              time: 'year',
+              limit: 30
+            })
+            painPosts.forEach((post: any) => allPosts.set(post.id, post))
+          } catch (error) {
+            console.log(`Pain point search failed for "${painQuery}":`, error.message)
+          }
+        }
       }
       
-      // Strategy 4: Get recent hot posts for broader coverage
-      const recentPosts = await redditClient.getRecentPosts(subreddit, 100)
-      recentPosts.forEach((post: any) => allPosts.set(post.id, post))
+      // Strategy 3: Search with buying intent keywords
+      const buyingIntentQueries = [
+        'looking for ' + product.name,
+        'need ' + product.name,
+        'recommend ' + product.name,
+        'best ' + product.name,
+        'alternative to ' + product.name,
+        'replacing ' + product.name
+      ]
+      
+      for (const intentQuery of buyingIntentQueries) {
+        try {
+          const intentPosts = await redditClient.searchPosts({
+            subreddit: subreddit,
+            query: intentQuery,
+            sort: 'relevance',
+            time: 'year',
+            limit: 25
+          })
+          intentPosts.forEach((post: any) => allPosts.set(post.id, post))
+        } catch (error) {
+          console.log(`Intent search failed for "${intentQuery}":`, error.message)
+        }
+      }
+      
+      // Strategy 4: Search with key features (more targeted)
+      if (product.features && product.features.length > 0) {
+        const featureQueries = product.features.slice(0, 3).map(feature => [
+          feature,
+          `"${feature}"`,
+          feature + ' tool',
+          feature + ' solution'
+        ]).flat()
+        
+        for (const featureQuery of featureQueries) {
+          try {
+            const featurePosts = await redditClient.searchPosts({
+              subreddit: subreddit,
+              query: featureQuery,
+              sort: 'relevance',
+              time: 'year',
+              limit: 25
+            })
+            featurePosts.forEach((post: any) => allPosts.set(post.id, post))
+          } catch (error) {
+            console.log(`Feature search failed for "${featureQuery}":`, error.message)
+          }
+        }
+      }
+      
+      // Strategy 5: Search with benefits
+      if (product.benefits && product.benefits.length > 0) {
+        const benefitQueries = product.benefits.slice(0, 2).map(benefit => [
+          benefit,
+          `"${benefit}"`,
+          'achieve ' + benefit,
+          'get ' + benefit
+        ]).flat()
+        
+        for (const benefitQuery of benefitQueries) {
+          try {
+            const benefitPosts = await redditClient.searchPosts({
+              subreddit: subreddit,
+              query: benefitQuery,
+              sort: 'relevance',
+              time: 'year',
+              limit: 20
+            })
+            benefitPosts.forEach((post: any) => allPosts.set(post.id, post))
+          } catch (error) {
+            console.log(`Benefit search failed for "${benefitQuery}":`, error.message)
+          }
+        }
+      }
+      
+      // Strategy 6: Search for questions and help requests
+      const questionQueries = [
+        'how to ' + product.name,
+        'what is ' + product.name,
+        'best way to ' + product.name,
+        'help with ' + product.name,
+        'anyone know ' + product.name
+      ]
+      
+      for (const questionQuery of questionQueries) {
+        try {
+          const questionPosts = await redditClient.searchPosts({
+            subreddit: subreddit,
+            query: questionQuery,
+            sort: 'relevance',
+            time: 'year',
+            limit: 20
+          })
+          questionPosts.forEach((post: any) => allPosts.set(post.id, post))
+        } catch (error) {
+          console.log(`Question search failed for "${questionQuery}":`, error.message)
+        }
+      }
+      
+      // Strategy 7: Get recent hot posts for broader coverage (reduced limit)
+      try {
+        const recentPosts = await redditClient.getRecentPosts(subreddit, 50)
+        recentPosts.forEach((post: any) => allPosts.set(post.id, post))
+      } catch (error) {
+        console.log(`Recent posts search failed:`, error.message)
+      }
+      
+      // Strategy 8: Get top posts from the past week
+      try {
+        const topPosts = await redditClient.searchPosts({
+          subreddit: subreddit,
+          query: '*',
+          sort: 'top',
+          time: 'week',
+          limit: 30
+        })
+        topPosts.forEach((post: any) => allPosts.set(post.id, post))
+      } catch (error) {
+        console.log(`Top posts search failed:`, error.message)
+      }
       
       return Array.from(allPosts.values())
     } catch (error) {
       console.error(`Advanced search error for r/${subreddit}:`, error)
       // Fallback to recent posts only
-      return await redditClient.getRecentPosts(subreddit, 100)
+      try {
+        return await redditClient.getRecentPosts(subreddit, 50)
+      } catch (fallbackError) {
+        console.error(`Fallback search also failed:`, fallbackError)
+        return []
+      }
     }
   }
 
   // Calculate relevance score for a post
   private async calculateRelevanceScore(post: any, product: Product): Promise<number> {
     let score = 0
+    let qualityMultiplier = 1.0
     
     const postText = `${post.title} ${post.selftext}`.toLowerCase()
     const productName = product.name.toLowerCase()
     
     // Direct product mention (highest priority)
     if (postText.includes(productName)) {
-      score += 15
+      score += 20
+      qualityMultiplier += 0.5
     }
     
-    // Exact feature matches (higher weight)
-    for (const feature of product.features) {
-      const featureLower = feature.toLowerCase()
-      if (postText.includes(featureLower)) {
-        score += 4
-        // Bonus for exact phrase matches
-        if (postText.includes(`"${featureLower}"`) || postText.includes(`'${featureLower}'`)) {
-          score += 2
-        }
-      }
-    }
-    
-    // Pain point mentions (high weight - these are buying signals)
+    // Enhanced pain point analysis with context
     for (const painPoint of product.pain_points) {
       const painPointLower = painPoint.toLowerCase()
       if (postText.includes(painPointLower)) {
-        score += 5
+        score += 8
         // Bonus for struggling/need context
-        if (postText.includes('struggling') || postText.includes('problem') || postText.includes('issue')) {
-          score += 2
+        if (postText.includes('struggling') || postText.includes('problem') || postText.includes('issue') || postText.includes('frustrated')) {
+          score += 4
+          qualityMultiplier += 0.3
+        }
+        // Bonus for urgency indicators
+        if (postText.includes('urgent') || postText.includes('asap') || postText.includes('immediately') || postText.includes('deadline')) {
+          score += 3
         }
       }
     }
     
-    // Benefit mentions
-    for (const benefit of product.benefits) {
-      if (postText.includes(benefit.toLowerCase())) {
+    // Enhanced feature matching with partial matches
+    for (const feature of product.features) {
+      const featureLower = feature.toLowerCase()
+      const featureWords = featureLower.split(' ')
+      
+      // Exact match
+      if (postText.includes(featureLower)) {
+        score += 6
+        // Bonus for exact phrase matches
+        if (postText.includes(`"${featureLower}"`) || postText.includes(`'${featureLower}'`)) {
+          score += 3
+        }
+      }
+      // Partial word matches (more flexible)
+      else if (featureWords.some(word => word.length > 3 && postText.includes(word))) {
         score += 3
       }
     }
     
-    // Strong buying intent signals
-    const strongIntentTerms = ['looking for', 'need', 'want', 'recommend', 'suggest', 'help with', 'struggling', 'best way to', 'how to', 'anyone know', 'suggestions', 'alternatives']
+    // Enhanced benefit matching
+    for (const benefit of product.benefits) {
+      const benefitLower = benefit.toLowerCase()
+      if (postText.includes(benefitLower)) {
+        score += 5
+      } else {
+        // Partial benefit matching
+        const benefitWords = benefitLower.split(' ')
+        if (benefitWords.some(word => word.length > 3 && postText.includes(word))) {
+          score += 2
+        }
+      }
+    }
+    
+    // Enhanced buying intent signals with context
+    const strongIntentTerms = [
+      'looking for', 'need', 'want', 'recommend', 'suggest', 'help with', 
+      'struggling', 'best way to', 'how to', 'anyone know', 'suggestions', 
+      'alternatives', 'trying to', 'attempting to', 'working on'
+    ]
+    
+    let intentScore = 0
     for (const term of strongIntentTerms) {
       if (postText.includes(term)) {
-        score += 2
+        intentScore += 2
       }
     }
     
-    // Question indicators (people asking for help)
-    if (postText.includes('?') && (postText.includes('how') || postText.includes('what') || postText.includes('where') || postText.includes('which'))) {
-      score += 2
+    // Bonus for multiple intent signals
+    if (intentScore > 4) {
+      score += intentScore + 2
+      qualityMultiplier += 0.2
+    } else {
+      score += intentScore
     }
     
-    // Budget/decision maker indicators
-    const decisionTerms = ['budget', 'cost', 'price', 'expensive', 'cheap', 'free', 'trial', 'demo', 'evaluate', 'compare']
+    // Enhanced question analysis
+    const questionWords = ['how', 'what', 'where', 'which', 'why', 'when']
+    const questionCount = questionWords.filter(word => postText.includes(word)).length
+    if (postText.includes('?') && questionCount > 0) {
+      score += 3 + questionCount
+      qualityMultiplier += 0.1
+    }
+    
+    // Budget/decision maker indicators with higher weights
+    const decisionTerms = ['budget', 'cost', 'price', 'expensive', 'cheap', 'free', 'trial', 'demo', 'evaluate', 'compare', 'pricing', 'investment']
+    let decisionScore = 0
     for (const term of decisionTerms) {
       if (postText.includes(term)) {
-        score += 1
+        decisionScore += 2
       }
     }
     
-    // Engagement and authority indicators
-    if (post.score > 20) score += 2
-    else if (post.score > 10) score += 1
+    if (decisionScore > 0) {
+      score += decisionScore
+      qualityMultiplier += 0.2
+    }
     
-    if (post.num_comments > 10) score += 2
-    else if (post.num_comments > 5) score += 1
+    // Company size and role indicators
+    const roleTerms = ['founder', 'ceo', 'cto', 'manager', 'director', 'owner', 'startup', 'company', 'business', 'team']
+    const roleMatches = roleTerms.filter(term => postText.includes(term)).length
+    if (roleMatches > 0) {
+      score += roleMatches * 2
+      qualityMultiplier += 0.1
+    }
     
-    // Recent activity bonus
+    // Technology stack indicators
+    const techTerms = ['api', 'database', 'cloud', 'saas', 'software', 'tool', 'platform', 'integration', 'automation']
+    const techMatches = techTerms.filter(term => postText.includes(term)).length
+    if (techMatches > 0) {
+      score += techMatches
+    }
+    
+    // Engagement and authority indicators (enhanced)
+    if (post.score > 50) {
+      score += 4
+      qualityMultiplier += 0.3
+    } else if (post.score > 20) {
+      score += 3
+      qualityMultiplier += 0.2
+    } else if (post.score > 10) {
+      score += 2
+    } else if (post.score > 5) {
+      score += 1
+    }
+    
+    if (post.num_comments > 20) {
+      score += 4
+      qualityMultiplier += 0.2
+    } else if (post.num_comments > 10) {
+      score += 3
+    } else if (post.num_comments > 5) {
+      score += 2
+    } else if (post.num_comments > 2) {
+      score += 1
+    }
+    
+    // Recent activity bonus (enhanced)
     const postAge = Date.now() / 1000 - post.created_utc
-    if (postAge < 24 * 3600) { // Within 24 hours
+    if (postAge < 6 * 3600) { // Within 6 hours
+      score += 4
+      qualityMultiplier += 0.3
+    } else if (postAge < 24 * 3600) { // Within 24 hours
+      score += 3
+      qualityMultiplier += 0.2
+    } else if (postAge < 3 * 24 * 3600) { // Within 3 days
       score += 2
     } else if (postAge < 7 * 24 * 3600) { // Within 7 days
       score += 1
     }
     
-    // Subreddit relevance bonus
-    const relevantSubreddits = ['entrepreneur', 'startups', 'smallbusiness', 'freelance', 'marketing', 'sales', 'business']
-    if (relevantSubreddits.some(sub => post.subreddit.toLowerCase().includes(sub))) {
-      score += 1
+    // Subreddit relevance bonus (enhanced)
+    const highValueSubreddits = ['entrepreneur', 'startups', 'smallbusiness', 'freelance', 'marketing', 'sales', 'business', 'saas', 'productivity']
+    const mediumValueSubreddits = ['technology', 'programming', 'webdev', 'digitalnomad', 'sideproject', 'indiehackers']
+    
+    if (highValueSubreddits.some(sub => post.subreddit.toLowerCase().includes(sub))) {
+      score += 3
+      qualityMultiplier += 0.2
+    } else if (mediumValueSubreddits.some(sub => post.subreddit.toLowerCase().includes(sub))) {
+      score += 2
     }
     
-    return Math.min(score, 20) // Increased cap for better granularity
+    // Sentiment analysis (basic)
+    const positiveWords = ['great', 'awesome', 'excellent', 'amazing', 'love', 'perfect', 'fantastic']
+    const negativeWords = ['terrible', 'awful', 'hate', 'worst', 'horrible', 'sucks', 'broken']
+    
+    const positiveCount = positiveWords.filter(word => postText.includes(word)).length
+    const negativeCount = negativeWords.filter(word => postText.includes(word)).length
+    
+    if (positiveCount > negativeCount) {
+      score += 2
+    } else if (negativeCount > positiveCount) {
+      score -= 1 // Slight penalty for negative sentiment
+    }
+    
+    // Apply quality multiplier
+    const finalScore = Math.round(score * qualityMultiplier)
+    
+    return Math.min(Math.max(finalScore, 0), 50) // Increased cap and minimum
   }
 
   // Search comments in a post for additional leads
@@ -534,8 +774,8 @@ export class JobScheduler {
 
         const commentScore = await this.calculateCommentRelevanceScore(comment, product)
         
-        // Only save comment leads with score >= 6 (higher threshold for better quality)
-        if (commentScore >= 6) {
+        // Only save comment leads with score >= 8 (higher threshold for better quality)
+        if (commentScore >= 8) {
           await this.saveLead(userId, product.id, post, commentScore, 'comment', comment)
           commentLeadsFound++
           console.log(`Saved comment lead: "${comment.body.substring(0, 50)}..." - Score: ${commentScore}`)
@@ -552,80 +792,156 @@ export class JobScheduler {
   // Calculate relevance score for a comment
   private async calculateCommentRelevanceScore(comment: any, product: Product): Promise<number> {
     let score = 0
+    let qualityMultiplier = 1.0
     
     const commentText = comment.body.toLowerCase()
     const productName = product.name.toLowerCase()
     
     // Direct product mention (highest priority)
     if (commentText.includes(productName)) {
-      score += 12
+      score += 15
+      qualityMultiplier += 0.4
     }
     
-    // Exact feature matches
-    for (const feature of product.features) {
-      const featureLower = feature.toLowerCase()
-      if (commentText.includes(featureLower)) {
-        score += 3
-        // Bonus for exact phrase matches
-        if (commentText.includes(`"${featureLower}"`) || commentText.includes(`'${featureLower}'`)) {
-          score += 2
-        }
-      }
-    }
-    
-    // Pain point mentions (high weight - these are buying signals)
+    // Enhanced pain point analysis
     for (const painPoint of product.pain_points) {
       const painPointLower = painPoint.toLowerCase()
       if (commentText.includes(painPointLower)) {
-        score += 4
+        score += 6
         // Bonus for struggling/need context
-        if (commentText.includes('struggling') || commentText.includes('problem') || commentText.includes('issue')) {
+        if (commentText.includes('struggling') || commentText.includes('problem') || commentText.includes('issue') || commentText.includes('frustrated')) {
+          score += 3
+          qualityMultiplier += 0.2
+        }
+        // Bonus for urgency
+        if (commentText.includes('urgent') || commentText.includes('asap') || commentText.includes('immediately')) {
           score += 2
         }
       }
     }
     
-    // Benefit mentions
-    for (const benefit of product.benefits) {
-      if (commentText.includes(benefit.toLowerCase())) {
+    // Enhanced feature matching
+    for (const feature of product.features) {
+      const featureLower = feature.toLowerCase()
+      const featureWords = featureLower.split(' ')
+      
+      if (commentText.includes(featureLower)) {
+        score += 4
+        if (commentText.includes(`"${featureLower}"`) || commentText.includes(`'${featureLower}'`)) {
+          score += 2
+        }
+      } else if (featureWords.some(word => word.length > 3 && commentText.includes(word))) {
         score += 2
       }
     }
     
-    // Strong buying intent signals
-    const strongIntentTerms = ['looking for', 'need', 'want', 'recommend', 'suggest', 'help with', 'struggling', 'anyone know', 'best way to', 'how to', 'suggestions', 'alternatives', 'tried', 'using', 'switching']
+    // Enhanced benefit matching
+    for (const benefit of product.benefits) {
+      const benefitLower = benefit.toLowerCase()
+      if (commentText.includes(benefitLower)) {
+        score += 3
+      } else {
+        const benefitWords = benefitLower.split(' ')
+        if (benefitWords.some(word => word.length > 3 && commentText.includes(word))) {
+          score += 1
+        }
+      }
+    }
+    
+    // Enhanced buying intent signals
+    const strongIntentTerms = [
+      'looking for', 'need', 'want', 'recommend', 'suggest', 'help with', 
+      'struggling', 'anyone know', 'best way to', 'how to', 'suggestions', 
+      'alternatives', 'tried', 'using', 'switching', 'trying to', 'attempting to'
+    ]
+    
+    let intentScore = 0
     for (const term of strongIntentTerms) {
       if (commentText.includes(term)) {
-        score += 2
+        intentScore += 2
       }
     }
     
-    // Question indicators (people asking for help)
-    if (commentText.includes('?') && (commentText.includes('how') || commentText.includes('what') || commentText.includes('where') || commentText.includes('which'))) {
-      score += 2
+    if (intentScore > 3) {
+      score += intentScore + 1
+      qualityMultiplier += 0.1
+    } else {
+      score += intentScore
+    }
+    
+    // Enhanced question analysis
+    const questionWords = ['how', 'what', 'where', 'which', 'why', 'when']
+    const questionCount = questionWords.filter(word => commentText.includes(word)).length
+    if (commentText.includes('?') && questionCount > 0) {
+      score += 2 + questionCount
+      qualityMultiplier += 0.1
     }
     
     // Experience sharing (people talking about their current situation)
-    const experienceTerms = ['currently using', 'tried', 'switched from', 'migrating from', 'replacing', 'upgrading from']
-    for (const term of experienceTerms) {
-      if (commentText.includes(term)) {
-        score += 2
-      }
+    const experienceTerms = [
+      'currently using', 'tried', 'switched from', 'migrating from', 
+      'replacing', 'upgrading from', 'working with', 'using', 'have used'
+    ]
+    const experienceMatches = experienceTerms.filter(term => commentText.includes(term)).length
+    if (experienceMatches > 0) {
+      score += experienceMatches * 2
+      qualityMultiplier += 0.1
     }
     
-    // Comment engagement bonus
-    if (comment.score > 5) score += 2
-    else if (comment.score > 2) score += 1
+    // Budget/decision indicators
+    const decisionTerms = ['budget', 'cost', 'price', 'expensive', 'cheap', 'free', 'trial', 'demo', 'pricing']
+    const decisionMatches = decisionTerms.filter(term => commentText.includes(term)).length
+    if (decisionMatches > 0) {
+      score += decisionMatches * 2
+      qualityMultiplier += 0.1
+    }
     
-    // Recent comment bonus (within last 7 days)
-    const commentAge = Date.now() / 1000 - comment.created_utc
-    if (commentAge < 24 * 3600) { // Within 24 hours
+    // Role and company indicators
+    const roleTerms = ['founder', 'ceo', 'cto', 'manager', 'director', 'owner', 'startup', 'company', 'business']
+    const roleMatches = roleTerms.filter(term => commentText.includes(term)).length
+    if (roleMatches > 0) {
+      score += roleMatches * 2
+      qualityMultiplier += 0.1
+    }
+    
+    // Comment engagement bonus (enhanced)
+    if (comment.score > 10) {
+      score += 3
+      qualityMultiplier += 0.2
+    } else if (comment.score > 5) {
       score += 2
-    } else if (commentAge < 7 * 24 * 3600) { // Within 7 days
+    } else if (comment.score > 2) {
       score += 1
     }
     
-    return Math.min(score, 20) // Increased cap for better granularity
+    // Recent comment bonus (enhanced)
+    const commentAge = Date.now() / 1000 - comment.created_utc
+    if (commentAge < 6 * 3600) { // Within 6 hours
+      score += 3
+      qualityMultiplier += 0.2
+    } else if (commentAge < 24 * 3600) { // Within 24 hours
+      score += 2
+    } else if (commentAge < 3 * 24 * 3600) { // Within 3 days
+      score += 1
+    }
+    
+    // Sentiment analysis
+    const positiveWords = ['great', 'awesome', 'excellent', 'amazing', 'love', 'perfect', 'fantastic', 'helpful']
+    const negativeWords = ['terrible', 'awful', 'hate', 'worst', 'horrible', 'sucks', 'broken', 'useless']
+    
+    const positiveCount = positiveWords.filter(word => commentText.includes(word)).length
+    const negativeCount = negativeWords.filter(word => commentText.includes(word)).length
+    
+    if (positiveCount > negativeCount) {
+      score += 2
+    } else if (negativeCount > positiveCount) {
+      score -= 1
+    }
+    
+    // Apply quality multiplier
+    const finalScore = Math.round(score * qualityMultiplier)
+    
+    return Math.min(Math.max(finalScore, 0), 30) // Increased cap for comments
   }
 
   // Save a lead to the database
@@ -995,3 +1311,4 @@ if (typeof window === 'undefined') {
     }
   })
 }
+

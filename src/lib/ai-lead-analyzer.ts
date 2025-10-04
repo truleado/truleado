@@ -195,23 +195,48 @@ export class AILeadAnalyzer {
       : `Post: "${lead.title}" - ${lead.content}`
 
     // Truncate long content to fit token limits
-    const maxContentLength = 500
+    const maxContentLength = 800
     const truncatedContext = leadContext.length > maxContentLength 
       ? leadContext.substring(0, maxContentLength) + "..."
       : leadContext
 
-    return `Analyze this Reddit ${lead.leadType} for ${product.name} (${product.description.substring(0, 100)}...).
+    return `You are an expert sales and marketing analyst specializing in Reddit lead qualification. Analyze this Reddit ${lead.leadType} to determine if it's a high-quality sales opportunity for ${product.name}.
 
-REDDIT: u/${lead.author} in r/${lead.subreddit} (${lead.score} upvotes)
-${truncatedContext}
+CONTEXT:
+- Product: ${product.name}
+- Description: ${product.description}
+- Key Features: ${product.features.join(', ')}
+- Benefits: ${product.benefits.join(', ')}
+- Pain Points Solved: ${product.painPoints.join(', ')}
+- Ideal Customer: ${product.idealCustomerProfile}
 
-PRODUCT SOLVES: ${product.painPoints.slice(0, 2).join('; ')}
-BENEFITS: ${product.benefits.slice(0, 2).join('; ')}
+REDDIT ${lead.leadType.toUpperCase()}:
+- Author: u/${lead.author}
+- Subreddit: r/${lead.subreddit}
+- Score: ${lead.score} upvotes
+- Comments: ${lead.numComments}
+- Content: ${truncatedContext}
+
+ANALYSIS INSTRUCTIONS:
+1. Identify specific pain points, needs, or problems mentioned
+2. Look for buying intent signals (budget, timeline, decision-making authority)
+3. Assess urgency and priority level
+4. Check for compatibility with ideal customer profile
+5. Evaluate engagement quality and author credibility
+6. Consider subreddit context and community norms
+
+REPLY GUIDELINES:
+- Be helpful and genuine, not salesy
+- Reference specific points from their post/comment
+- Offer value first, mention product second
+- Keep it conversational and Reddit-appropriate
+- Ask engaging questions to continue the conversation
+- Show understanding of their specific situation
 
 Return JSON only:
 {
-  "reasons": ["reason1", "reason2", "reason3"],
-  "sampleReply": "Helpful reply mentioning ${product.name}",
+  "reasons": ["specific reason 1", "specific reason 2", "specific reason 3"],
+  "sampleReply": "A helpful, contextual reply that references their specific situation and offers genuine value",
   "qualityScore": 8,
   "confidence": 7
 }`
@@ -261,54 +286,174 @@ Return JSON only:
 
   private getFallbackAnalysis(lead: LeadData, product: ProductData): LeadAnalysis {
     const reasons: string[] = []
-    
-    // Basic analysis without AI
-    if (lead.content.toLowerCase().includes(product.name.toLowerCase())) {
-      reasons.push('Directly mentions your product')
-    }
-    
-    if (lead.content.toLowerCase().includes('looking for') || lead.content.toLowerCase().includes('need')) {
-      reasons.push('Shows clear buying intent')
-    }
-    
-    if (lead.score > 5) {
-      reasons.push('High engagement indicates active discussion')
-    }
-    
-    if (lead.numComments > 3) {
-      reasons.push('Active conversation with multiple participants')
-    }
-
-    // Generate a more relevant fallback reply
     const leadContent = lead.content.toLowerCase()
-    const relevantFeatures = product.features.filter(feature => 
-      leadContent.includes(feature.toLowerCase()) || 
-      leadContent.includes(feature.split(' ')[0].toLowerCase())
-    )
+    const leadTitle = lead.title.toLowerCase()
+    const fullText = `${leadTitle} ${leadContent}`
     
-    const relevantBenefits = product.benefits.filter(benefit => 
-      leadContent.includes(benefit.toLowerCase()) || 
-      leadContent.includes(benefit.split(' ')[0].toLowerCase())
-    )
-
-    let sampleReply = `Hi u/${lead.author}! I saw your ${lead.leadType} about this topic. `
+    // Enhanced analysis without AI
+    let qualityScore = 0
+    let confidence = 5
     
-    if (relevantFeatures.length > 0) {
-      sampleReply += `${product.name} has ${relevantFeatures[0]} that might help with what you're looking for. `
-    } else if (relevantBenefits.length > 0) {
-      sampleReply += `${product.name} can help with ${relevantBenefits[0].toLowerCase()}, which seems relevant to your situation. `
-    } else {
-      sampleReply += `${product.name} might be helpful for what you're looking for. `
+    // Direct product mention (highest priority)
+    if (fullText.includes(product.name.toLowerCase())) {
+      reasons.push('Directly mentions your product')
+      qualityScore += 3
+      confidence += 2
     }
     
-    sampleReply += `Feel free to check it out and let me know if you have any questions!`
+    // Pain point analysis
+    const painPointMatches = product.painPoints.filter(painPoint => 
+      fullText.includes(painPoint.toLowerCase()) ||
+      this.hasSimilarWords(fullText, painPoint.toLowerCase())
+    )
+    
+    if (painPointMatches.length > 0) {
+      reasons.push(`Mentions pain points: ${painPointMatches.slice(0, 2).join(', ')}`)
+      qualityScore += painPointMatches.length * 2
+      confidence += painPointMatches.length
+    }
+    
+    // Feature/benefit relevance
+    const featureMatches = product.features.filter(feature => 
+      fullText.includes(feature.toLowerCase()) ||
+      this.hasSimilarWords(fullText, feature.toLowerCase())
+    )
+    
+    const benefitMatches = product.benefits.filter(benefit => 
+      fullText.includes(benefit.toLowerCase()) ||
+      this.hasSimilarWords(fullText, benefit.toLowerCase())
+    )
+    
+    if (featureMatches.length > 0) {
+      reasons.push(`Relevant features mentioned: ${featureMatches.slice(0, 2).join(', ')}`)
+      qualityScore += featureMatches.length
+    }
+    
+    if (benefitMatches.length > 0) {
+      reasons.push(`Relevant benefits mentioned: ${benefitMatches.slice(0, 2).join(', ')}`)
+      qualityScore += benefitMatches.length
+    }
+    
+    // Buying intent signals
+    const buyingIntentTerms = [
+      'looking for', 'need', 'want', 'recommend', 'suggest', 'help with', 
+      'struggling', 'problem', 'issue', 'best way to', 'how to', 
+      'anyone know', 'suggestions', 'alternatives', 'budget', 'cost', 
+      'price', 'trial', 'demo', 'evaluate', 'compare'
+    ]
+    
+    const intentMatches = buyingIntentTerms.filter(term => fullText.includes(term))
+    if (intentMatches.length > 0) {
+      reasons.push(`Shows buying intent: ${intentMatches.slice(0, 3).join(', ')}`)
+      qualityScore += intentMatches.length
+      confidence += 1
+    }
+    
+    // Question indicators (people asking for help)
+    if (fullText.includes('?') && (fullText.includes('how') || fullText.includes('what') || fullText.includes('where') || fullText.includes('which'))) {
+      reasons.push('Asking specific questions (high engagement potential)')
+      qualityScore += 2
+    }
+    
+    // Engagement quality
+    if (lead.score > 20) {
+      reasons.push('High engagement (20+ upvotes)')
+      qualityScore += 2
+    } else if (lead.score > 10) {
+      reasons.push('Good engagement (10+ upvotes)')
+      qualityScore += 1
+    }
+    
+    if (lead.numComments > 10) {
+      reasons.push('Active discussion (10+ comments)')
+      qualityScore += 2
+    } else if (lead.numComments > 3) {
+      reasons.push('Some discussion (3+ comments)')
+      qualityScore += 1
+    }
+    
+    // Recent activity bonus
+    const postAge = Date.now() / 1000 - (lead as any).created_utc
+    if (postAge < 24 * 3600) { // Within 24 hours
+      reasons.push('Very recent post (high urgency)')
+      qualityScore += 2
+    } else if (postAge < 7 * 24 * 3600) { // Within 7 days
+      reasons.push('Recent post')
+      qualityScore += 1
+    }
+    
+    // Generate contextual reply
+    let sampleReply = this.generateContextualReply(lead, product, painPointMatches, featureMatches, benefitMatches)
 
     return {
       reasons: reasons.length > 0 ? reasons : ['Potential lead based on subreddit relevance'],
       sampleReply,
-      qualityScore: reasons.length > 2 ? 7 : 5,
-      confidence: 6
+      qualityScore: Math.min(Math.max(qualityScore, 1), 10),
+      confidence: Math.min(Math.max(confidence, 1), 10)
     }
+  }
+  
+  private hasSimilarWords(text: string, target: string): boolean {
+    const targetWords = target.split(' ').filter(word => word.length > 3)
+    const textWords = text.split(' ')
+    
+    return targetWords.some(targetWord => 
+      textWords.some(textWord => 
+        textWord.includes(targetWord) || targetWord.includes(textWord)
+      )
+    )
+  }
+  
+  private generateContextualReply(lead: LeadData, product: ProductData, painPointMatches: string[], featureMatches: string[], benefitMatches: string[]): string {
+    const leadContent = lead.content.toLowerCase()
+    const isComment = lead.leadType === 'comment'
+    const context = isComment ? 'comment' : 'post'
+    
+    let reply = `Hey u/${lead.author}! `
+    
+    // Reference their specific situation
+    if (painPointMatches.length > 0) {
+      const painPoint = painPointMatches[0]
+      reply += `I noticed you mentioned ${painPoint} in your ${context}. `
+      
+      if (featureMatches.length > 0) {
+        reply += `${product.name} actually has ${featureMatches[0]} that could help with that specific issue. `
+      } else {
+        reply += `${product.name} is designed to help with exactly that kind of problem. `
+      }
+    } else if (featureMatches.length > 0) {
+      reply += `I saw your ${context} about ${featureMatches[0]}. `
+      reply += `${product.name} has some really solid ${featureMatches[0]} capabilities that might be worth checking out. `
+    } else if (benefitMatches.length > 0) {
+      reply += `Based on your ${context}, it sounds like you're looking for ${benefitMatches[0]}. `
+      reply += `${product.name} might be a good fit since it's built for exactly that. `
+    } else {
+      reply += `I came across your ${context} and thought ${product.name} might be relevant to what you're working on. `
+    }
+    
+    // Add value proposition
+    if (product.benefits.length > 0) {
+      reply += `It's helped a lot of people with ${product.benefits[0].toLowerCase()}, `
+      if (product.benefits.length > 1) {
+        reply += `plus ${product.benefits[1].toLowerCase()}. `
+      } else {
+        reply += `which seems like it could be useful for your situation. `
+      }
+    }
+    
+    // Add engagement
+    reply += `Would love to hear your thoughts on it! `
+    
+    // Add specific question based on context
+    if (leadContent.includes('budget') || leadContent.includes('cost') || leadContent.includes('price')) {
+      reply += `Feel free to DM me if you want to chat about pricing or have any questions!`
+    } else if (leadContent.includes('how') || leadContent.includes('best way')) {
+      reply += `Happy to share more details about how it works if you're interested!`
+    } else {
+      reply += `Let me know if you'd like to learn more!`
+    }
+    
+    return reply
   }
 }
 
