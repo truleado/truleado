@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { productId: string } }
+  { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
-    const productId = params.productId
+    const { productId } = await params
     
     if (!productId) {
       return NextResponse.json({ error: 'Product ID is required' }, { status: 400 })

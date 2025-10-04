@@ -162,7 +162,7 @@ function extractTextFromHTML(html: string): string {
 }
 
 async function analyzeWithAI(content: string, url: string): Promise<any> {
-  // Try Gemini first (cheaper), then fallback to OpenAI
+  // Try Gemini first (cheaper), then fallback to OpenAI, then intelligent fallback
   const geminiApiKey = process.env.GOOGLE_GEMINI_API_KEY
   const openaiApiKey = process.env.OPENAI_API_KEY
   
@@ -176,10 +176,18 @@ async function analyzeWithAI(content: string, url: string): Promise<any> {
   }
   
   if (openaiApiKey) {
-    return await analyzeWithOpenAI(content, url)
+    try {
+      return await analyzeWithOpenAI(content, url)
+    } catch (error) {
+      console.error('OpenAI analysis failed, using intelligent fallback:', error)
+      // Continue to intelligent fallback
+    }
   }
   
-  throw new Error('No AI API keys configured')
+  // If both AI APIs fail or are not available, use intelligent analysis
+  console.log('AI APIs unavailable, using intelligent analysis fallback')
+  const name = extractNameFromUrl(url)
+  return getIntelligentAnalysis(name, url.toLowerCase(), content)
 }
 
 async function analyzeWithGemini(content: string, url: string): Promise<any> {
@@ -571,6 +579,19 @@ function generateDescriptionFromContent(name: string, content: string): string {
     if (match && match[1]) {
       return `${name} ${match[1].trim()}.`
     }
+  }
+  
+  // Look for specific product descriptions
+  if (content.toLowerCase().includes('reddit') && content.toLowerCase().includes('lead')) {
+    return `${name} is a Reddit lead generation platform that helps businesses find potential customers through targeted Reddit monitoring and engagement.`
+  }
+  
+  if (content.toLowerCase().includes('marketing') || content.toLowerCase().includes('sales')) {
+    return `${name} is a marketing and sales platform that helps businesses grow their customer base and increase revenue.`
+  }
+  
+  if (content.toLowerCase().includes('ai') || content.toLowerCase().includes('artificial intelligence')) {
+    return `${name} is an AI-powered platform that helps businesses automate processes and make data-driven decisions.`
   }
   
   return `${name} is a platform that helps teams work more efficiently and collaborate better.`
