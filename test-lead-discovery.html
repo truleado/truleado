@@ -40,7 +40,13 @@
     </div>
     
     <div class="section">
-        <h2>5. Manual Trigger Lead Discovery</h2>
+        <h2>5. Force Job Execution</h2>
+        <button onclick="forceJobExecution()">Force Job Execution</button>
+        <div id="forceJobResult"></div>
+    </div>
+    
+    <div class="section">
+        <h2>6. Manual Trigger Lead Discovery</h2>
         <button onclick="triggerLeadDiscovery()">Trigger Lead Discovery</button>
         <div id="triggerResult"></div>
     </div>
@@ -90,6 +96,23 @@
                     `<div class="info"><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
             } catch (error) {
                 document.getElementById('redditResult').innerHTML = 
+                    `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function forceJobExecution() {
+            try {
+                const response = await fetch('/api/debug/force-job-execution', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                const data = await response.json();
+                document.getElementById('forceJobResult').innerHTML = 
+                    `<div class="success"><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+            } catch (error) {
+                document.getElementById('forceJobResult').innerHTML = 
                     `<div class="error">Error: ${error.message}</div>`;
             }
         }
