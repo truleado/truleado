@@ -14,10 +14,14 @@ export async function GET(request: NextRequest) {
     
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Fetch all products (temporarily without user filter)
+    // For now, let's get products for a specific user ID (the one with active jobs)
+    // This is a temporary fix until we restore proper authentication
+    const activeUserId = '4c58263e-b936-40b1-a168-aee9f39536b9' // User with active jobs
+    
     const { data: products, error } = await supabase
       .from('products')
       .select('*')
+      .eq('user_id', activeUserId)
       .order('created_at', { ascending: false })
 
     if (error) {
