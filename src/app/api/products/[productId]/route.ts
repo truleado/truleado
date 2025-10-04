@@ -1,135 +1,71 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
 
-export async function PUT(request: NextRequest, { params }: { params: Promise<{ productId: string }> }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { productId: string } }
+) {
   try {
-    const supabase = await createClient()
+    const productId = params.productId
     
-    // Get the current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { productId } = await params
-
     if (!productId) {
       return NextResponse.json({ error: 'Product ID is required' }, { status: 400 })
     }
 
-    const body = await request.json()
-    const { name, description, website, features, benefits, painPoints, idealCustomerProfile, subreddits } = body
-
-    // Verify the product belongs to the user before updating
-    const { data: existingProduct, error: fetchError } = await supabase
-      .from('products')
-      .select('id')
-      .eq('id', productId)
-      .eq('user_id', user.id)
-      .single()
-
-    if (fetchError || !existingProduct) {
-      return NextResponse.json({ error: 'Product not found or unauthorized' }, { status: 404 })
-    }
-
-    // Update the product
-    const { data, error: updateError } = await supabase
-      .from('products')
-      .update({
-        name,
-        description,
-        website_url: website,
-        features,
-        benefits,
-        pain_points: painPoints,
-        ideal_customer_profile: idealCustomerProfile,
-        subreddits,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', productId)
-      .eq('user_id', user.id) // Ensure RLS is respected
-      .select()
-      .single()
-
-    if (updateError) {
-      console.error('Database error updating product:', updateError)
-      return NextResponse.json({ error: 'Failed to update product' }, { status: 500 })
-    }
-
-    return NextResponse.json({ product: data }, { status: 200 })
-  } catch (error) {
-    console.error('Error updating product:', error)
-    return NextResponse.json({ 
-      error: error instanceof Error ? error.message : 'Failed to update product'
-    }, { status: 500 })
-  }
-}
-
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ productId: string }> }) {
-  try {
-    const supabase = await createClient()
+    // Use the same database connection as other APIs
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     
-    // Get the current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (!supabaseKey || !supabaseUrl) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 500 })
+    }
     
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { productId } = await params
-
-    if (!productId) {
-      return NextResponse.json({ error: 'Product ID is required' }, { status: 400 })
-    }
-
-    // Verify the product belongs to the user before deleting
-    const { data: existingProduct, error: fetchError } = await supabase
-      .from('products')
-      .select('id')
-      .eq('id', productId)
-      .eq('user_id', user.id)
-      .single()
-
-    if (fetchError || !existingProduct) {
-      return NextResponse.json({ error: 'Product not found or unauthorized' }, { status: 404 })
-    }
-
-    // Stop associated background jobs (but don't delete them yet)
-    const { error: jobStopError } = await supabase
-      .from('background_jobs')
-      .update({ 
-        status: 'paused',
-        updated_at: new Date().toISOString()
-      })
-      .eq('product_id', productId)
-      .eq('user_id', user.id)
-
-    if (jobStopError) {
-      console.error('Error stopping background jobs:', jobStopError)
-      // Continue with product deletion even if job stopping fails
-    }
-
-    // Keep the leads - don't delete them
-    // This allows users to retain their lead history even after deleting the product
+    const supabase = createClient(supabaseUrl, supabaseKey)
 
     // Delete the product
     const { error: deleteError } = await supabase
       .from('products')
       .delete()
       .eq('id', productId)
-      .eq('user_id', user.id) // Ensure RLS is respected
 
     if (deleteError) {
-      console.error('Database error deleting product:', deleteError)
+      console.error('Error deleting product:', deleteError)
       return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 })
     }
 
-    return NextResponse.json({ message: 'Product deleted successfully' }, { status: 200 })
-  } catch (error) {
-    console.error('Error deleting product:', error)
+    // Also delete associated leads
+    const { error: leadsDeleteError } = await supabase
+      .from('leads')
+      .delete()
+      .eq('product_id', productId)
+
+    if (leadsDeleteError) {
+      console.error('Error deleting associated leads:', leadsDeleteError)
+      // Don't fail the request if leads deletion fails
+    }
+
+    // Also delete associated background jobs
+    const { error: jobsDeleteError } = await supabase
+      .from('background_jobs')
+      .delete()
+      .eq('product_id', productId)
+
+    if (jobsDeleteError) {
+      console.error('Error deleting associated jobs:', jobsDeleteError)
+      // Don't fail the request if jobs deletion fails
+    }
+
+    console.log(`Product ${productId} deleted successfully`)
+
     return NextResponse.json({ 
-      error: error instanceof Error ? error.message : 'Failed to delete product'
+      success: true, 
+      message: 'Product deleted successfully' 
+    })
+
+  } catch (error) {
+    console.error('Error in delete product API:', error)
+    return NextResponse.json({ 
+      error: 'Failed to delete product' 
     }, { status: 500 })
   }
 }
