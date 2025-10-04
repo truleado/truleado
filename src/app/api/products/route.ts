@@ -118,9 +118,19 @@ export async function POST(request: NextRequest) {
     
     console.log('Product created successfully:', data)
 
-    // Skip lead discovery for now to make product creation faster
-    // Lead discovery can be started manually from the dashboard
+    // Automatically start lead discovery for the new product
     let leadDiscoveryStarted = false
+    try {
+      const { getJobScheduler } = await import('@/lib/job-scheduler')
+      const jobScheduler = getJobScheduler()
+      
+      await jobScheduler.createJob(user.id, data.id, 'reddit_monitoring', 60)
+      leadDiscoveryStarted = true
+      console.log(`Started lead discovery for product: ${data.name}`)
+    } catch (jobError) {
+      console.error(`Failed to start lead discovery for product ${data.name}:`, jobError)
+      // Don't fail product creation if lead discovery fails
+    }
 
     return NextResponse.json({ 
       success: true, 
