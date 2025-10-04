@@ -129,13 +129,16 @@ function LeadsContent() {
     try {
       console.log('Fetching leads...')
       const response = await fetch('/api/leads')
+      console.log('Leads API response status:', response.status)
+      
       if (response.ok) {
         const data = await response.json()
         console.log('Leads API response:', data)
         console.log('Number of leads:', data.leads?.length || 0)
         setLeads(data.leads || [])
       } else {
-        console.error('Leads API error:', response.status, response.statusText)
+        const errorText = await response.text()
+        console.error('Leads API error:', response.status, response.statusText, errorText)
       }
     } catch (error) {
       console.error('Failed to fetch leads:', error)

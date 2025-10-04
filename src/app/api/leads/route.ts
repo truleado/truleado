@@ -17,12 +17,12 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const limit = parseInt(searchParams.get('limit') || '50')
 
-    // Build query
+    // Build query - try without INNER JOIN first
     let query = supabase
       .from('leads')
       .select(`
         *,
-        products!inner(name, website_url)
+        products(name, website_url)
       `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
@@ -38,6 +38,8 @@ export async function GET(request: NextRequest) {
     }
 
     const { data: leads, error } = await query
+
+    console.log('Leads query result:', { leadsCount: leads?.length || 0, error: error?.message })
 
     if (error) {
       console.error('Database error:', error)
