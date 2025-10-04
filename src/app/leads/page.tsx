@@ -127,10 +127,15 @@ function LeadsContent() {
 
   const fetchLeads = async () => {
     try {
+      console.log('Fetching leads...')
       const response = await fetch('/api/leads')
       if (response.ok) {
         const data = await response.json()
+        console.log('Leads API response:', data)
+        console.log('Number of leads:', data.leads?.length || 0)
         setLeads(data.leads || [])
+      } else {
+        console.error('Leads API error:', response.status, response.statusText)
       }
     } catch (error) {
       console.error('Failed to fetch leads:', error)
@@ -237,6 +242,14 @@ function LeadsContent() {
     
     return matchesFilter && matchesType && matchesSearch && matchesProduct
   })
+
+  // Debug logging
+  console.log('Leads state:', leads.length)
+  console.log('Filtered leads:', filteredLeads.length)
+  console.log('Selected product:', selectedProduct?.id)
+  console.log('Filter:', filter)
+  console.log('Type filter:', typeFilter)
+  console.log('Search term:', searchTerm)
 
   const getStatusColor = (status: string) => {
     switch (status) {
