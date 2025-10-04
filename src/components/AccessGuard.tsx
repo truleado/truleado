@@ -29,8 +29,8 @@ export function AccessGuard({ feature, children, fallback }: AccessGuardProps) {
     })
   }
 
-  // Show loading state only for a short time to prevent choppy experience
-  if (isLoading && !user) {
+  // Show loading state while subscription is loading
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -41,12 +41,21 @@ export function AccessGuard({ feature, children, fallback }: AccessGuardProps) {
     )
   }
 
-  if (canAccess(feature)) {
+  // If we have a user and they can access the feature, show the content
+  if (user && canAccess(feature)) {
     return <>{children}</>
   }
 
-  if (fallback) {
-    return <>{fallback}</>
+  // If we have a user but they can't access the feature, show fallback
+  if (user && !canAccess(feature)) {
+    if (fallback) {
+      return <>{fallback}</>
+    }
+  }
+
+  // If no user, don't show anything (let auth redirect handle it)
+  if (!user) {
+    return null
   }
 
   const handleUpgradeClick = () => {

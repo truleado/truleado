@@ -91,6 +91,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     } else if (!authLoading && !authUser) {
       setUser(null)
       setIsLoading(false)
+    } else if (authLoading) {
+      // Keep loading state while auth is loading
+      setIsLoading(true)
     }
   }, [authUser, authLoading])
 
