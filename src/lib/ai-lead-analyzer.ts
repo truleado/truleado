@@ -93,7 +93,7 @@ export class AILeadAnalyzer {
             temperature: 0.7,
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 2048,
+            maxOutputTokens: 1024,
           }
         }),
       })
@@ -121,7 +121,12 @@ export class AILeadAnalyzer {
       }
       
       if (finishReason === 'MAX_TOKENS') {
-        console.warn('Gemini response was truncated due to token limit')
+        console.warn('Gemini response was truncated due to token limit, using partial response')
+        // Try to extract what we can from the truncated response
+        if (analysisText && analysisText.length > 50) {
+          // Use the partial response as fallback
+          return this.parsePartialGeminiResponse(analysisText)
+        }
         throw new Error('Gemini response truncated - trying OpenAI fallback')
       }
 
@@ -200,43 +205,18 @@ export class AILeadAnalyzer {
       ? leadContext.substring(0, maxContentLength) + "..."
       : leadContext
 
-    return `You are an expert sales and marketing analyst specializing in Reddit lead qualification. Analyze this Reddit ${lead.leadType} to determine if it's a high-quality sales opportunity for ${product.name}.
+    return `Analyze this Reddit ${lead.leadType} for sales opportunity with ${product.name}:
 
-CONTEXT:
-- Product: ${product.name}
-- Description: ${product.description}
-- Key Features: ${product.features.join(', ')}
-- Benefits: ${product.benefits.join(', ')}
-- Pain Points Solved: ${product.painPoints.join(', ')}
-- Ideal Customer: ${product.idealCustomerProfile}
+PRODUCT: ${product.name} - ${product.description}
+FEATURES: ${product.features.slice(0, 3).join(', ')}
+PAIN POINTS: ${product.painPoints.slice(0, 3).join(', ')}
 
-REDDIT ${lead.leadType.toUpperCase()}:
-- Author: u/${lead.author}
-- Subreddit: r/${lead.subreddit}
-- Score: ${lead.score} upvotes
-- Comments: ${lead.numComments}
-- Content: ${truncatedContext}
+${lead.leadType.toUpperCase()}: ${truncatedContext}
 
-ANALYSIS INSTRUCTIONS:
-1. Identify specific pain points, needs, or problems mentioned
-2. Look for buying intent signals (budget, timeline, decision-making authority)
-3. Assess urgency and priority level
-4. Check for compatibility with ideal customer profile
-5. Evaluate engagement quality and author credibility
-6. Consider subreddit context and community norms
-
-REPLY GUIDELINES:
-- Be helpful and genuine, not salesy
-- Reference specific points from their post/comment
-- Offer value first, mention product second
-- Keep it conversational and Reddit-appropriate
-- Ask engaging questions to continue the conversation
-- Show understanding of their specific situation
-
-Return JSON only:
+Find pain points, buying intent, urgency. Return JSON:
 {
-  "reasons": ["specific reason 1", "specific reason 2", "specific reason 3"],
-  "sampleReply": "A helpful, contextual reply that references their specific situation and offers genuine value",
+  "reasons": ["reason1", "reason2"],
+  "sampleReply": "Helpful reply referencing their situation",
   "qualityScore": 8,
   "confidence": 7
 }`
@@ -402,6 +382,36 @@ Return JSON only:
         textWord.includes(targetWord) || targetWord.includes(textWord)
       )
     )
+  }
+
+  // Parse partial Gemini response when truncated
+  private parsePartialGeminiResponse(partialText: string): LeadAnalysis {
+    console.log('Parsing partial Gemini response:', partialText.substring(0, 200) + '...')
+    
+    // Try to extract basic information from the partial response
+    const reasons = []
+    const sampleReply = "I understand your situation. Let me help you with some insights that might be useful."
+    
+    // Look for any mention of pain points or features
+    if (partialText.toLowerCase().includes('pain') || partialText.toLowerCase().includes('struggle')) {
+      reasons.push('Mentions pain points or struggles')
+    }
+    if (partialText.toLowerCase().includes('need') || partialText.toLowerCase().includes('looking')) {
+      reasons.push('Shows buying intent or need')
+    }
+    if (partialText.toLowerCase().includes('help') || partialText.toLowerCase().includes('advice')) {
+      reasons.push('Asks for help or advice')
+    }
+    
+    return {
+      reasons: reasons.length > 0 ? reasons : ['Relevant content found'],
+      sampleReply: sampleReply,
+      qualityScore: 7, // Medium quality for partial response
+      confidence: 6, // Lower confidence due to truncation
+      painPoints: [],
+      features: [],
+      benefits: []
+    }
   }
   
   private generateContextualReply(lead: LeadData, product: ProductData, painPointMatches: string[], featureMatches: string[], benefitMatches: string[]): string {
