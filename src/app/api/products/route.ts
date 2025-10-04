@@ -3,8 +3,36 @@ import { createClient } from '@/lib/supabase-server'
 
 export async function GET(request: NextRequest) {
   try {
-    // Use the same database connection as job scheduler to get products
-    const { createClient } = await import('@supabase/supabase-js')
+    // Try to get authenticated user first
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    console.log('Products API auth check:', { 
+      hasUser: !!user, 
+      userId: user?.id, 
+      authError: authError?.message 
+    })
+
+    // If we have a user, filter by user ID
+    if (user) {
+      const { data: products, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Database error:', error)
+        return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
+      }
+
+      console.log('Products query result (authenticated):', { productsCount: products?.length || 0, error: error?.message })
+      return NextResponse.json({ products: products || [] })
+    }
+
+    // Fallback: if no user, show all products (temporary for development)
+    console.log('No authenticated user, showing all products (development mode)')
+    const { createClient: createServiceClient } = await import('@supabase/supabase-js')
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     
@@ -12,11 +40,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 })
     }
     
-    const supabase = createClient(supabaseUrl, supabaseKey)
-
-    // Get all products for now (temporary fix until proper auth is restored)
-    // This will show all products but we'll add proper filtering later
-    const { data: products, error } = await supabase
+    const serviceSupabase = createServiceClient(supabaseUrl, supabaseKey)
+    const { data: products, error } = await serviceSupabase
       .from('products')
       .select('*')
       .order('created_at', { ascending: false })
@@ -26,8 +51,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
     }
 
-    console.log('Products query result:', { productsCount: products?.length || 0, error: error?.message })
-
+    console.log('Products query result (all):', { productsCount: products?.length || 0, error: error?.message })
     return NextResponse.json({ products: products || [] })
   } catch (error) {
     console.error('Product fetch error:', error)
