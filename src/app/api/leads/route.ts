@@ -1,19 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase-server'
 
 export async function GET(request: NextRequest) {
   try {
     console.log('Leads API called')
     
-    // Use the same database connection as job scheduler to get leads
-    const { createClient } = await import('@supabase/supabase-js')
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    // Get authenticated user first
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     
-    if (!supabaseKey || !supabaseUrl) {
-      return NextResponse.json({ error: 'Database not configured' }, { status: 500 })
+    console.log('Leads API auth check:', { 
+      hasUser: !!user, 
+      userId: user?.id, 
+      authError: authError?.message 
+    })
+    
+    if (authError || !user) {
+      console.error('Authentication failed:', authError)
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    
-    const supabase = createClient(supabaseUrl, supabaseKey)
     
     // Get query parameters for filtering
     const { searchParams } = new URL(request.url)
@@ -21,15 +26,16 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const limit = parseInt(searchParams.get('limit') || '50')
     
-    console.log('Leads API filters:', { productId, status, limit })
+    console.log('Leads API filters:', { productId, status, limit, userId: user.id })
     
-    // Build query with filters - get all leads for now (temporary fix)
+    // Build query with filters - filter by authenticated user
     let query = supabase
       .from('leads')
       .select(`
         *,
         products(name, website_url, subreddits)
       `)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(limit)
     

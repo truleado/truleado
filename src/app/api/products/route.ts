@@ -13,37 +13,17 @@ export async function GET(request: NextRequest) {
       authError: authError?.message 
     })
 
-    // If we have a user, filter by user ID
-    if (user) {
-      const { data: products, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        console.error('Database error:', error)
-        return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
-      }
-
-      console.log('Products query result (authenticated):', { productsCount: products?.length || 0, error: error?.message })
-      return NextResponse.json({ products: products || [] })
+    // Require authentication - no fallback for security
+    if (!user) {
+      console.error('No authenticated user')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Fallback: if no user, show all products (temporary for development)
-    console.log('No authenticated user, showing all products (development mode)')
-    const { createClient: createServiceClient } = await import('@supabase/supabase-js')
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    
-    if (!supabaseKey || !supabaseUrl) {
-      return NextResponse.json({ error: 'Database not configured' }, { status: 500 })
-    }
-    
-    const serviceSupabase = createServiceClient(supabaseUrl, supabaseKey)
-    const { data: products, error } = await serviceSupabase
+    // Filter products by authenticated user
+    const { data: products, error } = await supabase
       .from('products')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -51,7 +31,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
     }
 
-    console.log('Products query result (all):', { productsCount: products?.length || 0, error: error?.message })
+    console.log('Products query result:', { productsCount: products?.length || 0, error: error?.message })
     return NextResponse.json({ products: products || [] })
   } catch (error) {
     console.error('Product fetch error:', error)
