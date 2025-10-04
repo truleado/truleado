@@ -118,12 +118,24 @@ export async function POST(request: NextRequest) {
     
     console.log('Product created successfully:', data)
 
-    // Lead discovery will be started separately via the UI
-    // This makes product creation much faster and more reliable
+    // Start lead discovery asynchronously (don't wait for it)
+    setImmediate(async () => {
+      try {
+        const { getJobScheduler } = await import('@/lib/job-scheduler')
+        const jobScheduler = getJobScheduler()
+        
+        await jobScheduler.createJob(user.id, data.id, 'reddit_monitoring', 60)
+        console.log(`✅ Started lead discovery for product: ${data.name}`)
+      } catch (jobError) {
+        console.error(`❌ Failed to start lead discovery for product ${data.name}:`, jobError)
+        // Don't fail product creation if lead discovery fails
+      }
+    })
+
     return NextResponse.json({ 
       success: true, 
       product: data,
-      message: 'Product created successfully. You can start lead discovery from the dashboard.'
+      message: 'Product created successfully. Lead discovery is starting in the background.'
     })
   } catch (error) {
     console.error('Product creation error:', error)

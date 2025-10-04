@@ -380,6 +380,35 @@ function ProductsContent() {
     }
   }
 
+  const handleStartLeadDiscovery = async (productId: string) => {
+    try {
+      const response = await fetch('/api/leads/start-discovery', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to start lead discovery')
+      }
+
+      const data = await response.json()
+      
+      setModalTitle('Lead Discovery Started!')
+      setModalMessage(`Lead discovery has been started for your products. You should start seeing leads within the next hour.`)
+      setShowSuccessModal(true)
+      
+    } catch (error) {
+      console.error('Error starting lead discovery:', error)
+      setModalTitle('Error')
+      setModalMessage(error instanceof Error ? error.message : 'Failed to start lead discovery. Please try again.')
+      setShowErrorModal(true)
+    }
+  }
+
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product)
     setNewProduct({
@@ -574,6 +603,13 @@ function ProductsContent() {
                         </div>
                       </div>
                       <div className="flex space-x-1 sm:space-x-2 flex-shrink-0 ml-4">
+                        <button 
+                          onClick={() => handleStartLeadDiscovery(product.id)}
+                          className="p-1.5 sm:p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                          title="Start lead discovery"
+                        >
+                          <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        </button>
                         <button 
                           onClick={() => handleEditProduct(product)}
                           className="p-1.5 sm:p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
