@@ -120,17 +120,23 @@ export class AILeadAnalyzer {
 
       if (!analysisText) {
         console.error('Gemini response structure:', data)
-        throw new Error('No analysis returned from Gemini')
+        console.log('No analysis from Gemini, using fallback analysis')
+        return this.getFallbackAnalysis(lead, product)
       }
       
       if (finishReason === 'MAX_TOKENS') {
         console.warn('Gemini response was truncated due to token limit, using partial response')
         // Try to extract what we can from the truncated response
         if (analysisText && analysisText.length > 50) {
-          // Use the partial response as fallback
-          return this.parsePartialGeminiResponse(analysisText)
+          try {
+            return this.parsePartialGeminiResponse(analysisText)
+          } catch (parseError) {
+            console.log('Failed to parse partial response, using fallback analysis')
+            return this.getFallbackAnalysis(lead, product)
+          }
         }
-        throw new Error('Gemini response truncated - trying OpenAI fallback')
+        console.log('Truncated response too short, using fallback analysis')
+        return this.getFallbackAnalysis(lead, product)
       }
 
       // Parse JSON response
