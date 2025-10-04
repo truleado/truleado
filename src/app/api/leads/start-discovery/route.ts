@@ -12,59 +12,44 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if Reddit account is connected
-    const { data: apiKeys, error: apiKeysError } = await supabase
-      .from('api_keys')
-      .select('reddit_access_token')
-      .eq('user_id', user.id)
-      .single()
-
-    if (apiKeysError || !apiKeys?.reddit_access_token) {
-      return NextResponse.json({ 
-        error: 'Reddit account not connected. Please connect your Reddit account first.' 
-      }, { status: 400 })
-    }
-
     // Get all products for the user
     const { data: products, error: productsError } = await supabase
       .from('products')
       .select('id, name')
       .eq('user_id', user.id)
 
-    if (productsError || !products) {
+    if (productsError) {
+      console.error('Error fetching products:', productsError)
       return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
     }
 
-    if (products.length === 0) {
-      return NextResponse.json({ 
-        error: 'No products found. Please add a product first.' 
-      }, { status: 400 })
+    if (!products || products.length === 0) {
+      return NextResponse.json({ error: 'No products found' }, { status: 404 })
     }
 
-    // Start lead discovery for all products
+    // Start lead discovery jobs for all products
     const { getJobScheduler } = await import('@/lib/job-scheduler')
     const jobScheduler = getJobScheduler()
     
-    let jobsCreated = 0
+    const results = []
     for (const product of products) {
       try {
         await jobScheduler.createJob(user.id, product.id, 'reddit_monitoring', 60)
-        jobsCreated++
+        results.push({ productId: product.id, productName: product.name, status: 'started' })
         console.log(`Started lead discovery for product: ${product.name}`)
       } catch (jobError) {
         console.error(`Failed to start lead discovery for product ${product.name}:`, jobError)
+        results.push({ productId: product.id, productName: product.name, status: 'failed', error: jobError.message })
       }
     }
 
     return NextResponse.json({ 
-      message: `Lead discovery started for ${jobsCreated} products.`,
-      productsStarted: jobsCreated,
-      totalProducts: products.length
+      message: 'Lead discovery jobs started',
+      results 
     })
+
   } catch (error) {
     console.error('Error starting lead discovery:', error)
-    return NextResponse.json({ 
-      error: error instanceof Error ? error.message : 'Failed to start lead discovery'
-    }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to start lead discovery' }, { status: 500 })
   }
 }

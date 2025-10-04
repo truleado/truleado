@@ -114,6 +114,31 @@ function ProductsContent() {
       const url = new URL(window.location.href)
       url.searchParams.delete('reddit_connected')
       window.history.replaceState({}, '', url.toString())
+      
+      // Start lead discovery for all products
+      const startLeadDiscovery = async () => {
+        try {
+          const response = await fetch('/api/leads/start-discovery', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          })
+          
+          if (response.ok) {
+            const data = await response.json()
+            console.log('Lead discovery started:', data)
+          } else {
+            console.error('Failed to start lead discovery')
+          }
+        } catch (error) {
+          console.error('Error starting lead discovery:', error)
+        }
+      }
+      
+      // Start lead discovery after a short delay
+      setTimeout(startLeadDiscovery, 1000)
+      
       // Hide success message after 5 seconds
       setTimeout(() => setShowRedditSuccess(false), 5000)
     }
