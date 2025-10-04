@@ -23,16 +23,13 @@ export async function GET(request: NextRequest) {
     
     console.log('Leads API filters:', { productId, status, limit })
     
-    // Build query with filters - filter by user ID
-    const activeUserId = '4c58263e-b936-40b1-a168-aee9f39536b9' // User with active jobs
-    
+    // Build query with filters - get all leads for now (temporary fix)
     let query = supabase
       .from('leads')
       .select(`
         *,
         products(name, website_url, subreddits)
       `)
-      .eq('user_id', activeUserId)
       .order('created_at', { ascending: false })
       .limit(limit)
     
