@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { v4 as uuidv4 } from 'uuid'
 
 export async function GET(request: NextRequest) {
   try {
@@ -60,6 +61,7 @@ export async function POST(request: NextRequest) {
     const { data: post, error } = await supabase
       .from('promoted_posts')
       .insert({
+        id: uuidv4(),
         user_id: user.id,
         product_id,
         subreddit,

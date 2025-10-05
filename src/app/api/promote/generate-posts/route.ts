@@ -6,7 +6,7 @@ interface GeneratePostsRequest {
   productName: string
   productDescription: string
   websiteUrl: string
-  targetSubreddits: string[]
+  variation?: number
 }
 
 interface GeneratedPost {
@@ -18,22 +18,44 @@ interface GeneratedPost {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Generate posts API called')
     const supabase = await createClient()
     
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  // Check authentication
+  console.log('Starting authentication check...')
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
 
+  console.log('Auth check in generate-posts:', {
+    hasUser: !!user,
+    userId: user?.id,
+    userEmail: user?.email,
+    authError: authError?.message,
+    errorCode: authError?.code,
+    errorStatus: authError?.status
+  })
+
+  // Also check session
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+  console.log('Session check in generate-posts:', {
+    hasSession: !!session,
+    sessionUserId: session?.user?.id,
+    sessionError: sessionError?.message
+  })
+    
     const body: GeneratePostsRequest = await request.json()
-    const { productId, productName, productDescription, websiteUrl, targetSubreddits } = body
+    
+    if (authError || !user) {
+      console.error('Authentication failed:', authError)
+      return NextResponse.json({ error: 'Unauthorized - Please log in to generate posts' }, { status: 401 })
+    }
+    const { productId, productName, productDescription, websiteUrl, variation = 0 } = body
 
-    if (!productId || !productName || !targetSubreddits || targetSubreddits.length === 0) {
+    if (!productId || !productName) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Verify user owns this product
+    // Get product details from database
+    console.log('Looking for product:', { productId, userId: user.id })
     const { data: product, error: productError } = await supabase
       .from('products')
       .select('*')
@@ -41,46 +63,119 @@ export async function POST(request: NextRequest) {
       .eq('user_id', user.id)
       .single()
 
+    console.log('Product query result:', { product, productError })
+
     if (productError || !product) {
+      console.error('Product not found:', { productError, productId, userId: user.id })
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    }
+
+    // Extract product data from database
+    const features = product.features || []
+    const benefits = product.benefits || []
+    const painPoints = product.pain_points || []
+    const idealCustomerProfile = product.ideal_customer_profile || ''
+
+    console.log('Product data from database:', {
+      name: productName,
+      description: productDescription,
+      features,
+      benefits,
+      painPoints,
+      idealCustomerProfile,
+      website: product.website_url
+    })
+
+    // Automatically determine relevant subreddits based on product data
+    let targetSubreddits
+    try {
+      console.log('Starting subreddit determination...')
+      targetSubreddits = await determineRelevantSubreddits(
+        productName,
+        productDescription,
+        features,
+        benefits,
+        painPoints,
+        idealCustomerProfile
+      )
+      console.log(`AI-detected subreddits for ${productName}:`, targetSubreddits)
+    } catch (error) {
+      console.error('Error determining subreddits:', error)
+      // Fallback to default subreddits
+      targetSubreddits = ['entrepreneur', 'startups', 'saas', 'marketing']
+      console.log(`Using fallback subreddits for ${productName}:`, targetSubreddits)
     }
 
     const generatedPosts: GeneratedPost[] = []
 
-    // Generate posts for each subreddit
+    console.log('Starting post generation for subreddits:', targetSubreddits)
+    console.log('Number of subreddits to process:', targetSubreddits.length)
+
+    // Generate multiple high-quality posts for each automatically detected subreddit
     for (const subreddit of targetSubreddits) {
       try {
-        console.log(`Starting post generation for r/${subreddit}...`)
+        console.log(`Starting high-quality post generation for r/${subreddit}...`)
         
-        // Generate 2 variations per subreddit
-        for (let i = 0; i < 2; i++) {
-          console.log(`Generating variation ${i + 1} for r/${subreddit}...`)
-          
-          const post = await generatePostForSubreddit(
-            subreddit,
-            productName,
-            productDescription,
-            websiteUrl,
-            i
-          )
-          generatedPosts.push(post)
-          console.log(`Successfully generated variation ${i + 1} for r/${subreddit}`)
+        // Generate 2-3 variations per subreddit for maximum quality and diversity
+        const postsPerSubreddit = Math.min(3, Math.max(2, Math.floor(8 / targetSubreddits.length)))
+        console.log(`Will generate ${postsPerSubreddit} posts for r/${subreddit}`)
+        
+        for (let i = 0; i < postsPerSubreddit; i++) {
+          try {
+            console.log(`Calling generatePostForSubreddit for r/${subreddit}, variation ${i}`)
+            const post = await generatePostForSubreddit(
+              subreddit,
+              productName,
+              productDescription,
+              websiteUrl,
+              i, // Use index as variation
+              features,
+              benefits,
+              painPoints,
+              idealCustomerProfile
+            )
+            console.log(`Post generated successfully for r/${subreddit}:`, { title: post.title, bodyLength: post.body.length })
+            generatedPosts.push(post)
+            console.log(`Successfully generated post ${i + 1}/${postsPerSubreddit} for r/${subreddit}`)
+            
+            // Add small delay between variations to avoid rate limiting
+            if (i < postsPerSubreddit - 1) {
+              await new Promise(resolve => setTimeout(resolve, 1000))
+            }
+          } catch (postError) {
+            console.error(`Error generating post ${i + 1} for r/${subreddit}:`, {
+              error: postError,
+              subreddit,
+              productName,
+              variation: i
+            })
+            // Continue with next post instead of failing completely
+            continue
+          }
         }
+        
+        console.log(`Completed post generation for r/${subreddit}`)
+        
       } catch (error) {
         console.error(`Error generating posts for r/${subreddit}:`, error)
-        
-        // Add fallback posts even if generation fails
-        for (let i = 0; i < 2; i++) {
-          generatedPosts.push({
-            subreddit,
-            title: `Check out ${productName} - ${productDescription.substring(0, 50)}...`,
-            body: `Hey r/${subreddit} community! I wanted to share ${productName} which helps with ${productDescription.toLowerCase()}. Check it out at ${websiteUrl}`,
-            type: 'promotional' as const
-          })
-        }
+        // Continue with next subreddit instead of failing completely
+        continue
       }
     }
 
+    console.log(`Post generation completed. Generated ${generatedPosts.length} posts total.`)
+    
+    if (generatedPosts.length === 0) {
+      console.error('No posts were generated successfully', {
+        targetSubreddits,
+        productName,
+        productId,
+        userId: user.id
+      })
+      return NextResponse.json({ error: 'Failed to generate any posts' }, { status: 500 })
+    }
+
+    console.log('Returning generated posts:', generatedPosts.map(p => ({ subreddit: p.subreddit, title: p.title })))
     return NextResponse.json({ posts: generatedPosts })
   } catch (error) {
     console.error('Error in generate-posts API:', error)
@@ -93,58 +188,78 @@ async function generatePostForSubreddit(
   productName: string,
   productDescription: string,
   websiteUrl: string,
-  variation: number
+  variation: number,
+  productFeatures: string[] = [],
+  productBenefits: string[] = [],
+  productPainPoints: string[] = [],
+  idealCustomerProfile: string = ''
 ): Promise<GeneratedPost> {
-  const geminiApiKey = process.env.GEMINI_API_KEY
+  console.log(`generatePostForSubreddit called for r/${subreddit}, variation ${variation}`)
+  
+  const geminiApiKey = process.env.GOOGLE_GEMINI_API_KEY
   if (!geminiApiKey) {
+    console.error('Gemini API key not configured')
     throw new Error('Gemini API key not configured')
   }
 
-  // Determine post type and tone based on subreddit and variation
-  const postTypes = ['educational', 'problem-solution', 'community', 'promotional']
-  const postType = postTypes[variation % postTypes.length] as GeneratedPost['type']
+  console.log(`Generating high-quality post for r/${subreddit} with variation ${variation}`)
+  
+  // Advanced AI-powered post generation with sophisticated analysis
+  const prompt = `You are an expert Reddit marketing strategist and content creator. Create a highly engaging, valuable Reddit post for r/${subreddit} that will genuinely help the community while subtly promoting "${productName}".
 
-  // Get subreddit context for better targeting
-  const subredditContext = getSubredditContext(subreddit)
-
-  const prompt = `Create a Reddit post for r/${subreddit} to promote "${productName}".
-
-Product Details:
-- Name: ${productName}
+PRODUCT DEEP ANALYSIS:
+- Product Name: ${productName}
 - Description: ${productDescription}
 - Website: ${websiteUrl}
+- Key Features: ${productFeatures.join(', ')}
+- Core Benefits: ${productBenefits.join(', ')}
+- Pain Points Solved: ${productPainPoints.join(', ')}
+- Target Customer: ${idealCustomerProfile || 'Not specified'}
 
-Subreddit Context:
-${subredditContext}
+SUBREDDIT INTELLIGENCE:
+You are posting to r/${subreddit}. Research this subreddit's culture, values, common problems, terminology, and communication style. Create content that authentically fits this community.
 
-Post Type: ${postType}
+ADVANCED CONTENT STRATEGY:
+1. ANALYZE the subreddit's specific culture, values, and communication style
+2. IDENTIFY the most pressing problems this community faces that your product solves
+3. DETERMINE the optimal content angle that provides maximum value
+4. CRAFT a narrative that feels authentic and community-driven
+5. INTEGRATE the product mention naturally and helpfully
 
-Requirements:
-1. Create a compelling title (under 100 characters)
-2. Write engaging post content (200-400 words)
-3. Make it feel natural and community-appropriate for r/${subreddit}
-4. Include the website URL naturally in the content
-5. Avoid spammy language - focus on value and community engagement
-6. Match the tone and style of ${subreddit} community
-7. For educational posts: focus on teaching something valuable
-8. For problem-solution posts: address a common problem the product solves
-9. For community posts: engage with the community and ask questions
-10. For promotional posts: be subtle and value-focused
+CONTENT CREATION FRAMEWORK:
+- Hook: Start with a compelling, relatable problem or insight
+- Value: Provide genuine, actionable value to the community
+- Story: Use storytelling to make it engaging and memorable
+- Solution: Naturally introduce how your product addresses the problem
+- Community: Encourage discussion and engagement
+- Call-to-Action: Subtle, helpful direction to learn more
+
+QUALITY STANDARDS:
+- Title: 60-90 characters, click-worthy, community-relevant
+- Content: 300-500 words, highly engaging, valuable
+- Tone: Match the subreddit's culture perfectly
+- Language: Use their specific terminology and references
+- Value: Provide genuine insights, tips, or solutions
+- Authenticity: Feel like it was written by a community member
+- Engagement: Encourage comments and discussion
+
+UNIQUENESS REQUIREMENTS:
+- This post must be COMPLETELY UNIQUE and tailored to r/${subreddit}
+- Address specific problems this community faces
+- Use their exact terminology and communication style
+- Provide value that this specific community would appreciate
+- Avoid generic promotional content
 
 Return ONLY a JSON object with this exact structure:
 {
-  "title": "Your post title here",
-  "body": "Your post content here with natural website mention"
-}`
+  "title": "Your compelling, community-specific title here",
+  "body": "Your engaging, valuable post content with natural product mention"
+}
+
+Create content that will genuinely help the r/${subreddit} community and encourage meaningful engagement.`
 
   try {
-    console.log(`Generating post for r/${subreddit} with Gemini...`)
-    
-    // Add timeout to prevent hanging
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
-    
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -152,104 +267,199 @@ Return ONLY a JSON object with this exact structure:
       body: JSON.stringify({
         contents: [{
           parts: [{
-            text: `You are an expert Reddit marketer who creates engaging, community-appropriate promotional posts. You understand Reddit culture and create content that provides value while subtly promoting products.
-
-${prompt}`
+            text: prompt
           }]
         }],
         generationConfig: {
           temperature: 0.8,
           topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 1024,
+          topP: 0.9,
+          maxOutputTokens: 2048,
         }
-      }),
-      signal: controller.signal
+      })
     })
-
-    clearTimeout(timeoutId)
 
     if (!response.ok) {
       const errorText = await response.text()
       console.error(`Gemini API error: ${response.status} - ${errorText}`)
+      
+      if (response.status === 429) {
+        throw new Error('RATE_LIMIT_EXCEEDED')
+      }
       throw new Error(`Gemini API error: ${response.status}`)
     }
 
     const data = await response.json()
-    console.log('Gemini response received:', { 
-      hasCandidates: !!data.candidates, 
-      candidatesLength: data.candidates?.length,
-      finishReason: data.candidates?.[0]?.finishReason 
-    })
-    
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text
+    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text
 
-    if (!content) {
-      console.error('No content in Gemini response:', data)
-      throw new Error('No content generated by Gemini')
+    if (!responseText) {
+      throw new Error('No response from Gemini API')
     }
 
-    // Parse JSON response
-    let parsedContent
+    // Parse the JSON response (handle markdown code blocks)
+    let postData
     try {
-      parsedContent = JSON.parse(content)
+      // Extract JSON from markdown code blocks if present
+      let jsonText = responseText
+      if (jsonText.includes('```json')) {
+        const jsonMatch = jsonText.match(/```json\s*([\s\S]*?)\s*```/)
+        if (jsonMatch) {
+          jsonText = jsonMatch[1]
+        }
+      } else if (jsonText.includes('```')) {
+        const jsonMatch = jsonText.match(/```\s*([\s\S]*?)\s*```/)
+        if (jsonMatch) {
+          jsonText = jsonMatch[1]
+        }
+      }
+      
+      postData = JSON.parse(jsonText)
     } catch (parseError) {
-      console.error('Failed to parse Gemini JSON response:', content)
-      throw new Error('Invalid JSON response from Gemini')
+      console.error('Failed to parse post generation JSON:', responseText)
+      throw new Error('Invalid JSON response from AI')
     }
     
-    console.log(`Successfully generated post for r/${subreddit}`)
+    if (!postData.title || !postData.body) {
+      console.error('Invalid post data structure:', postData)
+      throw new Error('Invalid response format from AI')
+    }
+
     return {
       subreddit,
-      title: parsedContent.title,
-      body: parsedContent.body,
-      type: postType
+      title: postData.title,
+      body: postData.body,
+      type: 'promotional' // Default type, AI will make it appropriate
     }
   } catch (error) {
-    console.error(`Error generating post with Gemini for r/${subreddit}:`, error)
-    
-    // Fallback post if AI generation fails
-    return {
-      subreddit,
-      title: `Check out ${productName} - ${productDescription.substring(0, 50)}...`,
-      body: `Hey r/${subreddit} community!
+    console.error(`Error generating post for r/${subreddit}:`, error)
+    throw error
+  }
+}
 
-I wanted to share something that might be useful for you all. I've been using ${productName} and it's been really helpful for ${productDescription.toLowerCase()}.
+async function determineRelevantSubreddits(
+  productName: string,
+  productDescription: string,
+  features: string[],
+  benefits: string[],
+  painPoints: string[],
+  idealCustomerProfile: string
+): Promise<string[]> {
+  const geminiApiKey = process.env.GOOGLE_GEMINI_API_KEY
+  if (!geminiApiKey) {
+    // Fallback to default subreddits if no API key
+    return ['entrepreneur', 'startups', 'saas', 'marketing']
+  }
 
-${productDescription}
+  const prompt = `You are an expert Reddit marketing strategist. Analyze this product comprehensively and suggest 5-8 highly relevant subreddits where it would be valuable and appropriate to promote.
 
-If you're interested, you can check it out at ${websiteUrl}
+PRODUCT ANALYSIS:
+- Name: ${productName}
+- Description: ${productDescription}
+- Key Features: ${features.join(', ')}
+- Core Benefits: ${benefits.join(', ')}
+- Pain Points Solved: ${painPoints.join(', ')}
+- Target Customer Profile: ${idealCustomerProfile || 'Not specified'}
 
-What do you think? Have any of you tried similar tools? I'd love to hear your experiences!`,
-      type: postType
+DEEP ANALYSIS REQUIRED:
+1. Identify the primary industry/niche this product serves
+2. Determine the technical complexity level (beginner, intermediate, advanced)
+3. Analyze the target audience demographics and interests
+4. Consider the product's unique value proposition
+5. Identify specific problems this product solves
+6. Determine the business model and pricing tier
+7. Think about what communities would genuinely benefit from this product
+
+SUBREDDIT SUGGESTION CRITERIA:
+1. Suggest subreddits where this product would solve REAL, SPECIFIC problems
+2. Prioritize communities that match the product's technical level and target audience
+3. Consider the product's business model and pricing (B2B vs B2C, enterprise vs SMB)
+4. Select communities where the product would provide genuine value, not just promotion
+5. Think about niche communities, industry-specific subreddits, and broader relevant communities
+6. Consider both technical and non-technical communities based on the product
+7. Include communities where the target audience actively participates
+
+IMPORTANT: Suggest actual subreddit names that exist on Reddit. Think broadly about:
+- Industry-specific subreddits (e.g., r/accounting, r/realestate, r/healthcare)
+- Professional communities (e.g., r/consulting, r/sales, r/HR)
+- Technology communities (e.g., r/webdev, r/programming, r/cybersecurity)
+- Business communities (e.g., r/entrepreneur, r/startups, r/smallbusiness)
+- Niche communities related to the product's use case
+- Educational communities where people learn about this domain
+
+Return ONLY a JSON array of 5-8 subreddit names (without "r/" prefix):
+["subreddit1", "subreddit2", "subreddit3", "subreddit4", "subreddit5"]`
+
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 512,
+        }
+      })
+    })
+
+    if (!response.ok) {
+      console.error(`Gemini API error for subreddit detection: ${response.status}`)
+      return ['entrepreneur', 'startups', 'saas', 'marketing'] // Fallback
     }
+
+    const data = await response.json()
+    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text
+
+    if (!responseText) {
+      return ['entrepreneur', 'startups', 'saas', 'marketing'] // Fallback
+    }
+
+    // Parse the JSON response (handle markdown code blocks)
+    let subreddits
+    try {
+      // Extract JSON from markdown code blocks if present
+      let jsonText = responseText
+      if (jsonText.includes('```json')) {
+        const jsonMatch = jsonText.match(/```json\s*([\s\S]*?)\s*```/)
+        if (jsonMatch) {
+          jsonText = jsonMatch[1]
+        }
+      } else if (jsonText.includes('```')) {
+        const jsonMatch = jsonText.match(/```\s*([\s\S]*?)\s*```/)
+        if (jsonMatch) {
+          jsonText = jsonMatch[1]
+        }
+      }
+      
+      subreddits = JSON.parse(jsonText)
+    } catch (parseError) {
+      console.error('Failed to parse subreddit suggestions JSON:', responseText)
+      return ['entrepreneur', 'startups', 'saas', 'marketing'] // Fallback
+    }
+    
+    if (!Array.isArray(subreddits) || subreddits.length === 0) {
+      console.error('Invalid subreddit suggestions format:', subreddits)
+      return ['entrepreneur', 'startups', 'saas', 'marketing'] // Fallback
+    }
+
+    // Filter out any invalid entries and ensure they're strings
+    const validSubreddits = subreddits
+      .filter(sub => typeof sub === 'string' && sub.trim().length > 0)
+      .map(sub => sub.trim().toLowerCase())
+      .slice(0, 8) // Limit to 8 subreddits max
+
+    console.log('AI suggested subreddits:', validSubreddits)
+    return validSubreddits.length > 0 ? validSubreddits : ['entrepreneur', 'startups', 'saas', 'marketing']
+  } catch (error) {
+    console.error('Error determining relevant subreddits:', error)
+    return ['entrepreneur', 'startups', 'saas', 'marketing'] // Fallback
   }
 }
-
-function getSubredditContext(subreddit: string): string {
-  const contexts: { [key: string]: string } = {
-    'entrepreneur': 'A community of entrepreneurs, startup founders, and business owners sharing experiences, advice, and resources.',
-    'startups': 'Startup founders and entrepreneurs discussing business ideas, funding, and growth strategies.',
-    'marketing': 'Marketing professionals and business owners sharing marketing strategies, tools, and insights.',
-    'saas': 'Software as a Service discussions, tools, and business models.',
-    'productivity': 'People interested in productivity tools, methods, and improving efficiency.',
-    'business': 'General business discussions, advice, and networking.',
-    'smallbusiness': 'Small business owners sharing experiences and seeking advice.',
-    'freelance': 'Freelancers and independent contractors discussing work and business.',
-    'webdev': 'Web developers sharing projects, tools, and development discussions.',
-    'programming': 'Software developers discussing programming, tools, and technology.',
-    'technology': 'General technology discussions and news.',
-    'gadgets': 'Technology gadgets, reviews, and recommendations.',
-    'software': 'Software discussions, recommendations, and reviews.',
-    'tools': 'Productivity tools, software, and utilities discussions.',
-    'recommendations': 'Community for product and service recommendations.',
-    'buymyproduct': 'Community for promoting and discovering new products.',
-    'sideproject': 'Developers and entrepreneurs sharing their side projects.',
-    'indiehackers': 'Independent makers and entrepreneurs building products.',
-    'nocode': 'No-code and low-code development discussions.',
-    'automation': 'Workflow automation and productivity tools.',
-  }
-
-  return contexts[subreddit.toLowerCase()] || `A community focused on ${subreddit} topics and discussions.`
-}
-

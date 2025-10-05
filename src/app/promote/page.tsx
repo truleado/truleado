@@ -16,6 +16,10 @@ interface Product {
   description: string
   website_url: string
   subreddits: string[]
+  features?: string[]
+  benefits?: string[]
+  pain_points?: string[]
+  ideal_customer_profile?: string
   created_at: string
 }
 
@@ -41,6 +45,33 @@ export default function PromotePage() {
   const [copiedPost, setCopiedPost] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [maxPostsReached, setMaxPostsReached] = useState(false)
+  const [generationProgress, setGenerationProgress] = useState({ current: 0, total: 0, currentSubreddit: '' })
+  const [generationError, setGenerationError] = useState<string | null>(null)
+  const [generationAbortController, setGenerationAbortController] = useState<AbortController | null>(null)
+
+  // Redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      window.location.href = '/auth/signin'
+    }
+  }, [user, authLoading])
+
+  // Show loading while authentication is in progress
+  if (authLoading || subscriptionLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render anything if not authenticated (redirect will happen)
+  if (!user) {
+    return null
+  }
 
   // Debug logging (only in development)
   if (process.env.NODE_ENV === 'development') {
@@ -106,6 +137,7 @@ export default function PromotePage() {
     fetchProducts()
   }, [])
 
+
   const fetchProducts = async () => {
     try {
       const response = await fetch('/api/products')
@@ -144,8 +176,31 @@ export default function PromotePage() {
       return
     }
 
+    // Clear any previous errors
+    setGenerationError(null)
+    
+    // Check if posts already exist for this product
+    const existingPostsForProduct = generatedPosts.filter(post => 
+      post.product_id === selectedProduct.id
+    )
+    
+    if (existingPostsForProduct.length > 0) {
+      const confirmGenerate = window.confirm(
+        `You already have ${existingPostsForProduct.length} posts for this product. Do you want to generate more?`
+      )
+      if (!confirmGenerate) return
+    }
+
+    // Create abort controller for stopping generation
+    const abortController = new AbortController()
+    setGenerationAbortController(abortController)
+
     setIsGenerating(true)
+    setGenerationProgress({ current: 0, total: 0, currentSubreddit: 'Analyzing product and detecting subreddits...' })
+    setGenerationError(null)
+    
     try {
+      // Generate high-quality posts with AI-powered subreddit detection
       const response = await fetch('/api/promote/generate-posts', {
         method: 'POST',
         headers: {
@@ -156,17 +211,35 @@ export default function PromotePage() {
           productName: selectedProduct.name,
           productDescription: selectedProduct.description,
           websiteUrl: selectedProduct.website_url,
-          targetSubreddits: selectedProduct.subreddits,
+          variation: 0
         }),
+        signal: abortController.signal
       })
 
       if (response.ok) {
         const data = await response.json()
         const newPosts = data.posts || []
         
-        // Save each new post to the database
-        const savedPosts = []
-        for (const post of newPosts) {
+        console.log(`Generated ${newPosts.length} high-quality posts for AI-detected subreddits`)
+        
+        // Update progress to show completion
+        setGenerationProgress({ current: newPosts.length, total: newPosts.length, currentSubreddit: 'Complete' })
+        
+        // Save all posts to database and add to UI
+        for (let i = 0; i < newPosts.length; i++) {
+          // Check if generation was aborted
+          if (abortController.signal.aborted) {
+            console.log('Generation aborted by user')
+            return
+          }
+          
+          const post = newPosts[i]
+          setGenerationProgress(prev => ({ 
+            ...prev, 
+            current: i + 1,
+            currentSubreddit: `Saving high-quality post for r/${post.subreddit}...`
+          }))
+          
           try {
             const saveResponse = await fetch('/api/promoted-posts', {
               method: 'POST',
@@ -175,49 +248,61 @@ export default function PromotePage() {
               },
               body: JSON.stringify({
                 product_id: selectedProduct.id,
-                subreddit: post.subreddit,
-                title: post.title,
-                body: post.body,
-                post_type: post.type
+                subreddit: post.subreddit || 'unknown',
+                title: post.title || 'Untitled',
+                body: post.body || 'No content',
+                post_type: post.type || 'promotional'
               }),
+              signal: abortController.signal
             })
             
             if (saveResponse.ok) {
               const savedPost = await saveResponse.json()
-              savedPosts.push(savedPost.post)
+              
+              // Add post immediately to UI (streaming)
+              setGeneratedPosts(prev => {
+                const updatedPosts = [...prev, savedPost.post]
+                setMaxPostsReached(updatedPosts.length >= 50)
+                
+                // Save to localStorage as backup
+                try {
+                  localStorage.setItem('truleado-generated-posts', JSON.stringify(updatedPosts))
+                } catch (error) {
+                  console.warn('Failed to save posts to localStorage:', error)
+                }
+                
+                return updatedPosts
+              })
             } else {
               console.error('Failed to save post to database:', post.title)
               // Still add to UI even if database save fails
-              savedPosts.push({ ...post, id: `temp-${Date.now()}-${Math.random()}` })
+              const tempPost = { ...post, id: `temp-${Date.now()}-${Math.random()}` }
+              setGeneratedPosts(prev => [...prev, tempPost])
             }
           } catch (error) {
             console.error('Error saving post to database:', error)
             // Still add to UI even if database save fails
-            savedPosts.push({ ...post, id: `temp-${Date.now()}-${Math.random()}` })
+            const tempPost = { ...post, id: `temp-${Date.now()}-${Math.random()}` }
+            setGeneratedPosts(prev => [...prev, tempPost])
           }
         }
-        
-        // Add new posts to existing ones
-        setGeneratedPosts(prev => {
-          const updatedPosts = [...prev, ...savedPosts]
-          setMaxPostsReached(updatedPosts.length >= 50)
-          
-          // Save to localStorage as backup
-          try {
-            localStorage.setItem('truleado-generated-posts', JSON.stringify(updatedPosts))
-          } catch (error) {
-            console.warn('Failed to save posts to localStorage:', error)
-          }
-          
-          return updatedPosts
-        })
       } else {
-        console.error('Failed to generate posts')
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.error || 'Failed to generate posts'
+        console.error('Failed to generate posts:', errorMessage)
+        setGenerationError(errorMessage)
       }
     } catch (error) {
+      if (error.name === 'AbortError') {
+        console.log('Generation aborted by user')
+        return
+      }
       console.error('Error generating posts:', error)
+      setGenerationError('AI generation failed. Please check your internet connection and try again later.')
     } finally {
       setIsGenerating(false)
+      setGenerationProgress({ current: 0, total: 0, currentSubreddit: '' })
+      setGenerationAbortController(null)
     }
   }
 
@@ -278,6 +363,17 @@ export default function PromotePage() {
     setMaxPostsReached(false)
     localStorage.removeItem('truleado-generated-posts')
   }
+
+  const stopGeneration = () => {
+    if (generationAbortController) {
+      generationAbortController.abort()
+      setGenerationAbortController(null)
+    }
+    setIsGenerating(false)
+    setGenerationProgress({ current: 0, total: 0, currentSubreddit: '' })
+    setGenerationError(null)
+  }
+
 
   const copyToClipboard = async (text: string, postIndex: number) => {
     try {
@@ -370,23 +466,14 @@ export default function PromotePage() {
         ) : (
           <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-                  <Megaphone className="w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3 text-blue-600" />
-                  Promote Your Products
-                </h1>
-                <p className="text-sm sm:text-base text-gray-600 mt-1">
-                  Generate creative promotional posts for Reddit communities
-                </p>
-              </div>
-              <button
-                onClick={forceRefresh}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-xs sm:text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 self-start sm:self-auto"
-              >
-                <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                Refresh Status
-              </button>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+                <Megaphone className="w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3 text-blue-600" />
+                Promote Your Products
+              </h1>
+              <p className="text-sm sm:text-base text-gray-600 mt-1">
+                Generate creative promotional posts for Reddit communities
+              </p>
             </div>
 
             {/* Product Selection */}
@@ -435,6 +522,34 @@ export default function PromotePage() {
                         <span className="truncate">Website: {selectedProduct.website_url}</span>
                         <span>Target Subreddits: {selectedProduct.subreddits.length}</span>
                       </div>
+                      
+                      {selectedProduct.subreddits.length === 0 && (
+                        <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                          <div className="flex items-start">
+                            <div className="flex-shrink-0">
+                              <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                            <div className="ml-3">
+                              <h3 className="text-sm font-medium text-amber-800">
+                                No Subreddits Configured
+                              </h3>
+                              <div className="mt-1 text-sm text-amber-700">
+                                <p>This product needs subreddits configured to generate posts. Please edit the product to add subreddits.</p>
+                              </div>
+                              <div className="mt-2">
+                                <a
+                                  href="/products"
+                                  className="text-sm font-medium text-amber-800 hover:text-amber-900 underline"
+                                >
+                                  Go to Products to Edit →
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -449,15 +564,74 @@ export default function PromotePage() {
                           {isGenerating ? (
                             <>
                               <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 animate-spin" />
-                              Generating...
+                              AI Generating...
                             </>
                           ) : (
                             <>
                               <Star className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                              Generate Posts
+                              Generate AI Posts
                             </>
                           )}
                         </button>
+                        
+                        {isGenerating && generationProgress.total > 0 && (
+                          <div className="w-full mt-3">
+                            <div className="flex justify-between items-center text-xs text-gray-600 mb-1">
+                              <span>AI analyzing product and generating high-quality posts...</span>
+                              <div className="flex items-center space-x-2">
+                                <span>{generationProgress.current}/{generationProgress.total}</span>
+                                <button
+                                  onClick={stopGeneration}
+                                  className="px-2 py-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded text-xs font-medium transition-colors"
+                                >
+                                  Stop
+                                </button>
+                              </div>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${(generationProgress.current / generationProgress.total) * 100}%` }}
+                              ></div>
+                            </div>
+                            {generationProgress.currentSubreddit && (
+                              <div className="text-xs text-gray-500 mt-1">
+                                Currently generating for: r/{generationProgress.currentSubreddit}
+                              </div>
+                            )}
+                            <div className="text-xs text-gray-400 mt-1">
+                              {Math.round((generationProgress.current / generationProgress.total) * 100)}% complete
+                            </div>
+                          </div>
+                        )}
+                        
+                        {generationError && (
+                          <div className="w-full mt-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <div className="flex items-start">
+                              <div className="flex-shrink-0">
+                                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                              <div className="ml-3">
+                                <h3 className="text-sm font-medium text-red-800">
+                                  AI Generation Failed
+                                </h3>
+                                <div className="mt-1 text-sm text-red-700">
+                                  <p>{generationError}</p>
+                                </div>
+                                <div className="mt-2">
+                                  <button
+                                    onClick={() => setGenerationError(null)}
+                                    className="text-sm font-medium text-red-800 hover:text-red-900 underline"
+                                  >
+                                    Dismiss
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                         
                         {generatedPosts.length > 0 && (
                           <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
@@ -487,9 +661,6 @@ export default function PromotePage() {
                   <h2 className="text-lg font-semibold text-gray-900 flex items-center">
                     <Star className="w-5 h-5 mr-2 text-yellow-500" />
                     Generated Posts
-                    <div className="text-sm text-gray-500">
-                      Posts persist after page refresh
-                    </div>
                   </h2>
                 </div>
                 
@@ -499,19 +670,19 @@ export default function PromotePage() {
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-3">
                         <span className="text-sm font-medium text-gray-900">
-                          r/{post.subreddit}
+                          r/{post.subreddit || 'unknown'}
                         </span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(post.type)}`}>
-                          {post.type.replace('-', ' ')}
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(post.type || 'promotional')}`}>
+                          {(post.type || 'promotional').replace('-', ' ')}
                         </span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <button
-                          onClick={() => copyToClipboard(`${post.title}\n\n${post.body}`, index)}
+                          onClick={() => copyToClipboard(`${post.title || 'Untitled'}\n\n${post.body || 'No content'}`, index)}
                           className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
                           title="Copy post"
                         >
-                          {copiedPost === `${index}-${post.title.substring(0, 20)}` ? (
+                          {copiedPost === `${index}-${(post.title || 'Untitled').substring(0, 20)}` ? (
                             <Check className="w-4 h-4 text-green-600" />
                           ) : (
                             <Copy className="w-4 h-4" />
@@ -534,7 +705,7 @@ export default function PromotePage() {
                       {editingPost?.subreddit === post.subreddit && editingPost?.field === 'title' ? (
                         <div className="space-y-2">
                           <textarea
-                            value={post.title}
+                            value={post.title || ''}
                             onChange={(e) => setGeneratedPosts(prev => 
                               prev.map((p, i) => i === index ? { ...p, title: e.target.value } : p)
                             )}
@@ -543,7 +714,7 @@ export default function PromotePage() {
                           />
                           <div className="flex space-x-2">
                             <button
-                              onClick={() => saveEdit(index, 'title', post.title)}
+                              onClick={() => saveEdit(index, 'title', post.title || '')}
                               className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
                             >
                               Save
@@ -559,7 +730,7 @@ export default function PromotePage() {
                       ) : (
                         <div className="relative">
                           <h3 className="text-lg font-semibold text-gray-900 pr-8">
-                            {post.title}
+                            {post.title || 'Untitled'}
                           </h3>
                           <button
                             onClick={() => setEditingPost({ subreddit: post.subreddit, field: 'title' })}
@@ -577,7 +748,7 @@ export default function PromotePage() {
                       {editingPost?.subreddit === post.subreddit && editingPost?.field === 'body' ? (
                         <div className="space-y-2">
                           <textarea
-                            value={post.body}
+                            value={post.body || ''}
                             onChange={(e) => setGeneratedPosts(prev => 
                               prev.map((p, i) => i === index ? { ...p, body: e.target.value } : p)
                             )}
@@ -586,7 +757,7 @@ export default function PromotePage() {
                           />
                           <div className="flex space-x-2">
                             <button
-                              onClick={() => saveEdit(index, 'body', post.body)}
+                              onClick={() => saveEdit(index, 'body', post.body || '')}
                               className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
                             >
                               Save
@@ -602,7 +773,7 @@ export default function PromotePage() {
                       ) : (
                         <div className="relative">
                           <div className="text-gray-700 bg-gray-50 p-4 rounded-md whitespace-pre-wrap">
-                            {post.body}
+                            {post.body || 'No content available'}
                           </div>
                           <button
                             onClick={() => setEditingPost({ subreddit: post.subreddit, field: 'body' })}

@@ -1,6 +1,6 @@
 -- Create promoted_posts table to store generated promotional posts
 CREATE TABLE IF NOT EXISTS promoted_posts (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   product_id UUID NOT NULL,
   subreddit TEXT NOT NULL,
