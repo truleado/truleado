@@ -127,10 +127,12 @@ export class RedditClient {
         const refreshResult = await this.refreshRedditToken(apiKeys.reddit_refresh_token)
         if (!refreshResult.success) {
           console.warn('Failed to refresh Reddit token. Reddit search will be disabled.')
+          console.warn('Refresh error:', refreshResult.error)
           return
         }
         // Update apiKeys with new token data
         Object.assign(apiKeys, refreshResult.tokens)
+        console.log('Reddit token refreshed successfully')
       }
 
       const userAgent = 'Truleado Lead Discovery Bot 1.0'
@@ -214,6 +216,8 @@ export class RedditClient {
         .from('api_keys')
         .update(newTokens)
         .eq('user_id', this.userId)
+
+      console.log('Token refresh database update result:', { updateError, userId: this.userId })
 
       if (updateError) {
         console.error('Failed to update refreshed tokens in database:', updateError)

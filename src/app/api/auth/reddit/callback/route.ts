@@ -118,9 +118,36 @@ export async function GET(request: NextRequest) {
         throw new Error('Token storage failed')
       }
 
-      // Note: Lead discovery jobs will be started automatically by the job scheduler
-      // No need to start them immediately here to avoid timeout issues
-      console.log('Reddit OAuth completed successfully. Lead discovery will start automatically.')
+      // Start lead discovery jobs for all active products
+      try {
+        const { getJobScheduler } = await import('@/lib/job-scheduler')
+        const jobScheduler = getJobScheduler()
+        
+        // Get user's active products
+        const { data: products, error: productsError } = await supabase
+          .from('products')
+          .select('id, name')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+
+        if (!productsError && products && products.length > 0) {
+          console.log(`Starting lead discovery for ${products.length} products`)
+          
+          for (const product of products) {
+            try {
+              await jobScheduler.createJob(user.id, product.id, 'reddit_monitoring', 60)
+              console.log(`Started lead discovery for product: ${product.name}`)
+            } catch (jobError) {
+              console.error(`Failed to start lead discovery for product ${product.name}:`, jobError)
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error starting lead discovery jobs:', error)
+        // Don't fail the OAuth flow if job creation fails
+      }
+
+      console.log('Reddit OAuth completed successfully. Lead discovery jobs started.')
 
       return NextResponse.redirect(new URL('/products?reddit_connected=true', request.url))
     })()

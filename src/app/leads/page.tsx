@@ -20,11 +20,6 @@ import {
   Play,
   Square,
   Package,
-  Activity,
-  Loader2,
-  AlertCircle,
-  Link,
-  RefreshCw,
   Search,
   Target,
   Brain,
@@ -248,6 +243,7 @@ function LeadsContent() {
       alert('Failed to update lead status. Please try again.')
     }
   }
+
 
   const filteredLeads = leads.filter(lead => {
     const matchesFilter = filter === 'all' || lead.status === filter

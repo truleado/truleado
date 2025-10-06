@@ -260,6 +260,7 @@ export class JobScheduler {
         console.log(`Reddit client initialized: ${redditClient.isInitialized}`)
         
         if (!redditClient.isInitialized) {
+          console.error(`Reddit client not initialized for user ${job.user_id}. This usually means Reddit account not connected or token expired.`)
           throw new Error('Reddit account not connected or token expired. Please reconnect your Reddit account to search for leads.')
         }
         
@@ -1310,5 +1311,19 @@ if (typeof window === 'undefined') {
       console.error('Failed to auto-start scheduler on process.nextTick:', error)
     }
   })
+  
+  // Ensure scheduler stays running - restart if it stops
+  setInterval(async () => {
+    try {
+      const scheduler = getJobScheduler()
+      if (!scheduler.isRunning) {
+        console.log('Job scheduler stopped, restarting...')
+        await scheduler.start()
+        console.log('Job scheduler restarted successfully')
+      }
+    } catch (error) {
+      console.error('Failed to restart job scheduler:', error)
+    }
+  }, 60000) // Check every minute
 }
 
