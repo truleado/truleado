@@ -526,7 +526,7 @@ export class EmailService {
                 </div>
 
                 <div class="footer">
-                  <p>This lead was found by monitoring r/${data.subreddit} for mentions of your product.</p>
+                  <p>This lead was found by discovering people discussing problems your product solves on r/${data.subreddit}.</p>
                   <p>Questions? Reply to this email or visit our <a href="https://truleado.com/support" style="color: #148cfc;">Support Center</a></p>
                 </div>
               </div>

@@ -98,7 +98,7 @@ export default function Home() {
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent block sm:inline"> Reddit</span>
             </h1>
             <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-gray-600 mb-6 sm:mb-8 max-w-4xl mx-auto leading-relaxed px-2 sm:px-4">
-              Monitor Reddit for mentions of your product and get notified when potential customers are looking for solutions like yours. 
+              Find your next customers on Reddit by discovering people actively discussing problems your product solves. 
               <span className="font-semibold text-gray-800"> Powered by AI analysis.</span>
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8 md:mb-12 px-2 sm:px-4">
@@ -144,7 +144,7 @@ export default function Home() {
               How Truleado Works
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-2">
-              Our AI-powered platform monitors Reddit conversations to find the perfect opportunities for your product.
+              Our AI-powered platform discovers Reddit conversations where people are actively seeking solutions your product provides.
             </p>
           </div>
           
@@ -163,7 +163,7 @@ export default function Home() {
               <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-200">
                 <Search className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
               </div>
-              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">Monitor Reddit</h3>
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">Discover Reddit</h3>
               <p className="text-sm sm:text-base text-gray-600 leading-relaxed px-2">
                 We scan all relevant subreddits 24/7 to find discussions where people need your solution.
               </p>
