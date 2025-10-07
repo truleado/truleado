@@ -365,7 +365,7 @@ export default function Pricing() {
               <div className="bg-gray-50 rounded-2xl p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">What subreddits do you monitor?</h3>
                 <p className="text-gray-600 leading-relaxed">
-                  We monitor all relevant subreddits including business, entrepreneurship, marketing, and industry-specific communities where people discuss problems and seek solutions.
+                  We automatically identify and monitor subreddits that are most relevant to your specific product and target audience, ensuring we find leads in the communities where your potential customers actually hang out.
                 </p>
               </div>
             </div>

@@ -118,7 +118,7 @@ export default function SupportPage() {
             <div className="border border-gray-200 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">How does the Reddit integration work?</h3>
               <p className="text-gray-600">
-                We connect to your Reddit account (with your permission) to monitor relevant subreddits and discussions. We only access public data and never store your Reddit credentials.
+                We connect to your Reddit account (with your permission) to discover and monitor subreddits that are most relevant to your specific products and target audience. We only access public data and never store your Reddit credentials.
               </p>
             </div>
             
