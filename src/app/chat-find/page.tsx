@@ -259,8 +259,19 @@ export default function ChatFindPage() {
     return 'bg-red-100 text-red-800 border-red-200'
   }
 
+  // Debug authentication state
+  console.log('Chat & Find auth state:', {
+    user: !!user,
+    authLoading,
+    subscriptionLoading,
+    userEmail: user?.email,
+    accessLevel,
+    canAccessPromote
+  })
+
   // Show loading while authentication is in progress
   if (authLoading || subscriptionLoading) {
+    console.log('Showing loading state')
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -273,30 +284,15 @@ export default function ChatFindPage() {
 
   // Don't render anything if not authenticated (redirect will happen)
   if (!user) {
+    console.log('No user, returning null')
     return null
   }
 
+  // Temporarily bypass AccessGuard for debugging
+  console.log('Rendering Chat & Find page (bypassing AccessGuard for debugging)')
+  
   return (
-    <AccessGuard 
-      feature="view_leads" 
-      fallback={
-        <AppLayout>
-          <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-            <div className="text-center max-w-md mx-auto px-6">
-              <div className="w-20 h-20 bg-gradient-to-r from-orange-100 to-red-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <MessageCircle className="w-10 h-10 text-orange-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Trial Expired</h2>
-              <p className="text-gray-600 mb-6">
-                Your free trial has ended. Upgrade to Pro to continue using Chat & Find.
-              </p>
-              <UpgradeButton />
-            </div>
-          </div>
-        </AppLayout>
-      }
-    >
-      <AppLayout>
+    <AppLayout>
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
             {/* Header */}
@@ -713,6 +709,6 @@ export default function ChatFindPage() {
           </div>
         )}
       </AppLayout>
-    </AccessGuard>
+    </AppLayout>
   )
 }
