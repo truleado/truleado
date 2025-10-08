@@ -147,7 +147,12 @@ export default function ChatFindPage() {
   }
 
   const handleSearch = async () => {
+    console.log('=== SEARCH FUNCTION CALLED ===')
     console.log('handleSearch called with query:', query)
+    console.log('Query length:', query.length)
+    console.log('Query trimmed:', query.trim())
+    console.log('Is query empty?', !query.trim())
+    
     if (!query.trim()) {
       console.log('Empty query, returning')
       return
@@ -267,6 +272,15 @@ export default function ChatFindPage() {
     userEmail: user?.email,
     accessLevel,
     canAccess
+  })
+  
+  // Debug component state
+  console.log('Chat & Find component state:', {
+    query,
+    isSearching,
+    leads: leads.length,
+    currentSearchId,
+    searchProgress
   })
 
   // Show loading while authentication is in progress
@@ -392,10 +406,20 @@ export default function ChatFindPage() {
                       rows={3}
                       disabled={isSearching}
                     />
-                    <div className="flex justify-end">
+                    <div className="flex justify-between">
                       <button
                         onClick={() => {
-                          console.log('Search button clicked')
+                          console.log('=== TEST BUTTON CLICKED ===')
+                          setQuery('test search query')
+                          console.log('Query set to:', 'test search query')
+                        }}
+                        className="bg-gray-500 text-white px-4 py-2 rounded-lg text-sm"
+                      >
+                        Test Query
+                      </button>
+                      <button
+                        onClick={() => {
+                          console.log('=== SEARCH BUTTON CLICKED ===')
                           handleSearch()
                         }}
                         disabled={isSearching || !query.trim()}
