@@ -146,38 +146,33 @@ export default function ChatFindPage() {
     }
   }
 
-  // Show loading while authentication is in progress
-  if (authLoading || subscriptionLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Don't render anything if not authenticated (redirect will happen)
-  if (!user) {
-    return null
-  }
-
   const handleSearch = async () => {
-    if (!query.trim()) return
+    console.log('handleSearch called with query:', query)
+    if (!query.trim()) {
+      console.log('Empty query, returning')
+      return
+    }
 
+    console.log('Starting search process...')
     setIsSearching(true)
     setLeads([])
     setSearchProgress(0)
     setProgressMessage('Starting search...')
 
     try {
+      console.log('Making API request to /api/chat-find/search-leads')
       const response = await fetch('/api/chat-find/search-leads', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ query: query.trim() }),
+      })
+
+      console.log('API response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
       })
 
       if (!response.ok) {
@@ -207,6 +202,7 @@ export default function ChatFindPage() {
       }
 
       const data = await response.json()
+      console.log('API response data:', data)
       setCurrentSearchId(data.searchId)
       
       // Add to search history
@@ -261,6 +257,23 @@ export default function ChatFindPage() {
     if (score >= 8) return 'bg-green-100 text-green-800 border-green-200'
     if (score >= 6) return 'bg-yellow-100 text-yellow-800 border-yellow-200'
     return 'bg-red-100 text-red-800 border-red-200'
+  }
+
+  // Show loading while authentication is in progress
+  if (authLoading || subscriptionLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render anything if not authenticated (redirect will happen)
+  if (!user) {
+    return null
   }
 
   return (
@@ -385,7 +398,10 @@ export default function ChatFindPage() {
                     />
                     <div className="flex justify-end">
                       <button
-                        onClick={handleSearch}
+                        onClick={() => {
+                          console.log('Search button clicked')
+                          handleSearch()
+                        }}
                         disabled={isSearching || !query.trim()}
                         className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 font-semibold"
                       >
