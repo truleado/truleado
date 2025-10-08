@@ -15,7 +15,8 @@ import {
   LogOut,
   User,
   ChevronRight,
-  Megaphone
+  Megaphone,
+  MessageCircle
 } from 'lucide-react'
 import { TrialBanner } from './TrialBanner'
 import { NotificationBell } from './NotificationBell'
@@ -25,6 +26,7 @@ const navigation = [
   { name: 'Products', href: '/products', icon: Package, description: 'Manage your products' },
   { name: 'Leads', href: '/leads', icon: Users, description: 'Discover new opportunities' },
   { name: 'Promote', href: '/promote', icon: Megaphone, description: 'Generate promotional posts' },
+  { name: 'Chat & Find', href: '/chat-find', icon: MessageCircle, description: 'AI-powered lead discovery' },
   { name: 'Settings', href: '/settings', icon: Settings, description: 'Account & preferences' },
 ]
 
