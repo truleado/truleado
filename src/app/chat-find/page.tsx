@@ -266,7 +266,7 @@ export default function ChatFindPage() {
     subscriptionLoading,
     userEmail: user?.email,
     accessLevel,
-    canAccessPromote
+    canAccess
   })
 
   // Show loading while authentication is in progress
