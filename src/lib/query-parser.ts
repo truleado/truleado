@@ -4,6 +4,11 @@ interface ParsedQuery {
   subreddits: string[]
   intent: 'find_leads' | 'find_discussions' | 'find_problems'
   confidence: number
+  problemKeywords: string[]
+  solutionKeywords: string[]
+  conversationTriggers: string[]
+  targetAudience: string
+  industryContext: string
 }
 
 export class QueryParser {
@@ -27,32 +32,80 @@ export class QueryParser {
   }
 
   private async parseWithGemini(query: string): Promise<ParsedQuery> {
-    const prompt = `You are an expert at analyzing user queries for lead discovery on Reddit. Parse this user query and extract the key information needed to find relevant leads.
+    const prompt = `You are an expert at analyzing user queries for lead discovery on Reddit. Your job is to deeply understand what the user wants and create highly targeted search parameters that will find people actively discussing problems and seeking solutions.
 
 User Query: "${query}"
 
-Analyze the query and provide a JSON response with this exact structure:
+Analyze this query and provide a JSON response with this exact structure:
 {
-  "productType": "The main product/service category being discussed (e.g., 'project management tools', 'CRM systems', 'email marketing software')",
-  "searchTerms": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
-  "subreddits": ["subreddit1", "subreddit2", "subreddit3", "subreddit4", "subreddit5"],
+  "productType": "The main product/service category being discussed",
+  "searchTerms": ["specific_term1", "specific_term2", "specific_term3", "specific_term4", "specific_term5"],
+  "subreddits": ["most_relevant_sub1", "most_relevant_sub2", "most_relevant_sub3", "most_relevant_sub4", "most_relevant_sub5"],
   "intent": "find_leads",
-  "confidence": 0.85
+  "confidence": 0.85,
+  "problemKeywords": ["problem1", "problem2", "problem3"],
+  "solutionKeywords": ["solution1", "solution2", "solution3"],
+  "conversationTriggers": ["trigger1", "trigger2", "trigger3"],
+  "targetAudience": "specific description of who they want to reach",
+  "industryContext": "industry or domain context"
 }
 
-GUIDELINES:
-1. ProductType: Extract the main product/service category the user is interested in
-2. SearchTerms: Generate 5 relevant keywords that would appear in Reddit discussions about this topic
-3. Subreddits: Suggest 5 relevant subreddits where people discuss this type of product/service
-4. Intent: Always use "find_leads" for lead discovery
-5. Confidence: Rate 0.0-1.0 based on how clear the query is
+CRITICAL GUIDELINES:
+1. PRODUCTTYPE: Extract the main product/service category the user is interested in
+2. SEARCHTERMS: Generate 5 highly specific terms that people would actually use when discussing their problems or seeking solutions
+3. SUBREDDITS: Choose 5 subreddits where this specific audience actively discusses these problems and seeks solutions
+4. PROBLEMKEYWORDS: Focus on pain points, frustrations, and challenges people express (e.g., "struggling with", "overwhelmed", "frustrated")
+5. SOLUTIONKEYWORDS: Include terms related to solutions, tools, services they might need
+6. CONVERSATIONTRIGGERS: Words/phrases that indicate someone is actively seeking help or solutions (e.g., "need help", "recommendations", "best tool")
+7. TARGETAUDIENCE: Identify the specific audience who would have these problems
+8. INDUSTRYCONTEXT: Identify the specific industry or domain
+9. CONFIDENCE: Rate 0.0-1.0 based on how clear the query is
 
-EXAMPLES:
-- "Find people looking for project management tools" → productType: "project management tools", searchTerms: ["project management", "task management", "team collaboration", "workflow", "productivity"]
-- "Show me discussions about CRM systems" → productType: "CRM systems", searchTerms: ["CRM", "customer management", "sales software", "lead tracking", "contact management"]
-- "I need leads for my email marketing software" → productType: "email marketing software", searchTerms: ["email marketing", "email campaigns", "newsletter", "email automation", "email tools"]
+EXAMPLES OF INTELLIGENT PARSING:
 
-Focus on extracting the most relevant information for finding Reddit discussions where people are actively seeking or discussing these types of solutions.`
+Query: "Find people looking for project management tools"
+{
+  "productType": "project management tools",
+  "searchTerms": ["project management", "task tracking", "team collaboration", "deadline management", "workflow tools"],
+  "subreddits": ["productivity", "projectmanagement", "entrepreneur", "freelance", "smallbusiness"],
+  "intent": "find_leads",
+  "confidence": 0.9,
+  "problemKeywords": ["overwhelmed", "disorganized", "missed deadlines", "team chaos", "project tracking"],
+  "solutionKeywords": ["project management", "task management", "collaboration tools", "workflow", "organization"],
+  "conversationTriggers": ["need help", "recommendations", "best tool", "struggling with", "looking for"],
+  "targetAudience": "Business owners, managers, freelancers struggling with project organization",
+  "industryContext": "Business productivity and project management"
+}
+
+Query: "Show me discussions about CRM systems"
+{
+  "productType": "CRM systems",
+  "searchTerms": ["CRM", "customer management", "sales tracking", "lead management", "contact database"],
+  "subreddits": ["sales", "entrepreneur", "startups", "saas", "marketing"],
+  "intent": "find_leads",
+  "confidence": 0.85,
+  "problemKeywords": ["losing leads", "disorganized contacts", "sales tracking", "customer data", "follow up"],
+  "solutionKeywords": ["CRM", "customer management", "sales software", "lead tracking", "contact management"],
+  "conversationTriggers": ["need a CRM", "recommendations", "best CRM", "help with", "looking for"],
+  "targetAudience": "Sales professionals, business owners, entrepreneurs managing customer relationships",
+  "industryContext": "Sales and customer relationship management"
+}
+
+Query: "I need leads for my email marketing software"
+{
+  "productType": "email marketing software",
+  "searchTerms": ["email marketing", "email campaigns", "open rates", "email automation", "newsletter tools"],
+  "subreddits": ["marketing", "entrepreneur", "smallbusiness", "ecommerce", "digitalmarketing"],
+  "intent": "find_leads",
+  "confidence": 0.9,
+  "problemKeywords": ["low open rates", "spam folder", "unsubscribes", "email deliverability", "list building"],
+  "solutionKeywords": ["email marketing", "automation", "segmentation", "personalization", "deliverability"],
+  "conversationTriggers": ["help with email", "struggling", "not working", "advice needed", "recommendations"],
+  "targetAudience": "Small business owners, marketers, e-commerce entrepreneurs struggling with email marketing",
+  "industryContext": "Digital marketing and email marketing"
+}
+
+Focus on finding people who are ACTIVELY discussing problems and seeking solutions, not just mentioning keywords. The search terms should be what people actually say when they're frustrated or looking for help.`
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${this.geminiApiKey}`, {
       method: 'POST',
@@ -106,7 +159,12 @@ Focus on extracting the most relevant information for finding Reddit discussions
       searchTerms: Array.isArray(parsed.searchTerms) ? parsed.searchTerms : [],
       subreddits: Array.isArray(parsed.subreddits) ? parsed.subreddits : [],
       intent: parsed.intent || 'find_leads',
-      confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.7
+      confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.7,
+      problemKeywords: Array.isArray(parsed.problemKeywords) ? parsed.problemKeywords : [],
+      solutionKeywords: Array.isArray(parsed.solutionKeywords) ? parsed.solutionKeywords : [],
+      conversationTriggers: Array.isArray(parsed.conversationTriggers) ? parsed.conversationTriggers : [],
+      targetAudience: parsed.targetAudience || 'General audience',
+      industryContext: parsed.industryContext || 'General'
     }
   }
 
@@ -151,7 +209,12 @@ Focus on extracting the most relevant information for finding Reddit discussions
       searchTerms,
       subreddits,
       intent: 'find_leads',
-      confidence: 0.6
+      confidence: 0.6,
+      problemKeywords: ['struggling', 'need help', 'frustrated'],
+      solutionKeywords: searchTerms,
+      conversationTriggers: ['need help', 'recommendations', 'looking for'],
+      targetAudience: 'General audience',
+      industryContext: 'General'
     }
   }
 }

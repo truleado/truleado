@@ -4,12 +4,70 @@ import { queryParser } from '@/lib/query-parser'
 import { getRedditClient } from '@/lib/reddit-client'
 import { aiLeadAnalyzer } from '@/lib/ai-lead-analyzer'
 
+// Enhanced relevance calculation with context
+async function calculateEnhancedRelevanceScore(post: any, parsedQuery: ParsedQuery): Promise<number> {
+  let score = 0
+  const text = `${post.title} ${post.selftext || ''}`.toLowerCase()
+  
+  // Base score from post engagement
+  score += Math.min(post.score / 10, 5) // Up to 5 points for high engagement
+  score += Math.min(post.num_comments / 5, 3) // Up to 3 points for discussion
+  
+  // Search terms relevance (most important)
+  for (const term of parsedQuery.searchTerms) {
+    if (text.includes(term.toLowerCase())) {
+      score += 3
+    }
+  }
+  
+  // Problem keywords (indicates pain points)
+  for (const keyword of parsedQuery.problemKeywords) {
+    if (text.includes(keyword.toLowerCase())) {
+      score += 2
+    }
+  }
+  
+  // Conversation triggers (indicates active seeking)
+  for (const trigger of parsedQuery.conversationTriggers) {
+    if (text.includes(trigger.toLowerCase())) {
+      score += 2
+    }
+  }
+  
+  // Solution keywords (indicates they're looking for solutions)
+  for (const keyword of parsedQuery.solutionKeywords) {
+    if (text.includes(keyword.toLowerCase())) {
+      score += 1.5
+    }
+  }
+  
+  // Bonus for question marks (indicates seeking help)
+  if (text.includes('?')) {
+    score += 1
+  }
+  
+  // Bonus for help-seeking phrases
+  const helpPhrases = ['help', 'advice', 'recommend', 'suggest', 'need', 'looking for', 'struggling', 'frustrated']
+  for (const phrase of helpPhrases) {
+    if (text.includes(phrase)) {
+      score += 1
+    }
+  }
+  
+  return Math.min(score, 10) // Cap at 10
+}
+
 interface ParsedQuery {
   productType: string
   searchTerms: string[]
   subreddits: string[]
   intent: 'find_leads' | 'find_discussions' | 'find_problems'
   confidence: number
+  problemKeywords: string[]
+  solutionKeywords: string[]
+  conversationTriggers: string[]
+  targetAudience: string
+  industryContext: string
 }
 
 export async function POST(request: NextRequest) {
@@ -160,9 +218,20 @@ export async function POST(request: NextRequest) {
           continue
         }
         
-        // Use Reddit client to search for posts with timeout
-        const searchQuery = parsedQuery.searchTerms.join(' OR ')
-        console.log(`Searching r/${subreddit} with query: "${searchQuery}"`)
+        // Create intelligent search query combining search terms, problem keywords, and conversation triggers
+        const allSearchTerms = [
+          ...parsedQuery.searchTerms,
+          ...parsedQuery.problemKeywords,
+          ...parsedQuery.conversationTriggers
+        ]
+        
+        // Remove duplicates and create a more targeted search
+        const uniqueTerms = [...new Set(allSearchTerms)]
+        const searchQuery = uniqueTerms.slice(0, 8).join(' OR ') // Limit to 8 terms for better results
+        
+        console.log(`Searching r/${subreddit} with intelligent query: "${searchQuery}"`)
+        console.log(`Target audience: ${parsedQuery.targetAudience}`)
+        console.log(`Industry context: ${parsedQuery.industryContext}`)
         
         const searchPromise = redditClient.searchPosts({
           subreddit: subreddit,
@@ -193,8 +262,8 @@ export async function POST(request: NextRequest) {
           if (leads.length >= totalMaxLeads) break
 
           try {
-            // Calculate relevance score
-            const relevanceScore = await calculateRelevanceScore(post, parsedQuery)
+            // Calculate enhanced relevance score
+            const relevanceScore = await calculateEnhancedRelevanceScore(post, parsedQuery)
             
             // Only include high-relevance leads
             if (relevanceScore >= 6) {
