@@ -39,8 +39,8 @@ User Query: "${query}"
 Analyze this query and provide a JSON response with this exact structure:
 {
   "productType": "The main product/service category being discussed",
-  "searchTerms": ["specific_term1", "specific_term2", "specific_term3", "specific_term4", "specific_term5"],
-  "subreddits": ["most_relevant_sub1", "most_relevant_sub2", "most_relevant_sub3", "most_relevant_sub4", "most_relevant_sub5"],
+  "searchTerms": ["specific_term1", "specific_term2", "specific_term3", "specific_term4", "specific_term5", "specific_term6", "specific_term7", "specific_term8"],
+  "subreddits": ["most_relevant_sub1", "most_relevant_sub2", "most_relevant_sub3", "most_relevant_sub4", "most_relevant_sub5", "most_relevant_sub6", "most_relevant_sub7", "most_relevant_sub8"],
   "intent": "find_leads",
   "confidence": 0.85,
   "problemKeywords": ["problem1", "problem2", "problem3"],
@@ -52,8 +52,8 @@ Analyze this query and provide a JSON response with this exact structure:
 
 CRITICAL GUIDELINES:
 1. PRODUCTTYPE: Extract the main product/service category the user is interested in
-2. SEARCHTERMS: Generate 5 highly specific terms that people would actually use when discussing their problems or seeking solutions
-3. SUBREDDITS: Choose 5 subreddits where this specific audience actively discusses these problems and seeks solutions
+2. SEARCHTERMS: Generate 8 highly specific terms that people would actually use when discussing their problems or seeking solutions
+3. SUBREDDITS: Choose 8 subreddits where this specific audience actively discusses these problems and seeks solutions
 4. PROBLEMKEYWORDS: Focus on pain points, frustrations, and challenges people express (e.g., "struggling with", "overwhelmed", "frustrated")
 5. SOLUTIONKEYWORDS: Include terms related to solutions, tools, services they might need
 6. CONVERSATIONTRIGGERS: Words/phrases that indicate someone is actively seeking help or solutions (e.g., "need help", "recommendations", "best tool")

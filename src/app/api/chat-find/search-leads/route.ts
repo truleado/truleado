@@ -46,8 +46,8 @@ async function calculateEnhancedRelevanceScore(post: any, parsedQuery: ParsedQue
     score += 1
   }
   
-  // Bonus for help-seeking phrases
-  const helpPhrases = ['help', 'advice', 'recommend', 'suggest', 'need', 'looking for', 'struggling', 'frustrated']
+  // Bonus for help-seeking phrases (expanded list)
+  const helpPhrases = ['help', 'advice', 'recommend', 'suggest', 'need', 'looking for', 'struggling', 'frustrated', 'want', 'require', 'seeking', 'problem', 'issue', 'difficult', 'challenge', 'best', 'good', 'alternative', 'option', 'solution', 'tool', 'software', 'app', 'service']
   for (const phrase of helpPhrases) {
     if (text.includes(phrase)) {
       score += 1
@@ -207,8 +207,8 @@ export async function POST(request: NextRequest) {
     }
 
     const leads = []
-    const maxLeadsPerSubreddit = 3
-    const totalMaxLeads = 15
+    const maxLeadsPerSubreddit = 5  // Increased from 3
+    const totalMaxLeads = 25  // Increased from 15
     const totalSubreddits = parsedQuery.subreddits.length
 
     console.log(`Searching in ${totalSubreddits} subreddits for leads`)
@@ -230,7 +230,7 @@ export async function POST(request: NextRequest) {
         
         // Remove duplicates and create a more targeted search
         const uniqueTerms = [...new Set(allSearchTerms)]
-        const searchQuery = uniqueTerms.slice(0, 8).join(' OR ') // Limit to 8 terms for better results
+        const searchQuery = uniqueTerms.slice(0, 12).join(' OR ') // Increased from 8 to 12 terms for better coverage
         
         console.log(`Searching r/${subreddit} with query: "${searchQuery}"`)
         
@@ -238,13 +238,13 @@ export async function POST(request: NextRequest) {
           subreddit: subreddit,
           query: searchQuery,
           sort: 'relevance',
-          time: 'week',
+          time: 'year',  // Changed from 'week' to 'year'
           limit: maxLeadsPerSubreddit
         })
         
-        // Add timeout to prevent 504 errors
+        // Add timeout to prevent 504 errors (increased from 10s to 20s)
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Search timeout')), 10000)
+          setTimeout(() => reject(new Error('Search timeout')), 20000)
         )
         
         const posts = await Promise.race([searchPromise, timeoutPromise])
@@ -259,6 +259,59 @@ export async function POST(request: NextRequest) {
           })
         } else {
           console.log(`No posts found in r/${subreddit} with query: "${searchQuery}"`)
+          
+          // Try a simpler search if the complex one failed
+          if (searchQuery.includes(' OR ')) {
+            console.log(`Trying simpler search in r/${subreddit}...`)
+            try {
+              const simpleQuery = parsedQuery.searchTerms.slice(0, 3).join(' ')
+              const simpleSearchPromise = redditClient.searchPosts({
+                subreddit: subreddit,
+                query: simpleQuery,
+                sort: 'hot',
+                time: 'year',
+                limit: maxLeadsPerSubreddit
+              })
+              
+              const simpleTimeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Simple search timeout')), 15000)
+              )
+              
+              const simplePosts = await Promise.race([simpleSearchPromise, simpleTimeoutPromise])
+              console.log(`Simple search found ${simplePosts.length} posts in r/${subreddit}`)
+              
+              // Process simple search results
+              for (const post of simplePosts) {
+                if (leads.length >= totalMaxLeads) break
+                
+                try {
+                  const relevanceScore = await calculateEnhancedRelevanceScore(post, parsedQuery)
+                  if (relevanceScore >= 3) { // Even lower threshold for fallback
+                    console.log(`Fallback lead found: "${post.title}" (score: ${relevanceScore})`)
+                    // Add to leads with basic data
+                    leads.push({
+                      id: post.id,
+                      title: post.title,
+                      content: post.selftext || '',
+                      subreddit: post.subreddit,
+                      author: post.author,
+                      score: post.score,
+                      url: `https://reddit.com${post.permalink}`,
+                      created_utc: post.created_utc,
+                      relevanceScore: relevanceScore,
+                      reasoning: `Found via fallback search for "${simpleQuery}"`,
+                      problemKeywords: [],
+                      solutionKeywords: []
+                    })
+                  }
+                } catch (postError) {
+                  console.error(`Error processing fallback post ${post.id}:`, postError)
+                }
+              }
+            } catch (fallbackError) {
+              console.error(`Fallback search failed for r/${subreddit}:`, fallbackError)
+            }
+          }
         }
 
         // Process each post
@@ -269,8 +322,8 @@ export async function POST(request: NextRequest) {
             // Calculate enhanced relevance score
             const relevanceScore = await calculateEnhancedRelevanceScore(post, parsedQuery)
             
-            // Only include high-relevance leads
-            if (relevanceScore >= 6) {
+            // Only include relevant leads (lowered threshold from 6 to 4)
+            if (relevanceScore >= 4) {
               console.log(`High relevance lead found: "${post.title}" (score: ${relevanceScore})`)
               // Perform AI analysis
               const leadData = {
