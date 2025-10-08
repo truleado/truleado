@@ -708,7 +708,6 @@ export default function ChatFindPage() {
             </div>
           </div>
         )}
-      </AppLayout>
     </AppLayout>
   )
 }
