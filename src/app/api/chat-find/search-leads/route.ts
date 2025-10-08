@@ -82,7 +82,9 @@ export async function POST(request: NextRequest) {
     console.log('Chat & Find API: Auth check', { 
       hasUser: !!user, 
       userId: user?.id, 
-      authError: authError?.message 
+      userEmail: user?.email,
+      authError: authError?.message,
+      session: await supabase.auth.getSession()
     })
     
     if (authError || !user) {

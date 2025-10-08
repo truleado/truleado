@@ -165,6 +165,11 @@ export default function ChatFindPage() {
     setProgressMessage('Starting search...')
 
     try {
+      // Test authentication first
+      console.log('Testing authentication...')
+      const authTest = await fetch('/api/auth/me')
+      console.log('Auth test response:', authTest.status, authTest.statusText)
+      
       console.log('Making API request to /api/chat-find/search-leads')
       const response = await fetch('/api/chat-find/search-leads', {
         method: 'POST',
