@@ -63,6 +63,7 @@ export default function ChatFindPage() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [usageInfo, setUsageInfo] = useState<{used: number, limit: number} | null>(null)
   const [userUsage, setUserUsage] = useState<{used: number, limit: number, isSubscribed: boolean} | null>(null)
+  const [redditStatus, setRedditStatus] = useState<{connected: boolean, hasToken: boolean, tokenExpired: boolean, username?: string} | null>(null)
 
   // Redirect to sign-in if not authenticated
   useEffect(() => {
@@ -76,6 +77,7 @@ export default function ChatFindPage() {
     if (user) {
       loadSearchHistory()
       loadUserUsage()
+      loadRedditStatus()
     }
   }, [user])
 
@@ -143,6 +145,21 @@ export default function ChatFindPage() {
       }
     } catch (error) {
       console.error('Error loading user usage:', error)
+    }
+  }
+
+  const loadRedditStatus = async () => {
+    try {
+      const response = await fetch('/api/chat-find/reddit-status')
+      if (response.ok) {
+        const data = await response.json()
+        setRedditStatus(data)
+        console.log('Reddit status:', data)
+      } else if (response.status === 401) {
+        console.log('Reddit status unauthorized, skipping')
+      }
+    } catch (error) {
+      console.error('Error loading Reddit status:', error)
     }
   }
 
@@ -293,6 +310,22 @@ export default function ChatFindPage() {
                   <div>
                     <h1 className="text-3xl font-bold text-gray-900">Chat & Find</h1>
                     <p className="text-gray-600">AI-powered lead discovery with natural language</p>
+                    {redditStatus && (
+                      <div className="mt-2">
+                        {redditStatus.connected ? (
+                          <div className="flex items-center gap-2 text-sm text-green-600">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            Reddit connected as {redditStatus.username}
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-sm text-red-600">
+                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                            {redditStatus.tokenExpired ? 'Reddit token expired' : 'Reddit not connected'}
+                            <a href="/settings" className="text-blue-600 hover:underline">Connect Reddit</a>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     {userUsage && !userUsage.isSubscribed && (
                       <div className="mt-2 text-sm">
                         <span className="text-gray-500">Free searches: </span>

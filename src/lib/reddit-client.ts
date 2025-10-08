@@ -106,13 +106,21 @@ export class RedditClient {
 
       if (error) {
         console.error('Error fetching Reddit tokens:', error)
+        console.error('Error details:', { message: error.message, details: error.details, hint: error.hint })
         return
       }
 
-      console.log('API Keys query result:', { apiKeys, error })
+      console.log('API Keys query result:', { 
+        hasApiKeys: !!apiKeys, 
+        hasAccessToken: !!apiKeys?.reddit_access_token,
+        hasRefreshToken: !!apiKeys?.reddit_refresh_token,
+        username: apiKeys?.reddit_username,
+        tokenExpires: apiKeys?.reddit_token_expires_at
+      })
 
       if (!apiKeys || !apiKeys.reddit_access_token) {
         console.warn('No Reddit OAuth tokens found for user. Reddit search will be disabled.')
+        console.warn('User needs to connect Reddit account in Settings.')
         return
       }
 
@@ -156,6 +164,7 @@ export class RedditClient {
       console.log('Reddit client initialized with OAuth tokens successfully')
     } catch (error) {
       console.error('Failed to initialize Reddit client with OAuth:', error)
+      console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace')
     }
   }
 
