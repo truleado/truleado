@@ -126,8 +126,8 @@ export async function POST(request: NextRequest) {
       userId: redditClient.userId
     })
     
-    // Wait for client to initialize
-    await new Promise(resolve => setTimeout(resolve, 3000))
+    // Wait for client to initialize (reduced timeout)
+    await new Promise(resolve => setTimeout(resolve, 1000))
     
     console.log('Reddit client status after wait:', {
       isInitialized: redditClient.isInitialized,
@@ -135,9 +135,8 @@ export async function POST(request: NextRequest) {
     })
     
     if (!redditClient.isInitialized) {
-      return NextResponse.json({ 
-        error: 'Reddit client not initialized. Please check your Reddit connection in Settings.' 
-      }, { status: 500 })
+      console.log('Reddit client not initialized, proceeding with limited search')
+      // Don't fail completely, just proceed with limited functionality
     }
 
     const leads = []
@@ -147,7 +146,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`Searching in ${totalSubreddits} subreddits for leads`)
 
-    // Search each subreddit
+    // Search each subreddit with timeout protection
     for (let i = 0; i < parsedQuery.subreddits.length; i++) {
       const subreddit = parsedQuery.subreddits[i]
       if (leads.length >= totalMaxLeads) break
@@ -155,17 +154,30 @@ export async function POST(request: NextRequest) {
       try {
         console.log(`Searching in r/${subreddit}... (${i + 1}/${totalSubreddits})`)
         
-        // Use Reddit client to search for posts
+        // Skip if Reddit client not initialized
+        if (!redditClient.isInitialized) {
+          console.log(`Skipping r/${subreddit} - Reddit client not initialized`)
+          continue
+        }
+        
+        // Use Reddit client to search for posts with timeout
         const searchQuery = parsedQuery.searchTerms.join(' OR ')
         console.log(`Searching r/${subreddit} with query: "${searchQuery}"`)
         
-        const posts = await redditClient.searchPosts({
+        const searchPromise = redditClient.searchPosts({
           subreddit: subreddit,
           query: searchQuery,
           sort: 'relevance',
           time: 'week',
           limit: maxLeadsPerSubreddit
         })
+        
+        // Add timeout to prevent 504 errors
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Search timeout')), 10000)
+        )
+        
+        const posts = await Promise.race([searchPromise, timeoutPromise])
 
         console.log(`Found ${posts.length} posts in r/${subreddit}`)
         if (posts.length > 0) {
@@ -242,6 +254,9 @@ export async function POST(request: NextRequest) {
         }
       } catch (subredditError) {
         console.error(`Error searching in r/${subreddit}:`, subredditError)
+        if (subredditError.message === 'Search timeout') {
+          console.log(`Timeout searching r/${subreddit}, continuing with next subreddit`)
+        }
         // Continue with next subreddit
       }
     }
@@ -306,6 +321,17 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`Chat & Find completed: Found ${leads.length} leads for query "${query}"`)
+
+    // If no leads found and Reddit client not initialized, provide helpful message
+    if (leads.length === 0 && !redditClient.isInitialized) {
+      return NextResponse.json({ 
+        leads: [],
+        query: parsedQuery,
+        totalFound: 0,
+        searchId: searchRecord.id,
+        message: 'No leads found. Please connect your Reddit account in Settings to enable lead discovery.'
+      })
+    }
 
     return NextResponse.json({ 
       leads,

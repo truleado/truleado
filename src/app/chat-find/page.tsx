@@ -103,9 +103,14 @@ export default function ChatFindPage() {
               setCurrentSearchId(null)
               alert('Search failed: ' + data.message)
             }
+          } else if (response.status === 401) {
+            console.log('Progress tracking unauthorized, stopping progress check')
+            setIsSearching(false)
+            setCurrentSearchId(null)
           }
         } catch (error) {
           console.error('Error tracking progress:', error)
+          // Don't stop searching on progress tracking errors
         }
       }, 1000)
 
@@ -119,6 +124,8 @@ export default function ChatFindPage() {
       if (response.ok) {
         const data = await response.json()
         setSavedSearches(data.searches)
+      } else if (response.status === 401) {
+        console.log('Search history unauthorized, skipping')
       }
     } catch (error) {
       console.error('Error loading search history:', error)
@@ -131,6 +138,8 @@ export default function ChatFindPage() {
       if (response.ok) {
         const data = await response.json()
         setUserUsage(data)
+      } else if (response.status === 401) {
+        console.log('Usage info unauthorized, skipping')
       }
     } catch (error) {
       console.error('Error loading user usage:', error)
@@ -172,7 +181,15 @@ export default function ChatFindPage() {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
+        let errorData
+        try {
+          errorData = await response.json()
+        } catch (jsonError) {
+          // Handle non-JSON responses
+          const textResponse = await response.text()
+          console.error('Non-JSON response:', textResponse)
+          throw new Error(`Server error: ${response.status} - ${textResponse}`)
+        }
         
         // Handle usage limit error
         if (response.status === 402 && errorData.code === 'USAGE_LIMIT_EXCEEDED') {
