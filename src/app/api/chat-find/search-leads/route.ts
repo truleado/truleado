@@ -74,7 +74,6 @@ export async function POST(request: NextRequest) {
   try {
     console.log('Chat & Find API: Starting request')
     const supabase = await createClient()
-    console.log('Supabase client created successfully')
     
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -83,8 +82,7 @@ export async function POST(request: NextRequest) {
       hasUser: !!user, 
       userId: user?.id, 
       userEmail: user?.email,
-      authError: authError?.message,
-      session: await supabase.auth.getSession()
+      authError: authError?.message
     })
     
     if (authError || !user) {
@@ -184,22 +182,28 @@ export async function POST(request: NextRequest) {
     
     console.log('Reddit client status:', {
       isInitialized: redditClient.isInitialized,
-      userId: redditClient.userId,
-      hasAccessToken: !!redditClient.accessToken,
-      hasRefreshToken: !!redditClient.refreshToken
+      userId: redditClient.userId
     })
     
-    // Wait for client to initialize (reduced timeout)
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Wait for client to initialize
+    await new Promise(resolve => setTimeout(resolve, 2000))
     
     console.log('Reddit client status after wait:', {
       isInitialized: redditClient.isInitialized,
       userId: redditClient.userId
     })
     
+    // If Reddit client not initialized, return helpful message
     if (!redditClient.isInitialized) {
-      console.log('Reddit client not initialized, proceeding with limited search')
-      // Don't fail completely, just proceed with limited functionality
+      console.log('Reddit client not initialized - user needs to connect Reddit')
+      return NextResponse.json({ 
+        leads: [],
+        query: parsedQuery,
+        totalFound: 0,
+        searchId: searchRecord.id,
+        message: 'Please connect your Reddit account in Settings to enable lead discovery.',
+        requiresRedditConnection: true
+      })
     }
 
     const leads = []
@@ -217,12 +221,6 @@ export async function POST(request: NextRequest) {
       try {
         console.log(`Searching in r/${subreddit}... (${i + 1}/${totalSubreddits})`)
         
-        // Skip if Reddit client not initialized
-        if (!redditClient.isInitialized) {
-          console.log(`Skipping r/${subreddit} - Reddit client not initialized`)
-          continue
-        }
-        
         // Create intelligent search query combining search terms, problem keywords, and conversation triggers
         const allSearchTerms = [
           ...parsedQuery.searchTerms,
@@ -234,9 +232,7 @@ export async function POST(request: NextRequest) {
         const uniqueTerms = [...new Set(allSearchTerms)]
         const searchQuery = uniqueTerms.slice(0, 8).join(' OR ') // Limit to 8 terms for better results
         
-        console.log(`Searching r/${subreddit} with intelligent query: "${searchQuery}"`)
-        console.log(`Target audience: ${parsedQuery.targetAudience}`)
-        console.log(`Industry context: ${parsedQuery.industryContext}`)
+        console.log(`Searching r/${subreddit} with query: "${searchQuery}"`)
         
         const searchPromise = redditClient.searchPosts({
           subreddit: subreddit,
@@ -272,10 +268,9 @@ export async function POST(request: NextRequest) {
           try {
             // Calculate enhanced relevance score
             const relevanceScore = await calculateEnhancedRelevanceScore(post, parsedQuery)
-            console.log(`Post relevance score: ${relevanceScore} for "${post.title}"`)
             
-            // Only include high-relevance leads (lowered threshold for debugging)
-            if (relevanceScore >= 3) {
+            // Only include high-relevance leads
+            if (relevanceScore >= 6) {
               console.log(`High relevance lead found: "${post.title}" (score: ${relevanceScore})`)
               // Perform AI analysis
               const leadData = {

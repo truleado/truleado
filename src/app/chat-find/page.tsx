@@ -147,42 +147,20 @@ export default function ChatFindPage() {
   }
 
   const handleSearch = async () => {
-    console.log('=== SEARCH FUNCTION CALLED ===')
-    console.log('handleSearch called with query:', query)
-    console.log('Query length:', query.length)
-    console.log('Query trimmed:', query.trim())
-    console.log('Is query empty?', !query.trim())
-    
-    if (!query.trim()) {
-      console.log('Empty query, returning')
-      return
-    }
+    if (!query.trim()) return
 
-    console.log('Starting search process...')
     setIsSearching(true)
     setLeads([])
     setSearchProgress(0)
     setProgressMessage('Starting search...')
 
     try {
-      // Test authentication first
-      console.log('Testing authentication...')
-      const authTest = await fetch('/api/auth/me')
-      console.log('Auth test response:', authTest.status, authTest.statusText)
-      
-      console.log('Making API request to /api/chat-find/search-leads')
       const response = await fetch('/api/chat-find/search-leads', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ query: query.trim() }),
-      })
-
-      console.log('API response received:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok
       })
 
       if (!response.ok) {
@@ -277,15 +255,6 @@ export default function ChatFindPage() {
     userEmail: user?.email,
     accessLevel,
     canAccess
-  })
-  
-  // Debug component state
-  console.log('Chat & Find component state:', {
-    query,
-    isSearching,
-    leads: leads.length,
-    currentSearchId,
-    searchProgress
   })
 
   // Show loading while authentication is in progress
@@ -411,22 +380,9 @@ export default function ChatFindPage() {
                       rows={3}
                       disabled={isSearching}
                     />
-                    <div className="flex justify-between">
+                    <div className="flex justify-end">
                       <button
-                        onClick={() => {
-                          console.log('=== TEST BUTTON CLICKED ===')
-                          setQuery('test search query')
-                          console.log('Query set to:', 'test search query')
-                        }}
-                        className="bg-gray-500 text-white px-4 py-2 rounded-lg text-sm"
-                      >
-                        Test Query
-                      </button>
-                      <button
-                        onClick={() => {
-                          console.log('=== SEARCH BUTTON CLICKED ===')
-                          handleSearch()
-                        }}
+                        onClick={handleSearch}
                         disabled={isSearching || !query.trim()}
                         className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 font-semibold"
                       >
