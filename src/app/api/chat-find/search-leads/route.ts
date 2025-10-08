@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
   try {
     console.log('Chat & Find API: Starting request')
     const supabase = await createClient()
+    console.log('Supabase client created successfully')
     
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -181,7 +182,9 @@ export async function POST(request: NextRequest) {
     
     console.log('Reddit client status:', {
       isInitialized: redditClient.isInitialized,
-      userId: redditClient.userId
+      userId: redditClient.userId,
+      hasAccessToken: !!redditClient.accessToken,
+      hasRefreshToken: !!redditClient.refreshToken
     })
     
     // Wait for client to initialize (reduced timeout)
@@ -253,8 +256,11 @@ export async function POST(request: NextRequest) {
           console.log('Sample post:', {
             title: posts[0].title,
             subreddit: posts[0].subreddit,
-            score: posts[0].score
+            score: posts[0].score,
+            num_comments: posts[0].num_comments
           })
+        } else {
+          console.log(`No posts found in r/${subreddit} with query: "${searchQuery}"`)
         }
 
         // Process each post
@@ -264,9 +270,11 @@ export async function POST(request: NextRequest) {
           try {
             // Calculate enhanced relevance score
             const relevanceScore = await calculateEnhancedRelevanceScore(post, parsedQuery)
+            console.log(`Post relevance score: ${relevanceScore} for "${post.title}"`)
             
-            // Only include high-relevance leads
-            if (relevanceScore >= 6) {
+            // Only include high-relevance leads (lowered threshold for debugging)
+            if (relevanceScore >= 3) {
+              console.log(`High relevance lead found: "${post.title}" (score: ${relevanceScore})`)
               // Perform AI analysis
               const leadData = {
                 title: post.title,
@@ -332,6 +340,12 @@ export async function POST(request: NextRequest) {
 
     // Sort leads by relevance score (highest first)
     leads.sort((a, b) => b.relevanceScore - a.relevanceScore)
+    
+    console.log('Search summary:', {
+      totalSubredditsSearched: parsedQuery.subreddits.length,
+      totalLeadsFound: leads.length,
+      redditClientStatus: redditClient.isInitialized ? 'initialized' : 'not initialized'
+    })
 
     // Save results to database
     if (leads.length > 0) {
@@ -390,15 +404,34 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`Chat & Find completed: Found ${leads.length} leads for query "${query}"`)
+    console.log('Final leads summary:', {
+      totalLeads: leads.length,
+      redditClientInitialized: redditClient.isInitialized,
+      searchedSubreddits: parsedQuery.subreddits.length,
+      searchTerms: parsedQuery.searchTerms
+    })
 
     // If no leads found and Reddit client not initialized, provide helpful message
     if (leads.length === 0 && !redditClient.isInitialized) {
+      console.log('No leads found - Reddit client not initialized')
       return NextResponse.json({ 
         leads: [],
         query: parsedQuery,
         totalFound: 0,
         searchId: searchRecord.id,
         message: 'No leads found. Please connect your Reddit account in Settings to enable lead discovery.'
+      })
+    }
+
+    // If no leads found but Reddit client is initialized, provide different message
+    if (leads.length === 0 && redditClient.isInitialized) {
+      console.log('No leads found - Reddit client initialized but no relevant posts')
+      return NextResponse.json({ 
+        leads: [],
+        query: parsedQuery,
+        totalFound: 0,
+        searchId: searchRecord.id,
+        message: 'No relevant leads found. Try adjusting your search terms or check different subreddits.'
       })
     }
 
