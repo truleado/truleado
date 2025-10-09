@@ -230,6 +230,27 @@ export default function ChatFindPage() {
       console.log('API response data:', data)
       setCurrentSearchId(data.searchId)
       
+      // If leads are returned immediately, set them
+      if (data.leads && data.leads.length > 0) {
+        console.log('Setting leads from immediate response:', data.leads.length)
+        setLeads(data.leads)
+        setIsSearching(false)
+        setCurrentSearchId(null)
+        // Reload the search history and usage
+        loadSearchHistory()
+        loadUserUsage()
+      } else if (data.totalFound === 0) {
+        // No leads found, stop searching
+        console.log('No leads found, stopping search')
+        setLeads([])
+        setIsSearching(false)
+        setCurrentSearchId(null)
+        loadSearchHistory()
+        loadUserUsage()
+      } else {
+        console.log('No immediate leads, waiting for progress tracking...')
+      }
+      
       // Add to search history
       if (!searchHistory.includes(query.trim())) {
         setSearchHistory(prev => [query.trim(), ...prev.slice(0, 4)])

@@ -430,7 +430,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Update search record as completed
-    await supabase
+    console.log('Updating search record as completed:', {
+      searchId: searchRecord.id,
+      totalLeadsFound: leads.length,
+      status: 'completed'
+    })
+    
+    const { error: updateError } = await supabase
       .from('chat_find_searches')
       .update({
         total_leads_found: leads.length,
@@ -438,6 +444,12 @@ export async function POST(request: NextRequest) {
         completed_at: new Date().toISOString()
       })
       .eq('id', searchRecord.id)
+    
+    if (updateError) {
+      console.error('Failed to update search record:', updateError)
+    } else {
+      console.log('Search record updated successfully')
+    }
 
     // Increment user's search count
     try {

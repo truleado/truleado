@@ -27,7 +27,11 @@ export async function GET(request: NextRequest) {
       .eq('user_id', user.id)
       .single()
 
+    console.log('Progress API - Search record:', search)
+    console.log('Progress API - Search error:', searchError)
+
     if (searchError || !search) {
+      console.log('Progress API - Search not found or error')
       return NextResponse.json({ error: 'Search not found' }, { status: 404 })
     }
 

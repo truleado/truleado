@@ -26,6 +26,10 @@ export async function GET(request: NextRequest) {
       .eq('search_id', searchId)
       .order('relevance_score', { ascending: false })
 
+    console.log('Results API - Search ID:', searchId)
+    console.log('Results API - Results count:', results?.length || 0)
+    console.log('Results API - Results error:', resultsError)
+
     if (resultsError) {
       console.error('Error getting search results:', resultsError)
       return NextResponse.json({ error: 'Failed to get search results' }, { status: 500 })
