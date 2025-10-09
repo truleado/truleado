@@ -437,7 +437,7 @@ export default function ChatFindPage() {
                         <button
                           onClick={() => {
                             console.log('View Results clicked for search:', search.id)
-                            loadSearchResults(search.id)
+                            window.open(`/chat-find/results?searchId=${search.id}`, '_blank')
                           }}
                           className="mt-2 text-blue-600 hover:text-blue-500 text-sm font-medium"
                         >

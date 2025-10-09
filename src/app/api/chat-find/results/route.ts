@@ -19,6 +19,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Search ID is required' }, { status: 400 })
     }
 
+    // Get search information
+    const { data: searchInfo, error: searchError } = await supabase
+      .from('chat_find_searches')
+      .select('*')
+      .eq('id', searchId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (searchError) {
+      console.error('Error getting search info:', searchError)
+      return NextResponse.json({ error: 'Search not found or unauthorized' }, { status: 404 })
+    }
+
     // Get search results
     const { data: results, error: resultsError } = await supabase
       .from('chat_find_results')
@@ -58,7 +71,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       results: formattedResults,
-      total: formattedResults.length
+      total: formattedResults.length,
+      searchInfo: searchInfo
     })
 
   } catch (error) {

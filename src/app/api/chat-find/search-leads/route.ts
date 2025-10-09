@@ -399,6 +399,26 @@ export async function POST(request: NextRequest) {
 
     // Save results to database
     if (leads.length > 0) {
+      console.log(`Saving ${leads.length} leads to database...`)
+      
+      // Verify search record exists and belongs to user
+      const { data: verifySearch, error: verifyError } = await supabase
+        .from('chat_find_searches')
+        .select('id, user_id')
+        .eq('id', searchRecord.id)
+        .eq('user_id', user.id)
+        .single()
+      
+      if (verifyError || !verifySearch) {
+        console.error('Search record verification failed:', verifyError)
+        return NextResponse.json({ 
+          error: 'Search record not found or unauthorized',
+          searchId: searchRecord.id
+        }, { status: 500 })
+      }
+      
+      console.log('Search record verified:', verifySearch)
+      
       const resultsToInsert = leads.map(lead => ({
         search_id: searchRecord.id,
         lead_id: lead.id,
@@ -409,7 +429,6 @@ export async function POST(request: NextRequest) {
         url: lead.url,
         score: lead.score,
         comments: lead.comments,
-        created_at: lead.createdAt,
         relevance_score: Math.round(lead.relevanceScore * 100), // Convert to integer (multiply by 100 to preserve 2 decimal places)
         ai_analysis_reasons: lead.aiAnalysisReasons,
         ai_sample_reply: lead.aiSampleReply,
@@ -420,12 +439,38 @@ export async function POST(request: NextRequest) {
         is_comment: lead.isComment
       }))
 
+      console.log('Sample result to insert:', resultsToInsert[0])
+      
       const { error: resultsError } = await supabase
         .from('chat_find_results')
         .insert(resultsToInsert)
 
       if (resultsError) {
         console.error('Failed to save search results:', resultsError)
+        console.error('Results error details:', {
+          code: resultsError.code,
+          message: resultsError.message,
+          details: resultsError.details,
+          hint: resultsError.hint
+        })
+        
+        // Update search record with error
+        await supabase
+          .from('chat_find_searches')
+          .update({
+            search_status: 'failed',
+            error_message: `Failed to save results: ${resultsError.message}`,
+            completed_at: new Date().toISOString()
+          })
+          .eq('id', searchRecord.id)
+        
+        return NextResponse.json({ 
+          error: 'Failed to save search results',
+          details: resultsError.message,
+          searchId: searchRecord.id
+        }, { status: 500 })
+      } else {
+        console.log(`Successfully saved ${leads.length} leads to database`)
       }
     }
 
