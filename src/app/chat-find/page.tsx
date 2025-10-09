@@ -428,7 +428,7 @@ export default function ChatFindPage() {
                         <p className="text-sm text-gray-600 mb-2">
                           Found {search.total_leads_found} leads
                         </p>
-                        {search.topResults.length > 0 && (
+                        {search.topResults && search.topResults.length > 0 && (
                           <div className="text-xs text-gray-500">
                             Top results: {search.topResults.map(r => r.title).slice(0, 2).join(', ')}
                             {search.topResults.length > 2 && '...'}
@@ -646,7 +646,7 @@ export default function ChatFindPage() {
                       </div>
 
                       {/* AI Analysis */}
-                      {lead.aiAnalysisReasons.length > 0 && (
+                      {lead.aiAnalysisReasons && lead.aiAnalysisReasons.length > 0 && (
                         <div className="mb-4 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl">
                           <h4 className="text-xs font-semibold text-purple-900 mb-2 flex items-center gap-1">
                             <Brain className="w-3 h-3" />
@@ -659,7 +659,7 @@ export default function ChatFindPage() {
                                 <span>{reason}</span>
                               </li>
                             ))}
-                            {lead.aiAnalysisReasons.length > 3 && (
+                            {lead.aiAnalysisReasons && lead.aiAnalysisReasons.length > 3 && (
                               <li className="text-purple-600 text-xs">+{lead.aiAnalysisReasons.length - 3} more reasons</li>
                             )}
                           </ul>

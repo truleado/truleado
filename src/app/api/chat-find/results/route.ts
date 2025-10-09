@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       score: result.score,
       comments: result.comments,
       createdAt: result.created_at,
-      relevanceScore: result.relevance_score,
+      relevanceScore: result.relevance_score / 100, // Convert back from integer to decimal
       aiAnalysisReasons: result.ai_analysis_reasons || [],
       aiSampleReply: result.ai_sample_reply || '',
       aiAnalysisScore: result.ai_analysis_score || 0,

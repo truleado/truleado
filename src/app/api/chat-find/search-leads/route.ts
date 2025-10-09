@@ -410,7 +410,7 @@ export async function POST(request: NextRequest) {
         score: lead.score,
         comments: lead.comments,
         created_at: lead.createdAt,
-        relevance_score: lead.relevanceScore,
+        relevance_score: Math.round(lead.relevanceScore * 100), // Convert to integer (multiply by 100 to preserve 2 decimal places)
         ai_analysis_reasons: lead.aiAnalysisReasons,
         ai_sample_reply: lead.aiSampleReply,
         ai_analysis_score: lead.aiAnalysisScore,
