@@ -84,15 +84,30 @@ export default function ChatFindPage() {
   // Track search progress
   useEffect(() => {
     if (currentSearchId && isSearching) {
+      // Add a fallback timeout to load results after 30 seconds
+      const fallbackTimeout = setTimeout(async () => {
+        console.log('Fallback timeout reached, loading results...')
+        await loadSearchResults(currentSearchId)
+        setIsSearching(false)
+        setCurrentSearchId(null)
+        loadSearchHistory()
+        loadUserUsage()
+      }, 30000) // 30 seconds fallback
+      
       const interval = setInterval(async () => {
         try {
           const response = await fetch(`/api/chat-find/progress?searchId=${currentSearchId}`)
+          console.log('Progress check response:', response.status, response.statusText)
+          
           if (response.ok) {
             const data = await response.json()
+            console.log('Progress data:', data)
             setSearchProgress(data.progress)
             setProgressMessage(data.message)
             
             if (data.status === 'completed') {
+              console.log('Search completed! Loading results...')
+              clearTimeout(fallbackTimeout) // Clear the fallback timeout
               setIsSearching(false)
               setCurrentSearchId(null)
               // Load the final results
@@ -101,6 +116,8 @@ export default function ChatFindPage() {
               loadSearchHistory()
               loadUserUsage()
             } else if (data.status === 'failed') {
+              console.log('Search failed:', data.message)
+              clearTimeout(fallbackTimeout) // Clear the fallback timeout
               setIsSearching(false)
               setCurrentSearchId(null)
               alert('Search failed: ' + data.message)
@@ -116,7 +133,10 @@ export default function ChatFindPage() {
         }
       }, 1000)
 
-      return () => clearInterval(interval)
+      return () => {
+        clearInterval(interval)
+        clearTimeout(fallbackTimeout)
+      }
     }
   }, [currentSearchId, isSearching])
 
@@ -224,10 +244,18 @@ export default function ChatFindPage() {
 
   const loadSearchResults = async (searchId: string) => {
     try {
+      console.log('Loading search results for searchId:', searchId)
       const response = await fetch(`/api/chat-find/results?searchId=${searchId}`)
+      console.log('Results API response:', response.status, response.statusText)
+      
       if (response.ok) {
         const data = await response.json()
+        console.log('Results data:', data)
         setLeads(data.results || [])
+        console.log('Leads set:', data.results?.length || 0, 'leads')
+      } else {
+        const errorData = await response.text()
+        console.error('Results API error:', errorData)
       }
     } catch (error) {
       console.error('Error loading search results:', error)
@@ -381,7 +409,10 @@ export default function ChatFindPage() {
                           </div>
                         )}
                         <button
-                          onClick={() => loadSearchResults(search.id)}
+                          onClick={() => {
+                            console.log('View Results clicked for search:', search.id)
+                            loadSearchResults(search.id)
+                          }}
                           className="mt-2 text-blue-600 hover:text-blue-500 text-sm font-medium"
                         >
                           View Results →
@@ -505,8 +536,21 @@ export default function ChatFindPage() {
                   <h2 className="text-2xl font-bold text-gray-900">
                     Found {leads.length} leads
                   </h2>
-                  <div className="text-sm text-gray-600">
-                    Query: "{query}"
+                  <div className="flex items-center gap-4">
+                    <div className="text-sm text-gray-600">
+                      Query: "{query}"
+                    </div>
+                    <button
+                      onClick={() => {
+                        console.log('Refresh results clicked')
+                        if (currentSearchId) {
+                          loadSearchResults(currentSearchId)
+                        }
+                      }}
+                      className="text-sm text-blue-600 hover:text-blue-500 font-medium"
+                    >
+                      Refresh Results
+                    </button>
                   </div>
                 </div>
 
