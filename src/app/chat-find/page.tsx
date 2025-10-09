@@ -67,7 +67,9 @@ export default function ChatFindPage() {
 
   // Redirect to sign-in if not authenticated
   useEffect(() => {
+    console.log('Auth check useEffect:', { authLoading, user: !!user })
     if (!authLoading && !user) {
+      console.log('Redirecting to sign-in')
       router.push('/auth/signin')
     }
   }, [user, authLoading, router])
@@ -323,6 +325,8 @@ export default function ChatFindPage() {
     accessLevel,
     canAccess
   })
+
+  console.log('About to check loading state:', { authLoading, subscriptionLoading })
 
   // Show loading while authentication is in progress
   if (authLoading || subscriptionLoading) {
