@@ -72,6 +72,26 @@ export default function ChatFindPage() {
     }
   }, [user, authLoading, router])
 
+  const loadSearchResults = async (searchId: string) => {
+    try {
+      console.log('Loading search results for searchId:', searchId)
+      const response = await fetch(`/api/chat-find/results?searchId=${searchId}`)
+      console.log('Results API response:', response.status, response.statusText)
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Results data:', data)
+        setLeads(data.results || [])
+        console.log('Leads set:', data.results?.length || 0, 'leads')
+      } else {
+        const errorData = await response.text()
+        console.error('Results API error:', errorData)
+      }
+    } catch (error) {
+      console.error('Error loading search results:', error)
+    }
+  }
+
   // Load search history and usage on component mount
   useEffect(() => {
     if (user) {
@@ -263,25 +283,6 @@ export default function ChatFindPage() {
     }
   }
 
-  const loadSearchResults = async (searchId: string) => {
-    try {
-      console.log('Loading search results for searchId:', searchId)
-      const response = await fetch(`/api/chat-find/results?searchId=${searchId}`)
-      console.log('Results API response:', response.status, response.statusText)
-      
-      if (response.ok) {
-        const data = await response.json()
-        console.log('Results data:', data)
-        setLeads(data.results || [])
-        console.log('Leads set:', data.results?.length || 0, 'leads')
-      } else {
-        const errorData = await response.text()
-        console.error('Results API error:', errorData)
-      }
-    } catch (error) {
-      console.error('Error loading search results:', error)
-    }
-  }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
