@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { useRouter, useSearchParams } from 'next/navigation'
 import AppLayout from '@/components/app-layout'
@@ -16,7 +16,8 @@ import {
   XCircle,
   Eye,
   Copy,
-  ArrowLeft
+  ArrowLeft,
+  Loader2
 } from 'lucide-react'
 
 // Force dynamic rendering
@@ -41,7 +42,7 @@ interface ChatFindLead {
   isComment: boolean
 }
 
-export default function ChatFindResultsPage() {
+function ChatFindResultsContent() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -324,5 +325,24 @@ export default function ChatFindResultsPage() {
         </div>
       </div>
     </AppLayout>
+  )
+}
+
+function LoadingFallback() {
+  return (
+    <AppLayout>
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+        <p className="ml-4 text-lg text-gray-700">Loading search results...</p>
+      </div>
+    </AppLayout>
+  )
+}
+
+export default function ChatFindResultsPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <ChatFindResultsContent />
+    </Suspense>
   )
 }
