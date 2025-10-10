@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const testDomains = [
       'https://www.truleado.com',
       'https://truleado.com',
-      'https://localhost:3000',
+      process.env.NEXT_PUBLIC_APP_URL || 'https://localhost:3000',
       'https://example.com',
       'https://paddle.com'
     ]
