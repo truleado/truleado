@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: truleado
+    env: node
+    plan: starter
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+    cronJobs:
+      - name: keep-alive
+        schedule: "*/5 * * * *"
+        command: curl -X GET https://truleado.onrender.com/api/cron/keep-alive -H "Authorization: Bearer $CRON_SECRET"
+      - name: daily-lead-discovery
+        schedule: "0 0 * * *"
+        command: curl -X GET https://truleado.onrender.com/api/cron/daily-lead-discovery -H "Authorization: Bearer $CRON_SECRET"
+      - name: trial-reminders
+        schedule: "0 */6 * * *"
+        command: curl -X GET https://truleado.onrender.com/api/cron/send-trial-reminders -H "Authorization: Bearer $CRON_SECRET"
+      - name: expired-trials
+        schedule: "0 */2 * * *"
+        command: curl -X GET https://truleado.onrender.com/api/cron/send-expired-trial-emails -H "Authorization: Bearer $CRON_SECRET"
+
+databases:
+  - name: truleado-db
+    plan: starter
+    databaseName: truleado
+    user: truleado_user
