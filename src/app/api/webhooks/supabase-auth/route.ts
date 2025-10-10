@@ -20,9 +20,9 @@ async function createZohoContactWebhook(email: string, fullName: string) {
       },
       body: new URLSearchParams({
         grant_type: 'refresh_token',
-        client_id: '1000.82DRWH7GU91XIPF7ZN9Q3W9KZ770GY',
-        client_secret: '30c61a291d791a0d1caa6e2ce193d069be007d6ea9',
-        refresh_token: '1000.1aa3bd63937b5fb65d8e970165babc99.4df927f0368af5b8807bea0ee715c8cb',
+        client_id: process.env.ZOHO_CLIENT_ID || '',
+        client_secret: process.env.ZOHO_CLIENT_SECRET || '',
+        refresh_token: process.env.ZOHO_REFRESH_TOKEN || '',
       }),
     })
 
