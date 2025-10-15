@@ -207,14 +207,14 @@ export async function POST(request: NextRequest) {
     }
 
     const leads = []
-    const maxLeadsPerSubreddit = 5  // Increased from 3
-    const totalMaxLeads = 25  // Increased from 15
-    const totalSubreddits = parsedQuery.subreddits.length
+    const maxLeadsPerSubreddit = 3  // Reduced for faster searches
+    const totalMaxLeads = 15  // Reduced for faster searches
+    const totalSubreddits = Math.min(parsedQuery.subreddits.length, 5)  // Limit to 5 subreddits max
 
     console.log(`Searching in ${totalSubreddits} subreddits for leads`)
 
     // Search each subreddit with timeout protection
-    for (let i = 0; i < parsedQuery.subreddits.length; i++) {
+    for (let i = 0; i < totalSubreddits; i++) {
       const subreddit = parsedQuery.subreddits[i]
       if (leads.length >= totalMaxLeads) break
 
@@ -242,9 +242,9 @@ export async function POST(request: NextRequest) {
           limit: maxLeadsPerSubreddit
         })
         
-        // Add timeout to prevent 504 errors (increased from 10s to 20s)
+        // Add timeout to prevent 504 errors (reduced to 15s for better reliability)
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Search timeout')), 20000)
+          setTimeout(() => reject(new Error('Search timeout')), 15000)
         )
         
         const posts = await Promise.race([searchPromise, timeoutPromise])

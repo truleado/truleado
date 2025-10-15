@@ -82,9 +82,23 @@ function ChatFindResultsContent() {
         setLeads(data.results || [])
         setSearchInfo(data.searchInfo || null)
       } else {
-        const errorData = await response.text()
-        console.error('Results API error:', errorData)
-        setError('Failed to load search results')
+        let errorMessage = 'Failed to load search results'
+        try {
+          // Clone the response to avoid "body already read" error
+          const responseClone = response.clone()
+          const errorData = await responseClone.json()
+          errorMessage = errorData.error || errorMessage
+        } catch (jsonError) {
+          try {
+            const textResponse = await response.text()
+            console.error('Results API error:', textResponse)
+            errorMessage = `Server error: ${response.status} - ${textResponse}`
+          } catch (textError) {
+            console.error('Failed to read response as text:', textError)
+            errorMessage = `Server error: ${response.status} - ${response.statusText}`
+          }
+        }
+        setError(errorMessage)
       }
     } catch (error) {
       console.error('Error loading search results:', error)

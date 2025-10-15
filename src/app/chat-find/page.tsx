@@ -224,17 +224,27 @@ export default function ChatFindPage() {
 
       if (!response.ok) {
         let errorData
+        let errorMessage = 'Search failed'
+        
         try {
-          errorData = await response.json()
+          // Clone the response to avoid "body already read" error
+          const responseClone = response.clone()
+          errorData = await responseClone.json()
+          errorMessage = errorData.error || errorMessage
         } catch (jsonError) {
-          // Handle non-JSON responses
-          const textResponse = await response.text()
-          console.error('Non-JSON response:', textResponse)
-          throw new Error(`Server error: ${response.status} - ${textResponse}`)
+          // Handle non-JSON responses (like 504 Gateway Timeout)
+          try {
+            const textResponse = await response.text()
+            console.error('Non-JSON response:', textResponse)
+            errorMessage = `Server error: ${response.status} - ${textResponse}`
+          } catch (textError) {
+            console.error('Failed to read response as text:', textError)
+            errorMessage = `Server error: ${response.status} - ${response.statusText}`
+          }
         }
         
         // Handle usage limit error
-        if (response.status === 402 && errorData.code === 'USAGE_LIMIT_EXCEEDED') {
+        if (response.status === 402 && errorData?.code === 'USAGE_LIMIT_EXCEEDED') {
           setUsageInfo({
             used: errorData.freeSearchesUsed,
             limit: errorData.limit
@@ -245,7 +255,12 @@ export default function ChatFindPage() {
           return
         }
         
-        throw new Error(errorData.error || 'Search failed')
+        // Handle timeout errors specifically
+        if (response.status === 504) {
+          errorMessage = 'Search timed out. The search is taking longer than expected. Please try again with a more specific query or check back later.'
+        }
+        
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
