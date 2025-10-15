@@ -63,6 +63,13 @@ export default function Pricing() {
                 Home
               </Link>
               <Link 
+                href="/chat-find" 
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors flex items-center"
+              >
+                <MessageCircle className="w-4 h-4 mr-1" />
+                Chat & Find
+              </Link>
+              <Link 
                 href="/auth/signin" 
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
               >
@@ -135,6 +142,12 @@ export default function Pricing() {
                       <Check className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
                     </div>
                     <span className="text-sm sm:text-base text-gray-700">Full access to all features</span>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                      <Check className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
+                    </div>
+                    <span className="text-sm sm:text-base text-gray-700"><span className="font-semibold text-green-700">Chat & Find</span> - Natural language lead search</span>
                   </li>
                   <li className="flex items-start">
                     <div className="w-5 h-5 sm:w-6 sm:h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
@@ -224,6 +237,12 @@ export default function Pricing() {
                     <div className="w-5 h-5 sm:w-6 sm:h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
                       <Check className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
                     </div>
+                    <span className="text-sm sm:text-base text-gray-700"><span className="font-semibold text-green-700">Chat & Find</span> - Natural language lead search</span>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                      <Check className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
+                    </div>
                     <span className="text-sm sm:text-base text-gray-700">Unlimited product monitoring</span>
                   </li>
                   <li className="flex items-start">
@@ -293,7 +312,22 @@ export default function Pricing() {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Chat & Find - Featured prominently */}
+            <div className="text-center group lg:col-span-1 md:col-span-2">
+              <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-200 shadow-lg">
+                <MessageCircle className="w-10 h-10 text-white" />
+              </div>
+              <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-800 text-sm font-semibold mb-4">
+                <Sparkles className="w-4 h-4 mr-1" />
+                NEW FEATURE
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Chat & Find</h3>
+              <p className="text-gray-600 leading-relaxed max-w-sm mx-auto">
+                <span className="font-semibold text-gray-800">Ask in plain English what leads you want to find.</span> Our AI searches Reddit instantly and returns high-quality prospects with full context.
+              </p>
+            </div>
+            
             <div className="text-center group">
               <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-200">
                 <Target className="w-8 h-8 text-white" />
