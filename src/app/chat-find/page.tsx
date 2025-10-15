@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import AppLayout from '@/components/app-layout'
 import { AccessGuard, UpgradeButton } from '@/components/AccessGuard'
 import { useSubscription } from '@/lib/subscription-context'
+import CustomModal from '@/components/CustomModal'
 import { 
   Search, 
   MessageCircle, 
@@ -61,6 +62,7 @@ export default function ChatFindPage() {
   const [savedSearches, setSavedSearches] = useState<any[]>([])
   const [showHistory, setShowHistory] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [showNoResultsModal, setShowNoResultsModal] = useState(false)
   const [usageInfo, setUsageInfo] = useState<{used: number, limit: number} | null>(null)
   const [userUsage, setUserUsage] = useState<{used: number, limit: number, isSubscribed: boolean} | null>(null)
   const [redditStatus, setRedditStatus] = useState<{connected: boolean, hasToken: boolean, tokenExpired: boolean, username?: string} | null>(null)
@@ -282,6 +284,7 @@ export default function ChatFindPage() {
         setLeads([])
         setIsSearching(false)
         setCurrentSearchId(null)
+        setShowNoResultsModal(true)  // Show modal for no results
         loadSearchHistory()
         loadUserUsage()
       } else {
@@ -731,25 +734,7 @@ export default function ChatFindPage() {
               </div>
             )}
 
-            {/* No results state */}
-            {!isSearching && leads.length === 0 && query && (
-              <div className="text-center py-16">
-                <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <Search className="h-10 w-10 text-gray-400" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No leads found</h3>
-                <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                  Try rephrasing your search or use one of the example queries above.
-                </p>
-                <button
-                  onClick={() => setQuery('')}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Try Again
-                </button>
-              </div>
-            )}
+            {/* No results state - now handled by modal */}
           </div>
         </div>
 
@@ -811,6 +796,21 @@ export default function ChatFindPage() {
             </div>
           </div>
         )}
+
+        {/* No Results Modal */}
+        <CustomModal
+          isOpen={showNoResultsModal}
+          onClose={() => setShowNoResultsModal(false)}
+          title="No Results Found"
+          message="We couldn't find any leads matching your search criteria. Try again with a different request or more specific keywords."
+          type="info"
+          confirmText="Try Again"
+          onConfirm={() => {
+            setShowNoResultsModal(false)
+            setQuery('')
+          }}
+        />
+
     </AppLayout>
   )
 }
