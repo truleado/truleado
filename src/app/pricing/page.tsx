@@ -1,7 +1,7 @@
 'use client'
 
 import Link from "next/link";
-import { Check, ArrowRight, Filter, Zap, Target, Users, Brain, Clock, Shield, Star, Sparkles, Megaphone } from "lucide-react";
+import { Check, ArrowRight, Filter, Zap, Target, Users, Brain, Clock, Shield, Star, Sparkles, Megaphone, MessageCircle } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";

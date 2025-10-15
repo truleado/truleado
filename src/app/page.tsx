@@ -1,7 +1,7 @@
 'use client'
 
 import Link from "next/link";
-import { ArrowRight, Filter, Target, Zap, Users, TrendingUp, CheckCircle, Sparkles, BarChart3, Clock, Shield, Globe, Star, Brain, Search, Bell, Mail, Megaphone, Instagram } from "lucide-react";
+import { ArrowRight, Filter, Target, Zap, Users, TrendingUp, CheckCircle, Sparkles, BarChart3, Clock, Shield, Globe, Star, Brain, Search, Bell, Mail, Megaphone, Instagram, MessageCircle } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";

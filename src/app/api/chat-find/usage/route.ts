@@ -12,35 +12,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user's usage information using the database function
-    try {
-      const { data: usageInfo, error: usageError } = await supabase
-        .rpc('get_chat_find_usage_info', { user_id: user.id })
+    // Get user's usage information directly from profiles table
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('chat_find_free_searches_used, subscription_status')
+      .eq('id', user.id)
+      .single()
 
-      if (usageError) {
-        console.error('Error getting usage information:', usageError)
-        // Fallback to direct profile query
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('chat_find_free_searches_used, subscription_status')
-          .eq('id', user.id)
-          .single()
-
-        const freeSearchesUsed = profile?.chat_find_free_searches_used || 0
-        const isSubscribed = profile?.subscription_status && ['active', 'pro', 'enterprise'].includes(profile.subscription_status)
-
-        return NextResponse.json({
-          used: freeSearchesUsed,
-          limit: 1,
-          isSubscribed,
-          remaining: isSubscribed ? 'unlimited' : Math.max(0, 1 - freeSearchesUsed)
-        })
-      }
-
-      return NextResponse.json(usageInfo)
-    } catch (error) {
-      console.error('Error in usage API:', error)
-      // Return default values if everything fails
+    if (profileError) {
+      console.error('Error getting profile:', profileError)
+      // Return default values if profile not found
       return NextResponse.json({
         used: 0,
         limit: 1,
@@ -48,6 +29,16 @@ export async function GET(request: NextRequest) {
         remaining: 1
       })
     }
+
+    const freeSearchesUsed = profile?.chat_find_free_searches_used || 0
+    const isSubscribed = profile?.subscription_status && ['active', 'pro', 'enterprise'].includes(profile.subscription_status)
+
+    return NextResponse.json({
+      used: freeSearchesUsed,
+      limit: 1,
+      isSubscribed,
+      remaining: isSubscribed ? 'unlimited' : Math.max(0, 1 - freeSearchesUsed)
+    })
 
   } catch (error) {
     console.error('Error getting usage information:', error)
