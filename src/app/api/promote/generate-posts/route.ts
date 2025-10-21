@@ -20,18 +20,23 @@ interface GeneratedPost {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('Generate posts API called')
+    console.log('=== Generate posts API called ===')
     
     const body: GeneratePostsRequest = await request.json()
     console.log('Request body received:', body)
     console.log('User ID from request body:', body.userId)
     
-    // Use client-provided user ID directly (simpler approach)
-    const userId = body.userId
+    // Validate required fields first
+    const { productId, productName, productDescription, websiteUrl, variation = 0, userId } = body
     
     if (!userId) {
       console.error('No user ID found in request body:', body)
       return NextResponse.json({ error: 'Unauthorized - Please log in to generate posts' }, { status: 401 })
+    }
+    
+    if (!productId || !productName) {
+      console.error('Missing required fields:', { productId, productName })
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
     
     // Create a user object for the API call
@@ -40,12 +45,6 @@ export async function POST(request: NextRequest) {
     
     // Create a new Supabase client for database operations
     const supabase = await createClient()
-    
-    const { productId, productName, productDescription, websiteUrl, variation = 0 } = body
-
-    if (!productId || !productName) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-    }
 
     // Get product details from database
     console.log('Looking for product:', { productId, userId: currentUser.id })
@@ -60,7 +59,10 @@ export async function POST(request: NextRequest) {
 
     if (productError || !product) {
       console.error('Product not found:', { productError, productId, userId: currentUser.id })
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+      return NextResponse.json({ 
+        error: 'Product not found', 
+        details: productError?.message || 'Product does not exist or you do not have access to it' 
+      }, { status: 404 })
     }
 
     // Extract product data from database
@@ -162,14 +164,25 @@ export async function POST(request: NextRequest) {
         productId,
         userId: currentUser.id
       })
-      return NextResponse.json({ error: 'Failed to generate any posts' }, { status: 500 })
+      return NextResponse.json({ 
+        error: 'Failed to generate any posts', 
+        details: 'AI generation failed for all subreddits. Please try again.' 
+      }, { status: 500 })
     }
 
     console.log('Returning generated posts:', generatedPosts.map(p => ({ subreddit: p.subreddit, title: p.title })))
-    return NextResponse.json({ posts: generatedPosts })
+    return NextResponse.json({ 
+      posts: generatedPosts,
+      success: true,
+      count: generatedPosts.length
+    })
   } catch (error) {
     console.error('Error in generate-posts API:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Internal server error', 
+      details: error instanceof Error ? error.message : 'Unknown error occurred',
+      success: false
+    }, { status: 500 })
   }
 }
 

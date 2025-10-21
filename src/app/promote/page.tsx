@@ -211,7 +211,7 @@ export default function PromotePage() {
     } else {
       setIsGenerating(true)
     }
-    setGenerationProgress({ current: 0, total: 0, currentSubreddit: 'Analyzing product and detecting subreddits...' })
+    setGenerationProgress({ current: 0, total: 3, currentSubreddit: 'Starting AI analysis...' })
     setGenerationError(null)
     
     try {
@@ -231,6 +231,9 @@ export default function PromotePage() {
         productName: selectedProduct.name
       })
       
+      // Update progress - API call started
+      setGenerationProgress({ current: 1, total: 3, currentSubreddit: 'Calling AI API...' })
+      
       const response = await fetch('/api/promote/generate-posts', {
         method: 'POST',
         headers: {
@@ -247,8 +250,8 @@ export default function PromotePage() {
         
         console.log(`Generated ${newPosts.length} high-quality posts for AI-detected subreddits`)
         
-        // Update progress to show completion
-        setGenerationProgress({ current: newPosts.length, total: newPosts.length, currentSubreddit: 'Complete' })
+        // Update progress - posts received
+        setGenerationProgress({ current: 2, total: 3, currentSubreddit: 'Processing posts...' })
         
         // Save all posts to database and add to UI
         for (let i = 0; i < newPosts.length; i++) {
@@ -312,6 +315,10 @@ export default function PromotePage() {
             setGeneratedPosts(prev => [...prev, tempPost])
           }
         }
+        
+        // Update progress - complete
+        setGenerationProgress({ current: 3, total: 3, currentSubreddit: 'Complete!' })
+        
       } else {
         const errorData = await response.json().catch(() => ({}))
         const errorMessage = errorData.error || 'Failed to generate posts'
