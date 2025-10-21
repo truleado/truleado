@@ -210,20 +210,28 @@ export default function PromotePage() {
     
     try {
       // Generate high-quality posts with AI-powered subreddit detection
+      const requestBody = {
+        productId: selectedProduct.id,
+        productName: selectedProduct.name,
+        productDescription: selectedProduct.description,
+        websiteUrl: selectedProduct.website_url,
+        variation: 0,
+        userId: user?.id
+      }
+      
+      console.log('Sending request to generate-posts API:', {
+        userId: user?.id,
+        productId: selectedProduct.id,
+        productName: selectedProduct.name
+      })
+      
       const response = await fetch('/api/promote/generate-posts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include', // Include cookies for authentication
-        body: JSON.stringify({
-          productId: selectedProduct.id,
-          productName: selectedProduct.name,
-          productDescription: selectedProduct.description,
-          websiteUrl: selectedProduct.website_url,
-          variation: 0,
-          userId: user?.id
-        }),
+        body: JSON.stringify(requestBody),
         signal: abortController.signal
       })
 

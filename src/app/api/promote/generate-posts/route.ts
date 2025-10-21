@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
     
     const body: GeneratePostsRequest = await request.json()
     console.log('Request body received:', body)
+    console.log('User ID from request body:', body.userId)
     
     // If no user from server-side auth, try to get from client-side
     let currentUser = user
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
       const userId = body.userId
       
       if (!userId) {
-        console.error('No user ID found in request')
+        console.error('No user ID found in request body:', body)
         return NextResponse.json({ error: 'Unauthorized - Please log in to generate posts' }, { status: 401 })
       }
       
