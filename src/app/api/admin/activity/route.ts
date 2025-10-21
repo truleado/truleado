@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    // Use service role client to bypass RLS
+    const supabase = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
     // Get recent user signups
     const { data: recentUsers } = await supabase
@@ -18,7 +23,7 @@ export async function GET(request: NextRequest) {
       .select(`
         id,
         status,
-        plan,
+        razorpay_plan_id,
         created_at,
         profiles!inner(email)
       `)
@@ -43,6 +48,9 @@ export async function GET(request: NextRequest) {
       .select(`
         id,
         title,
+        subreddit,
+        author,
+        status,
         created_at,
         profiles!inner(email)
       `)
@@ -104,7 +112,7 @@ export async function GET(request: NextRequest) {
         id: `lead-${lead.id}`,
         type: 'lead_generated',
         user_email: lead.profiles.email,
-        description: `Generated lead: ${lead.title}`,
+        description: `Generated lead: ${lead.title} (r/${lead.subreddit} by u/${lead.author})`,
         created_at: lead.created_at
       })
     })

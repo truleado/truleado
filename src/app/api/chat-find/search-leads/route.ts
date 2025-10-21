@@ -4,57 +4,263 @@ import { queryParser } from '@/lib/query-parser'
 import { getRedditClient } from '@/lib/reddit-client'
 import { aiLeadAnalyzer } from '@/lib/ai-lead-analyzer'
 
-// Enhanced relevance calculation with context
+// Enhanced relevance calculation with context and quality filters
 async function calculateEnhancedRelevanceScore(post: any, parsedQuery: ParsedQuery): Promise<number> {
   let score = 0
   const text = `${post.title} ${post.selftext || ''}`.toLowerCase()
+  const title = post.title.toLowerCase()
+  const content = (post.selftext || '').toLowerCase()
   
-  // Base score from post engagement
-  score += Math.min(post.score / 10, 5) // Up to 5 points for high engagement
-  score += Math.min(post.num_comments / 5, 3) // Up to 3 points for discussion
+  // QUALITY FILTERS - Reject low-quality content first
+  if (isLowQualityContent(post, text)) {
+    return 0 // Reject immediately
+  }
   
-  // Search terms relevance (most important)
+  // DUPLICATE DETECTION - Check for repetitive content
+  if (isDuplicateContent(post, text)) {
+    return 0 // Reject duplicates
+  }
+  
+  // SPAM/BOT DETECTION
+  if (isSpamOrBot(post, text)) {
+    return 0 // Reject spam
+  }
+  
+  // CONTENT FRESHNESS - Prioritize recent, active content
+  const postAge = Date.now() / 1000 - post.created_utc
+  const hoursOld = postAge / 3600
+  const daysOld = hoursOld / 24
+  
+  // Fresh content bonus (within 24 hours gets highest priority)
+  if (hoursOld < 24) {
+    score += 4
+  } else if (hoursOld < 72) { // Within 3 days
+    score += 3
+  } else if (daysOld < 7) { // Within 1 week
+    score += 2
+  } else if (daysOld < 30) { // Within 1 month
+    score += 1
+  } else {
+    score -= 2 // Penalize old content
+  }
+  
+  // ENGAGEMENT QUALITY - Higher thresholds for better content
+  if (post.score >= 50) {
+    score += 5 // High engagement
+  } else if (post.score >= 20) {
+    score += 3 // Good engagement
+  } else if (post.score >= 10) {
+    score += 2 // Decent engagement
+  } else if (post.score >= 5) {
+    score += 1 // Some engagement
+  } else if (post.score < 0) {
+    score -= 3 // Negative engagement (downvoted)
+  }
+  
+  // COMMENT QUALITY - Active discussion indicates value
+  if (post.num_comments >= 20) {
+    score += 4 // Very active discussion
+  } else if (post.num_comments >= 10) {
+    score += 3 // Active discussion
+  } else if (post.num_comments >= 5) {
+    score += 2 // Some discussion
+  } else if (post.num_comments >= 2) {
+    score += 1 // Minimal discussion
+  }
+  
+  // SEARCH TERMS RELEVANCE (most important) - Exact matches get higher scores
+  let searchTermMatches = 0
   for (const term of parsedQuery.searchTerms) {
-    if (text.includes(term.toLowerCase())) {
-      score += 3
+    const termLower = term.toLowerCase()
+    if (title.includes(termLower)) {
+      score += 4 // Title match is most important
+      searchTermMatches++
+    } else if (content.includes(termLower)) {
+      score += 2 // Content match
+      searchTermMatches++
     }
   }
   
-  // Problem keywords (indicates pain points)
+  // Must have at least one search term match
+  if (searchTermMatches === 0) {
+    return 0
+  }
+  
+  // PROBLEM KEYWORDS - Strong buying intent indicators
+  let problemMatches = 0
   for (const keyword of parsedQuery.problemKeywords) {
     if (text.includes(keyword.toLowerCase())) {
-      score += 2
+      score += 3
+      problemMatches++
     }
   }
   
-  // Conversation triggers (indicates active seeking)
+  // CONVERSATION TRIGGERS - Active seeking behavior
+  let triggerMatches = 0
   for (const trigger of parsedQuery.conversationTriggers) {
     if (text.includes(trigger.toLowerCase())) {
       score += 2
+      triggerMatches++
     }
   }
   
-  // Solution keywords (indicates they're looking for solutions)
+  // SOLUTION KEYWORDS - Looking for solutions
   for (const keyword of parsedQuery.solutionKeywords) {
     if (text.includes(keyword.toLowerCase())) {
-      score += 1.5
+      score += 2
     }
   }
   
-  // Bonus for question marks (indicates seeking help)
-  if (text.includes('?')) {
-    score += 1
+  // BUYING INTENT SIGNALS - Strong commercial indicators
+  const buyingIntentPhrases = [
+    'looking for', 'need help with', 'recommend', 'suggest', 'best way to',
+    'struggling with', 'problem with', 'issue with', 'how to', 'what is the best',
+    'anyone know', 'suggestions', 'alternatives', 'budget', 'cost', 'price',
+    'trial', 'demo', 'evaluate', 'compare', 'worth it', 'should i'
+  ]
+  
+  let intentMatches = 0
+  for (const phrase of buyingIntentPhrases) {
+    if (text.includes(phrase)) {
+      score += 2
+      intentMatches++
+    }
   }
   
-  // Bonus for help-seeking phrases (expanded list)
-  const helpPhrases = ['help', 'advice', 'recommend', 'suggest', 'need', 'looking for', 'struggling', 'frustrated', 'want', 'require', 'seeking', 'problem', 'issue', 'difficult', 'challenge', 'best', 'good', 'alternative', 'option', 'solution', 'tool', 'software', 'app', 'service']
-  for (const phrase of helpPhrases) {
-    if (text.includes(phrase)) {
+  // QUESTION QUALITY - Well-formed questions get higher scores
+  if (title.includes('?') || content.includes('?')) {
+    const questionWords = ['how', 'what', 'where', 'when', 'why', 'which', 'who']
+    const hasQuestionWord = questionWords.some(word => text.includes(word))
+    if (hasQuestionWord) {
+      score += 3 // Well-formed question
+    } else {
+      score += 1 // Basic question
+    }
+  }
+  
+  // SUBREDDIT QUALITY - Higher quality subreddits get bonus
+  const highQualitySubreddits = [
+    'entrepreneur', 'startups', 'smallbusiness', 'freelance', 'marketing', 
+    'sales', 'business', 'saas', 'productivity', 'consulting', 'hiring',
+    'forhire', 'jobs', 'careerguidance', 'personalfinance'
+  ]
+  
+  const mediumQualitySubreddits = [
+    'technology', 'programming', 'webdev', 'digitalnomad', 'sideproject',
+    'indiehackers', 'growmybusiness', 'marketing', 'advertising'
+  ]
+  
+  const subredditLower = post.subreddit.toLowerCase()
+  if (highQualitySubreddits.some(sub => subredditLower.includes(sub))) {
+    score += 3
+  } else if (mediumQualitySubreddits.some(sub => subredditLower.includes(sub))) {
+    score += 2
+  }
+  
+  // CONTENT LENGTH QUALITY - Substantial content gets higher scores
+  const contentLength = content.length
+  if (contentLength >= 200) {
+    score += 2 // Substantial content
+  } else if (contentLength >= 100) {
+    score += 1 // Decent content
+  } else if (contentLength < 20) {
+    score -= 2 // Very short content (likely low quality)
+  }
+  
+  // AUTHOR QUALITY - Established users get slight bonus
+  if (post.author && post.author !== '[deleted]' && post.author !== 'AutoModerator') {
+    // Check if author has reasonable karma (if available)
+    if (post.author_karma && post.author_karma > 100) {
       score += 1
     }
+  } else {
+    score -= 2 // Deleted or bot accounts
   }
   
-  return Math.min(score, 10) // Cap at 10
+  // MINIMUM QUALITY THRESHOLD - Must meet basic standards
+  const hasMinimumEngagement = post.score >= 3 || post.num_comments >= 2
+  const hasRelevantContent = searchTermMatches > 0 || problemMatches > 0 || intentMatches > 0
+  const isRecentEnough = daysOld < 30 // Not older than 30 days
+  
+  if (!hasMinimumEngagement || !hasRelevantContent || !isRecentEnough) {
+    return 0
+  }
+  
+  return Math.min(Math.max(score, 0), 15) // Cap at 15, minimum 0
+}
+
+// Quality filters to reject low-quality content
+function isLowQualityContent(post: any, text: string): boolean {
+  // Reject very short content
+  if (text.length < 30) return true
+  
+  // Reject posts with very low engagement
+  if (post.score < 1 && post.num_comments < 1) return true
+  
+  // Reject posts with negative scores (heavily downvoted)
+  if (post.score < -5) return true
+  
+  // Reject posts that are too old (over 6 months)
+  const postAge = Date.now() / 1000 - post.created_utc
+  if (postAge > 180 * 24 * 3600) return true
+  
+  // Reject posts with suspicious patterns
+  const suspiciousPatterns = [
+    /^[A-Z\s!]{20,}$/, // All caps shouting
+    /(.)\1{4,}/, // Repeated characters (spam)
+    /https?:\/\/[^\s]+/g, // Multiple URLs (likely spam)
+  ]
+  
+  for (const pattern of suspiciousPatterns) {
+    if (pattern.test(text)) return true
+  }
+  
+  return false
+}
+
+// Duplicate detection to avoid repetitive content
+function isDuplicateContent(post: any, text: string): boolean {
+  // Simple duplicate detection based on content similarity
+  // In a real implementation, you'd store hashes of seen content
+  
+  // Reject very similar titles (basic check)
+  const commonTitles = [
+    'help', 'advice', 'recommendation', 'suggestion', 'looking for',
+    'best way', 'how to', 'what is', 'anyone know', 'need help'
+  ]
+  
+  const titleWords = post.title.toLowerCase().split(' ')
+  const commonWordCount = commonTitles.filter(common => 
+    titleWords.some(word => word.includes(common))
+  ).length
+  
+  // If title is mostly common words, likely low quality
+  if (commonWordCount > titleWords.length * 0.7) return true
+  
+  return false
+}
+
+// Spam and bot detection
+function isSpamOrBot(post: any, text: string): boolean {
+  // Reject deleted or removed content
+  if (post.selftext === '[deleted]' || post.selftext === '[removed]') return true
+  
+  // Reject AutoModerator posts
+  if (post.author === 'AutoModerator') return true
+  
+  // Reject posts with excessive links (likely spam)
+  const linkCount = (text.match(/https?:\/\/[^\s]+/g) || []).length
+  if (linkCount > 3) return true
+  
+  // Reject posts with excessive promotional language
+  const promotionalWords = ['buy now', 'click here', 'limited time', 'act now', 'don\'t miss']
+  const promotionalCount = promotionalWords.filter(phrase => text.includes(phrase)).length
+  if (promotionalCount > 1) return true
+  
+  // Reject posts with suspicious author patterns
+  if (post.author && post.author.length < 3) return true // Very short usernames
+  
+  return false
 }
 
 interface ParsedQuery {
@@ -322,8 +528,8 @@ export async function POST(request: NextRequest) {
             // Calculate enhanced relevance score
             const relevanceScore = await calculateEnhancedRelevanceScore(post, parsedQuery)
             
-            // Only include relevant leads (lowered threshold from 6 to 4)
-            if (relevanceScore >= 4) {
+            // Only include high-quality leads (increased threshold for better quality)
+            if (relevanceScore >= 8) {
               console.log(`High relevance lead found: "${post.title}" (score: ${relevanceScore})`)
               // Perform AI analysis
               const leadData = {

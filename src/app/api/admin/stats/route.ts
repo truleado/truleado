@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    // Use service role client to bypass RLS
+    const supabase = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
     // Get total users
     const { count: totalUsers } = await supabase
@@ -74,22 +79,18 @@ export async function GET(request: NextRequest) {
     const totalLeadsCount = (totalLeads || 0) + (chatFindLeads || 0)
     const leadsThisMonthCount = (leadsThisMonth || 0) + (chatFindLeadsThisMonth || 0)
 
-    // Get revenue data
+    // Get revenue data from subscriptions
     const { data: revenueData } = await supabase
       .from('subscriptions')
-      .select('amount, created_at, status')
+      .select('created_at, status, razorpay_plan_id')
 
-    const totalRevenue = revenueData?.reduce((sum, sub) => {
-      if (sub.status === 'active') {
-        return sum + (sub.amount || 0)
-      }
-      return sum
-    }, 0) || 0
+    // Calculate revenue based on plan (assuming $29/month for pro)
+    const totalRevenue = revenueData?.filter(sub => sub.status === 'active').length * 2900 || 0
 
     const revenueThisMonth = revenueData?.filter(sub => {
       const subDate = new Date(sub.created_at)
       return subDate >= monthAgo && sub.status === 'active'
-    }).reduce((sum, sub) => sum + (sub.amount || 0), 0) || 0
+    }).length * 2900 || 0
 
     // Calculate metrics
     const averageLeadsPerUser = totalUsers && totalUsers > 0 ? totalLeadsCount / totalUsers : 0

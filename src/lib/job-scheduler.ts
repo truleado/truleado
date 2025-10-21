@@ -285,8 +285,8 @@ export class JobScheduler {
                 const relevanceScore = await this.calculateRelevanceScore(post, product)
                 console.log(`Post "${post.title}" - Relevance score: ${relevanceScore}`)
                 
-                // Only save leads with score >= 10 (higher threshold for better relevance)
-                if (relevanceScore >= 10) {
+                // Only save leads with score >= 12 (much higher threshold for better relevance)
+                if (relevanceScore >= 12) {
                   await this.saveLead(job.user_id, product.id, post, relevanceScore, 'post')
                   totalLeadsFound++
                   console.log(`Saved post lead: ${post.title} (Score: ${relevanceScore})`)
@@ -558,10 +558,26 @@ export class JobScheduler {
 
   // Calculate relevance score for a post
   private async calculateRelevanceScore(post: any, product: Product): Promise<number> {
+    const postText = `${post.title} ${post.selftext || ''}`.toLowerCase()
+    
+    // QUALITY FILTERS - Reject low-quality content first
+    if (this.isLowQualityContent(post, postText)) {
+      return 0 // Reject immediately
+    }
+    
+    // DUPLICATE DETECTION - Check for repetitive content
+    if (this.isDuplicateContent(post, postText)) {
+      return 0 // Reject duplicates
+    }
+    
+    // SPAM/BOT DETECTION
+    if (this.isSpamOrBot(post, postText)) {
+      return 0 // Reject spam
+    }
+    
     let score = 0
     let qualityMultiplier = 1.0
     
-    const postText = `${post.title} ${post.selftext}`.toLowerCase()
     const productName = product.name.toLowerCase()
     
     // Direct product mention (highest priority)
@@ -746,6 +762,80 @@ export class JobScheduler {
     
     return Math.min(Math.max(finalScore, 0), 50) // Increased cap and minimum
   }
+  
+  // Quality filters to reject low-quality content
+  private isLowQualityContent(post: any, text: string): boolean {
+    // Reject very short content
+    if (text.length < 30) return true
+    
+    // Reject posts with very low engagement
+    if (post.score < 1 && post.num_comments < 1) return true
+    
+    // Reject posts with negative scores (heavily downvoted)
+    if (post.score < -5) return true
+    
+    // Reject posts that are too old (over 6 months)
+    const postAge = Date.now() / 1000 - post.created_utc
+    if (postAge > 180 * 24 * 3600) return true
+    
+    // Reject posts with suspicious patterns
+    const suspiciousPatterns = [
+      /^[A-Z\s!]{20,}$/, // All caps shouting
+      /(.)\1{4,}/, // Repeated characters (spam)
+      /https?:\/\/[^\s]+/g, // Multiple URLs (likely spam)
+    ]
+    
+    for (const pattern of suspiciousPatterns) {
+      if (pattern.test(text)) return true
+    }
+    
+    return false
+  }
+  
+  // Duplicate detection to avoid repetitive content
+  private isDuplicateContent(post: any, text: string): boolean {
+    // Simple duplicate detection based on content similarity
+    // In a real implementation, you'd store hashes of seen content
+    
+    // Reject very similar titles (basic check)
+    const commonTitles = [
+      'help', 'advice', 'recommendation', 'suggestion', 'looking for',
+      'best way', 'how to', 'what is', 'anyone know', 'need help'
+    ]
+    
+    const titleWords = post.title.toLowerCase().split(' ')
+    const commonWordCount = commonTitles.filter(common => 
+      titleWords.some(word => word.includes(common))
+    ).length
+    
+    // If title is mostly common words, likely low quality
+    if (commonWordCount > titleWords.length * 0.7) return true
+    
+    return false
+  }
+  
+  // Spam and bot detection
+  private isSpamOrBot(post: any, text: string): boolean {
+    // Reject deleted or removed content
+    if (post.selftext === '[deleted]' || post.selftext === '[removed]') return true
+    
+    // Reject AutoModerator posts
+    if (post.author === 'AutoModerator') return true
+    
+    // Reject posts with excessive links (likely spam)
+    const linkCount = (text.match(/https?:\/\/[^\s]+/g) || []).length
+    if (linkCount > 3) return true
+    
+    // Reject posts with excessive promotional language
+    const promotionalWords = ['buy now', 'click here', 'limited time', 'act now', 'don\'t miss']
+    const promotionalCount = promotionalWords.filter(phrase => text.includes(phrase)).length
+    if (promotionalCount > 1) return true
+    
+    // Reject posts with suspicious author patterns
+    if (post.author && post.author.length < 3) return true // Very short usernames
+    
+    return false
+  }
 
   // Search comments in a post for additional leads
   private async searchPostComments(redditClient: any, post: any, product: Product, userId: string): Promise<number> {
@@ -775,8 +865,8 @@ export class JobScheduler {
 
         const commentScore = await this.calculateCommentRelevanceScore(comment, product)
         
-        // Only save comment leads with score >= 4 (lowered threshold for testing)
-        if (commentScore >= 4) {
+        // Only save comment leads with score >= 8 (higher threshold for better quality)
+        if (commentScore >= 8) {
           await this.saveLead(userId, product.id, post, commentScore, 'comment', comment)
           commentLeadsFound++
           console.log(`Saved comment lead: "${comment.body.substring(0, 50)}..." - Score: ${commentScore}`)

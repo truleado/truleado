@@ -1,0 +1,62 @@
+User-agent: *
+Allow: /
+
+# Allow AI crawlers and bots
+User-agent: GPTBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: BingBot
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: SemrushBot
+Allow: /
+
+User-agent: AhrefsBot
+Allow: /
+
+User-agent: MJ12bot
+Allow: /
+
+User-agent: DotBot
+Allow: /
+
+# Disallow sensitive areas
+Disallow: /api/
+Disallow: /admin
+Disallow: /_next/
+Disallow: /auth/
+Disallow: /billing/
+Disallow: /settings/
+
+# Sitemap location
+Sitemap: https://truleado.com/sitemap.xml
