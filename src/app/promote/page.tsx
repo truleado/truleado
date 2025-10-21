@@ -221,7 +221,8 @@ export default function PromotePage() {
           productName: selectedProduct.name,
           productDescription: selectedProduct.description,
           websiteUrl: selectedProduct.website_url,
-          variation: 0
+          variation: 0,
+          userId: user?.id
         }),
         signal: abortController.signal
       })

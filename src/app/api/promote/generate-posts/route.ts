@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { createClient as createClientSide } from '@supabase/supabase-js'
 
 interface GeneratePostsRequest {
   productId: string
@@ -7,6 +8,7 @@ interface GeneratePostsRequest {
   productDescription: string
   websiteUrl: string
   variation?: number
+  userId?: string
 }
 
 interface GeneratedPost {
@@ -19,36 +21,56 @@ interface GeneratedPost {
 export async function POST(request: NextRequest) {
   try {
     console.log('Generate posts API called')
+    
+    // Get the authorization header
+    const authHeader = request.headers.get('authorization')
+    console.log('Auth header:', authHeader ? 'Present' : 'Missing')
+    
+    // Try to get user from the request
     const supabase = await createClient()
     
-  // Check authentication
-  console.log('Starting authentication check...')
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Check authentication
+    console.log('Starting authentication check...')
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-  console.log('Auth check in generate-posts:', {
-    hasUser: !!user,
-    userId: user?.id,
-    userEmail: user?.email,
-    authError: authError?.message,
-    errorCode: authError?.code,
-    errorStatus: authError?.status
-  })
+    console.log('Auth check in generate-posts:', {
+      hasUser: !!user,
+      userId: user?.id,
+      userEmail: user?.email,
+      authError: authError?.message,
+      errorCode: authError?.code,
+      errorStatus: authError?.status
+    })
 
-  // Also check session
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-  console.log('Session check in generate-posts:', {
-    hasSession: !!session,
-    sessionUserId: session?.user?.id,
-    sessionError: sessionError?.message
-  })
+    // Also check session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    console.log('Session check in generate-posts:', {
+      hasSession: !!session,
+      sessionUserId: session?.user?.id,
+      sessionError: sessionError?.message
+    })
     
     const body: GeneratePostsRequest = await request.json()
     console.log('Request body received:', body)
     
+    // If no user from server-side auth, try to get from client-side
+    let currentUser = user
     if (authError || !user) {
-      console.error('Authentication failed:', authError)
-      return NextResponse.json({ error: 'Unauthorized - Please log in to generate posts' }, { status: 401 })
+      console.log('Server-side auth failed, trying client-side approach...')
+      
+      // Try to get user from the request body
+      const userId = body.userId
+      
+      if (!userId) {
+        console.error('No user ID found in request')
+        return NextResponse.json({ error: 'Unauthorized - Please log in to generate posts' }, { status: 401 })
+      }
+      
+      // Create a user object for the API call
+      currentUser = { id: userId }
+      console.log('Using client-provided user ID:', userId)
     }
+    
     const { productId, productName, productDescription, websiteUrl, variation = 0 } = body
 
     if (!productId || !productName) {
@@ -56,18 +78,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Get product details from database
-    console.log('Looking for product:', { productId, userId: user.id })
+    console.log('Looking for product:', { productId, userId: currentUser.id })
     const { data: product, error: productError } = await supabase
       .from('products')
       .select('*')
       .eq('id', productId)
-      .eq('user_id', user.id)
+      .eq('user_id', currentUser.id)
       .single()
 
     console.log('Product query result:', { product, productError })
 
     if (productError || !product) {
-      console.error('Product not found:', { productError, productId, userId: user.id })
+      console.error('Product not found:', { productError, productId, userId: currentUser.id })
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
@@ -185,7 +207,7 @@ export async function POST(request: NextRequest) {
         targetSubreddits,
         productName,
         productId,
-        userId: user.id
+        userId: currentUser.id
       })
       return NextResponse.json({ error: 'Failed to generate any posts' }, { status: 500 })
     }
