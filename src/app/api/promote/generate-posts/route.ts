@@ -22,55 +22,24 @@ export async function POST(request: NextRequest) {
   try {
     console.log('Generate posts API called')
     
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization')
-    console.log('Auth header:', authHeader ? 'Present' : 'Missing')
-    
-    // Try to get user from the request
-    const supabase = await createClient()
-    
-    // Check authentication
-    console.log('Starting authentication check...')
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    console.log('Auth check in generate-posts:', {
-      hasUser: !!user,
-      userId: user?.id,
-      userEmail: user?.email,
-      authError: authError?.message,
-      errorCode: authError?.code,
-      errorStatus: authError?.status
-    })
-
-    // Also check session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    console.log('Session check in generate-posts:', {
-      hasSession: !!session,
-      sessionUserId: session?.user?.id,
-      sessionError: sessionError?.message
-    })
-    
     const body: GeneratePostsRequest = await request.json()
     console.log('Request body received:', body)
     console.log('User ID from request body:', body.userId)
     
-    // If no user from server-side auth, try to get from client-side
-    let currentUser = user
-    if (authError || !user) {
-      console.log('Server-side auth failed, trying client-side approach...')
-      
-      // Try to get user from the request body
-      const userId = body.userId
-      
-      if (!userId) {
-        console.error('No user ID found in request body:', body)
-        return NextResponse.json({ error: 'Unauthorized - Please log in to generate posts' }, { status: 401 })
-      }
-      
-      // Create a user object for the API call
-      currentUser = { id: userId }
-      console.log('Using client-provided user ID:', userId)
+    // Use client-provided user ID directly (simpler approach)
+    const userId = body.userId
+    
+    if (!userId) {
+      console.error('No user ID found in request body:', body)
+      return NextResponse.json({ error: 'Unauthorized - Please log in to generate posts' }, { status: 401 })
     }
+    
+    // Create a user object for the API call
+    const currentUser = { id: userId }
+    console.log('Using client-provided user ID:', userId)
+    
+    // Create a new Supabase client for database operations
+    const supabase = await createClient()
     
     const { productId, productName, productDescription, websiteUrl, variation = 0 } = body
 
