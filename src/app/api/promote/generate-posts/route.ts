@@ -278,7 +278,8 @@ Create content that will genuinely help the r/${subreddit} community and encoura
           topP: 0.9,
           maxOutputTokens: 2048,
         }
-      })
+      }),
+      signal: AbortSignal.timeout(30000) // 30 second timeout
     })
 
     if (!response.ok) {
@@ -334,6 +335,16 @@ Create content that will genuinely help the r/${subreddit} community and encoura
     }
   } catch (error) {
     console.error(`Error generating post for r/${subreddit}:`, error)
+    if (error instanceof Error && error.name === 'TimeoutError') {
+      console.error('Gemini API timeout - using fallback content')
+      // Return a simple fallback post instead of throwing
+      return {
+        subreddit,
+        title: `Looking for help with ${productName}`,
+        body: `I'm working on ${productName} and could use some advice from the r/${subreddit} community. ${productDescription}\n\nWhat are your thoughts?`,
+        type: 'educational' as const
+      }
+    }
     throw error
   }
 }
@@ -409,7 +420,8 @@ Return ONLY a JSON array of 5-8 subreddit names (without "r/" prefix):
           topP: 0.95,
           maxOutputTokens: 512,
         }
-      })
+      }),
+      signal: AbortSignal.timeout(15000) // 15 second timeout for subreddit suggestions
     })
 
     if (!response.ok) {
@@ -462,6 +474,9 @@ Return ONLY a JSON array of 5-8 subreddit names (without "r/" prefix):
     return validSubreddits.length > 0 ? validSubreddits : ['entrepreneur', 'startups', 'saas', 'marketing']
   } catch (error) {
     console.error('Error determining relevant subreddits:', error)
+    if (error instanceof Error && error.name === 'TimeoutError') {
+      console.error('Gemini API timeout for subreddit detection - using fallback')
+    }
     return ['entrepreneur', 'startups', 'saas', 'marketing'] // Fallback
   }
 }
