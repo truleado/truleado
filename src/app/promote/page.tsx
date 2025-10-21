@@ -90,13 +90,6 @@ export default function PromotePage() {
     })
   }
 
-  // Load saved posts from database on component mount
-  useEffect(() => {
-    if (user) {
-      fetchPromotedPosts()
-    }
-  }, [user, fetchPromotedPosts])
-
   // Fetch promoted posts from database
   const fetchPromotedPosts = useCallback(async () => {
     try {
@@ -138,12 +131,12 @@ export default function PromotePage() {
     }
   }, [])
 
+  // Load saved posts from database on component mount
   useEffect(() => {
-    // Always fetch products to keep it simple
-    console.log('PromotePage useEffect - calling fetchProducts')
-    fetchProducts()
-  }, [fetchProducts])
-
+    if (user) {
+      fetchPromotedPosts()
+    }
+  }, [user, fetchPromotedPosts])
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -175,6 +168,12 @@ export default function PromotePage() {
       setLoading(false)
     }
   }, [])
+
+  useEffect(() => {
+    // Always fetch products to keep it simple
+    console.log('PromotePage useEffect - calling fetchProducts')
+    fetchProducts()
+  }, [fetchProducts])
 
   const generatePosts = async () => {
     if (!selectedProduct) return
