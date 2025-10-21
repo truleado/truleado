@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
   })
     
     const body: GeneratePostsRequest = await request.json()
+    console.log('Request body received:', body)
     
     if (authError || !user) {
       console.error('Authentication failed:', authError)
@@ -90,6 +91,14 @@ export async function POST(request: NextRequest) {
     let targetSubreddits
     try {
       console.log('Starting subreddit determination...')
+      console.log('Product data for subreddit detection:', {
+        productName,
+        productDescription,
+        features,
+        benefits,
+        painPoints,
+        idealCustomerProfile
+      })
       targetSubreddits = await determineRelevantSubreddits(
         productName,
         productDescription,
@@ -101,6 +110,10 @@ export async function POST(request: NextRequest) {
       console.log(`AI-detected subreddits for ${productName}:`, targetSubreddits)
     } catch (error) {
       console.error('Error determining subreddits:', error)
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      })
       // Fallback to default subreddits
       targetSubreddits = ['entrepreneur', 'startups', 'saas', 'marketing']
       console.log(`Using fallback subreddits for ${productName}:`, targetSubreddits)
@@ -145,6 +158,8 @@ export async function POST(request: NextRequest) {
           } catch (postError) {
             console.error(`Error generating post ${i + 1} for r/${subreddit}:`, {
               error: postError,
+              message: postError instanceof Error ? postError.message : 'Unknown error',
+              stack: postError instanceof Error ? postError.stack : undefined,
               subreddit,
               productName,
               variation: i
