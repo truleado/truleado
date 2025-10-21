@@ -20,15 +20,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
-    // Get query parameters for filtering and pagination
+    // Get query parameters for filtering
     const { searchParams } = new URL(request.url)
     const productId = searchParams.get('productId')
     const status = searchParams.get('status')
-    const limit = parseInt(searchParams.get('limit') || '25')
-    const page = parseInt(searchParams.get('page') || '1')
-    const offset = (page - 1) * limit
+    const limit = searchParams.get('limit')
+    const page = searchParams.get('page')
     
-    console.log('Leads API filters:', { productId, status, limit, page, offset, userId: user.id })
+    // Only apply pagination if both limit and page are provided
+    const usePagination = limit && page
+    const limitNum = usePagination ? parseInt(limit) : 1000 // Large number to get all leads
+    const pageNum = usePagination ? parseInt(page) : 1
+    const offset = usePagination ? (pageNum - 1) * limitNum : 0
+    
+    console.log('Leads API filters:', { productId, status, usePagination, limitNum, pageNum, offset, userId: user.id })
     
     // Build query with filters - filter by authenticated user
     let query = supabase
@@ -39,7 +44,11 @@ export async function GET(request: NextRequest) {
       `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1)
+    
+    // Only apply range if using pagination
+    if (usePagination) {
+      query = query.range(offset, offset + limitNum - 1)
+    }
     
     // Add product filter if specified
     if (productId && productId !== 'all') {
@@ -53,24 +62,29 @@ export async function GET(request: NextRequest) {
     
     const { data: leads, error: leadsError } = await query
 
-    // Get total count for pagination
-    let countQuery = supabase
-      .from('leads')
-      .select('id', { count: 'exact' })
-      .eq('user_id', user.id)
-    
-    // Apply same filters for count
-    if (productId && productId !== 'all') {
-      countQuery = countQuery.eq('product_id', productId)
-    }
-    
-    if (status && status !== 'all') {
-      countQuery = countQuery.eq('status', status)
-    }
-    
-    const { count: totalLeads, error: countError } = await countQuery
+    console.log('Leads query result:', { leadsCount: leads?.length || 0, error: leadsError?.message })
 
-    console.log('Leads query result:', { leadsCount: leads?.length || 0, totalLeads, error: leadsError?.message, countError: countError?.message })
+    // Only get count if using pagination
+    let totalLeads = null
+    if (usePagination) {
+      let countQuery = supabase
+        .from('leads')
+        .select('id', { count: 'exact' })
+        .eq('user_id', user.id)
+      
+      // Apply same filters for count
+      if (productId && productId !== 'all') {
+        countQuery = countQuery.eq('product_id', productId)
+      }
+      
+      if (status && status !== 'all') {
+        countQuery = countQuery.eq('status', status)
+      }
+      
+      const { count, error: countError } = await countQuery
+      totalLeads = count
+      console.log('Count query result:', { totalLeads, countError: countError?.message })
+    }
 
     if (leadsError) {
       console.error('Database error:', leadsError)
@@ -104,19 +118,22 @@ export async function GET(request: NextRequest) {
       aiAnalysisTimestamp: lead.ai_analysis_timestamp
     }))
 
-    const totalPages = Math.ceil((totalLeads || 0) / limit)
+    // Only include pagination metadata if using pagination
+    const response: any = { leads: transformedLeads }
     
-    return NextResponse.json({ 
-      leads: transformedLeads,
-      pagination: {
-        page,
-        limit,
-        totalLeads: totalLeads || 0,
+    if (usePagination && totalLeads !== null) {
+      const totalPages = Math.ceil(totalLeads / limitNum)
+      response.pagination = {
+        page: pageNum,
+        limit: limitNum,
+        totalLeads,
         totalPages,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1
       }
-    })
+    }
+    
+    return NextResponse.json(response)
 
   } catch (error) {
     console.error('Error in leads API:', error)
