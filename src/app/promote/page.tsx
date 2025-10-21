@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { useSubscription } from '@/lib/subscription-context'
 import { AccessGuard, UpgradeButton } from '@/components/AccessGuard'
@@ -95,10 +95,10 @@ export default function PromotePage() {
     if (user) {
       fetchPromotedPosts()
     }
-  }, [user])
+  }, [user, fetchPromotedPosts])
 
   // Fetch promoted posts from database
-  const fetchPromotedPosts = async () => {
+  const fetchPromotedPosts = useCallback(async () => {
     try {
       const response = await fetch('/api/promoted-posts', {
         credentials: 'include'
@@ -136,16 +136,16 @@ export default function PromotePage() {
         }
       }
     }
-  }
+  }, [])
 
   useEffect(() => {
     // Always fetch products to keep it simple
     console.log('PromotePage useEffect - calling fetchProducts')
     fetchProducts()
-  }, [])
+  }, [fetchProducts])
 
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       const response = await fetch('/api/products', {
         credentials: 'include'
@@ -174,7 +174,7 @@ export default function PromotePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   const generatePosts = async () => {
     if (!selectedProduct) return
