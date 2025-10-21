@@ -220,7 +220,7 @@ async function generatePostForSubreddit(
   console.log(`Generating high-quality post for r/${subreddit} with variation ${variation}`)
   
   // Advanced AI-powered post generation with sophisticated analysis
-  const prompt = `You are an expert Reddit marketing strategist and content creator. Create a highly engaging, valuable Reddit post for r/${subreddit} that will genuinely help the community while subtly promoting "${productName}".
+  const prompt = `You are an expert Reddit marketing strategist and content creator. Create a SHORT, HIGH-IMPACT Reddit post for r/${subreddit} that will genuinely help the community while subtly promoting "${productName}".
 
 PRODUCT DEEP ANALYSIS:
 - Product Name: ${productName}
@@ -231,44 +231,39 @@ PRODUCT DEEP ANALYSIS:
 - Pain Points Solved: ${productPainPoints.join(', ')}
 - Target Customer: ${idealCustomerProfile || 'Not specified'}
 
-SUBREDDIT INTELLIGENCE:
-You are posting to r/${subreddit}. Research this subreddit's culture, values, common problems, terminology, and communication style. Create content that authentically fits this community.
+POST CREATION GUIDELINES:
+1. **LENGTH**: Keep posts VERY SHORT (100-200 words max) - Reddit users scroll fast
+2. **HOOK**: Start with a compelling hook that grabs attention in the first 10 words
+3. **VALUE**: Provide immediate, actionable value
+4. **NATURAL MENTION**: Mention the product naturally as a solution, not a sales pitch
+5. **URL INTEGRATION**: Smartly embed the product URL (${websiteUrl}) in context
+6. **CALL TO ACTION**: End with a question to encourage engagement
+7. **TONE**: Match the subreddit's tone perfectly - be conversational and helpful
+8. **IMPACT**: Make every word count - no fluff
 
-ADVANCED CONTENT STRATEGY:
-1. ANALYZE the subreddit's specific culture, values, and communication style
-2. IDENTIFY the most pressing problems this community faces that your product solves
-3. DETERMINE the optimal content angle that provides maximum value
-4. CRAFT a narrative that feels authentic and community-driven
-5. INTEGRATE the product mention naturally and helpfully
+CONTENT STRATEGY:
+- Start with a relatable problem or question (1-2 sentences)
+- Share a brief solution or insight (2-3 sentences)
+- Naturally mention your product as the solution (1 sentence)
+- Include the product URL in context (not just at the end)
+- End with an engaging question (1 sentence)
 
-CONTENT CREATION FRAMEWORK:
-- Hook: Start with a compelling, relatable problem or insight
-- Value: Provide genuine, actionable value to the community
-- Story: Use storytelling to make it engaging and memorable
-- Solution: Naturally introduce how your product addresses the problem
-- Community: Encourage discussion and engagement
-- Call-to-Action: Subtle, helpful direction to learn more
-
-QUALITY STANDARDS:
-- Title: 60-90 characters, click-worthy, community-relevant
-- Content: 300-500 words, highly engaging, valuable
-- Tone: Match the subreddit's culture perfectly
-- Language: Use their specific terminology and references
-- Value: Provide genuine insights, tips, or solutions
-- Authenticity: Feel like it was written by a community member
-- Engagement: Encourage comments and discussion
-
-UNIQUENESS REQUIREMENTS:
-- This post must be COMPLETELY UNIQUE and tailored to r/${subreddit}
-- Address specific problems this community faces
+TONE & STYLE FOR r/${subreddit}:
 - Use their exact terminology and communication style
-- Provide value that this specific community would appreciate
-- Avoid generic promotional content
+- Be direct and to the point
+- Provide immediate value
+- Avoid corporate speak or marketing jargon
+
+URL INTEGRATION RULES:
+- Embed the URL naturally in the text, not as a separate link
+- Use phrases like "I found this tool at [URL]" or "Check out [URL] for more details"
+- Don't just paste the URL at the end
+- Make it feel like a genuine recommendation
 
 Return ONLY a JSON object with this exact structure:
 {
-  "title": "Your compelling, community-specific title here",
-  "body": "Your engaging, valuable post content with natural product mention"
+  "title": "Your compelling, community-specific title here (keep it short and punchy)",
+  "body": "Your short, engaging post with natural product mention and embedded URL"
 }
 
 Create content that will genuinely help the r/${subreddit} community and encourage meaningful engagement.`

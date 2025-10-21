@@ -49,6 +49,11 @@ export default function PromotePage() {
   const [generationError, setGenerationError] = useState<string | null>(null)
   const [generationAbortController, setGenerationAbortController] = useState<AbortController | null>(null)
 
+  // Filter posts by selected product
+  const filteredPosts = selectedProduct 
+    ? generatedPosts.filter(post => post.product_id === selectedProduct.id)
+    : generatedPosts
+
   // Redirect to sign-in if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
@@ -95,7 +100,9 @@ export default function PromotePage() {
   // Fetch promoted posts from database
   const fetchPromotedPosts = async () => {
     try {
-      const response = await fetch('/api/promoted-posts')
+      const response = await fetch('/api/promoted-posts', {
+        credentials: 'include'
+      })
       if (response.ok) {
         const data = await response.json()
         const posts = data.posts || []
@@ -140,7 +147,9 @@ export default function PromotePage() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch('/api/products')
+      const response = await fetch('/api/products', {
+        credentials: 'include'
+      })
       if (response.ok) {
         const data = await response.json()
         // The API returns { products: [...] }, so we need to extract the products array
@@ -206,6 +215,7 @@ export default function PromotePage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include cookies for authentication
         body: JSON.stringify({
           productId: selectedProduct.id,
           productName: selectedProduct.name,
@@ -246,6 +256,7 @@ export default function PromotePage() {
               headers: {
                 'Content-Type': 'application/json',
               },
+              credentials: 'include',
               body: JSON.stringify({
                 product_id: selectedProduct.id,
                 subreddit: post.subreddit || 'unknown',
@@ -314,6 +325,7 @@ export default function PromotePage() {
       try {
         const response = await fetch(`/api/promoted-posts/${postToDelete.id}`, {
           method: 'DELETE',
+          credentials: 'include'
         })
         
         if (!response.ok) {
@@ -348,6 +360,7 @@ export default function PromotePage() {
       try {
         const response = await fetch(`/api/promoted-posts/${post.id}`, {
           method: 'DELETE',
+          credentials: 'include'
         })
         
         if (!response.ok) {
@@ -413,6 +426,7 @@ export default function PromotePage() {
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include',
           body: JSON.stringify({
             title: field === 'title' ? value : postToUpdate.title,
             body: field === 'body' ? value : postToUpdate.body,
@@ -507,16 +521,24 @@ export default function PromotePage() {
                     className="w-full p-3 sm:p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base bg-white shadow-sm hover:shadow-md transition-all duration-200"
                   >
                     <option value="">Choose a product...</option>
-                    {Array.isArray(products) && products.map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.name}
-                      </option>
-                    ))}
+                    {Array.isArray(products) && products.map((product) => {
+                      const postCount = generatedPosts.filter(post => post.product_id === product.id).length
+                      return (
+                        <option key={product.id} value={product.id}>
+                          {product.name} {postCount > 0 && `(${postCount} posts)`}
+                        </option>
+                      )
+                    })}
                   </select>
 
                   {selectedProduct && (
                     <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                      <h3 className="font-medium text-gray-900 mb-1.5 sm:mb-2 text-sm sm:text-base">{selectedProduct.name}</h3>
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-medium text-gray-900 text-sm sm:text-base">{selectedProduct.name}</h3>
+                        <span className="text-xs sm:text-sm text-blue-600 font-medium">
+                          {filteredPosts.length} posts generated
+                        </span>
+                      </div>
                       <p className="text-gray-600 text-xs sm:text-sm mb-2 sm:mb-3">{selectedProduct.description}</p>
                       <div className="flex flex-col sm:flex-row sm:items-center text-xs sm:text-sm text-gray-500 gap-1 sm:gap-4">
                         <span className="truncate">Website: {selectedProduct.website_url}</span>
@@ -633,14 +655,14 @@ export default function PromotePage() {
                           </div>
                         )}
                         
-                        {generatedPosts.length > 0 && (
+                        {filteredPosts.length > 0 && (
                           <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
-                            {generatedPosts.length}/50 posts generated
+                            {filteredPosts.length}/50 posts generated
                           </div>
                         )}
                       </div>
                       
-                      {generatedPosts.length > 0 && (
+                      {filteredPosts.length > 0 && (
                         <button
                           onClick={clearAllPosts}
                           className="text-red-600 hover:text-red-700 text-xs sm:text-sm font-medium self-center sm:self-auto"
@@ -655,16 +677,22 @@ export default function PromotePage() {
             </div>
 
             {/* Generated Posts */}
-            {generatedPosts.length > 0 && (
+            {!selectedProduct ? (
+              <div className="bg-white rounded-lg shadow p-8 text-center">
+                <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Select a Product</h3>
+                <p className="text-gray-600">Choose a product from the dropdown above to view or generate posts.</p>
+              </div>
+            ) : filteredPosts.length > 0 ? (
               <div className="bg-white rounded-lg shadow">
                 <div className="p-6 border-b border-gray-200">
                   <h2 className="text-lg font-semibold text-gray-900 flex items-center">
                     <Star className="w-5 h-5 mr-2 text-yellow-500" />
-                    Generated Posts
+                    Generated Posts {selectedProduct && `for ${selectedProduct.name}`}
                   </h2>
                 </div>
                 
-                {generatedPosts.map((post, index) => (
+                {filteredPosts.map((post, index) => (
                   <div key={index} className="p-6 border-b border-gray-200 last:border-b-0">
                     {/* Post Header */}
                     <div className="flex items-center justify-between mb-4">
@@ -787,6 +815,29 @@ export default function PromotePage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow p-8 text-center">
+                <Megaphone className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Posts Generated Yet</h3>
+                <p className="text-gray-600 mb-4">No posts have been generated for {selectedProduct.name} yet.</p>
+                <button
+                  onClick={generatePosts}
+                  disabled={isGenerating}
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Megaphone className="w-4 h-4 mr-2" />
+                      Generate Posts
+                    </>
+                  )}
+                </button>
               </div>
             )}
           </div>
