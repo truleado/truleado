@@ -48,6 +48,7 @@ export default function PromotePage() {
   const [generationProgress, setGenerationProgress] = useState({ current: 0, total: 0, currentSubreddit: '' })
   const [generationError, setGenerationError] = useState<string | null>(null)
   const [generationAbortController, setGenerationAbortController] = useState<AbortController | null>(null)
+  const [isGeneratingMore, setIsGeneratingMore] = useState(false)
 
   // Filter posts by selected product
   const filteredPosts = selectedProduct 
@@ -175,7 +176,7 @@ export default function PromotePage() {
     fetchProducts()
   }, [fetchProducts])
 
-  const generatePosts = async () => {
+  const generatePosts = async (isGeneratingMore: boolean = false) => {
     if (!selectedProduct) return
 
     // Check if we've reached the maximum number of posts
@@ -187,23 +188,29 @@ export default function PromotePage() {
     // Clear any previous errors
     setGenerationError(null)
     
-    // Check if posts already exist for this product
-    const existingPostsForProduct = generatedPosts.filter(post => 
-      post.product_id === selectedProduct.id
-    )
-    
-    if (existingPostsForProduct.length > 0) {
-      const confirmGenerate = window.confirm(
-        `You already have ${existingPostsForProduct.length} posts for this product. Do you want to generate more?`
+    // Check if posts already exist for this product (only for initial generation)
+    if (!isGeneratingMore) {
+      const existingPostsForProduct = generatedPosts.filter(post => 
+        post.product_id === selectedProduct.id
       )
-      if (!confirmGenerate) return
+      
+      if (existingPostsForProduct.length > 0) {
+        const confirmGenerate = window.confirm(
+          `You already have ${existingPostsForProduct.length} posts for this product. Do you want to generate more?`
+        )
+        if (!confirmGenerate) return
+      }
     }
 
     // Create abort controller for stopping generation
     const abortController = new AbortController()
     setGenerationAbortController(abortController)
 
-    setIsGenerating(true)
+    if (isGeneratingMore) {
+      setIsGeneratingMore(true)
+    } else {
+      setIsGenerating(true)
+    }
     setGenerationProgress({ current: 0, total: 0, currentSubreddit: 'Analyzing product and detecting subreddits...' })
     setGenerationError(null)
     
@@ -319,7 +326,11 @@ export default function PromotePage() {
       console.error('Error generating posts:', error)
       setGenerationError('AI generation failed. Please check your internet connection and try again later.')
     } finally {
-      setIsGenerating(false)
+      if (isGeneratingMore) {
+        setIsGeneratingMore(false)
+      } else {
+        setIsGenerating(false)
+      }
       setGenerationProgress({ current: 0, total: 0, currentSubreddit: '' })
       setGenerationAbortController(null)
     }
@@ -391,6 +402,7 @@ export default function PromotePage() {
       setGenerationAbortController(null)
     }
     setIsGenerating(false)
+    setIsGeneratingMore(false)
     setGenerationProgress({ current: 0, total: 0, currentSubreddit: '' })
     setGenerationError(null)
   }
@@ -604,10 +616,31 @@ export default function PromotePage() {
                           )}
                         </button>
                         
-                        {isGenerating && generationProgress.total > 0 && (
+                        {/* Generate 3 More button - only show if we have posts and not generating */}
+                        {filteredPosts.length > 0 && !isGenerating && (
+                          <button
+                            onClick={() => generatePosts(true)}
+                            disabled={isGeneratingMore || maxPostsReached}
+                            className="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                          >
+                            {isGeneratingMore ? (
+                              <>
+                                <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 animate-spin" />
+                                Generating...
+                              </>
+                            ) : (
+                              <>
+                                <Star className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+                                Generate 3 More
+                              </>
+                            )}
+                          </button>
+                        )}
+                        
+                        {(isGenerating || isGeneratingMore) && generationProgress.total > 0 && (
                           <div className="w-full mt-3">
                             <div className="flex justify-between items-center text-xs text-gray-600 mb-1">
-                              <span>AI analyzing product and generating high-quality posts...</span>
+                              <span>{isGeneratingMore ? 'Generating 3 more high-quality posts...' : 'AI analyzing product and generating high-quality posts...'}</span>
                               <div className="flex items-center space-x-2">
                                 <span>{generationProgress.current}/{generationProgress.total}</span>
                                 <button

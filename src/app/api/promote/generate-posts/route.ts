@@ -116,56 +116,39 @@ export async function POST(request: NextRequest) {
     console.log('Starting post generation for subreddits:', targetSubreddits)
     console.log('Number of subreddits to process:', targetSubreddits.length)
 
-    // Generate multiple high-quality posts for each automatically detected subreddit
-    for (const subreddit of targetSubreddits) {
+    // Generate exactly 3 high-quality posts total
+    const totalPostsToGenerate = 3
+    console.log(`Generating exactly ${totalPostsToGenerate} posts total`)
+    
+    for (let i = 0; i < totalPostsToGenerate; i++) {
       try {
-        console.log(`Starting high-quality post generation for r/${subreddit}...`)
+        // Cycle through subreddits to ensure diversity
+        const subreddit = targetSubreddits[i % targetSubreddits.length]
+        console.log(`Generating post ${i + 1}/${totalPostsToGenerate} for r/${subreddit}...`)
         
-        // Generate 2-3 variations per subreddit for maximum quality and diversity
-        const postsPerSubreddit = Math.min(3, Math.max(2, Math.floor(8 / targetSubreddits.length)))
-        console.log(`Will generate ${postsPerSubreddit} posts for r/${subreddit}`)
+        const post = await generatePostForSubreddit(
+          subreddit,
+          productName,
+          productDescription,
+          websiteUrl,
+          i, // Use index as variation
+          features,
+          benefits,
+          painPoints,
+          idealCustomerProfile
+        )
+        console.log(`Post generated successfully for r/${subreddit}:`, { title: post.title, bodyLength: post.body.length })
+        generatedPosts.push(post)
+        console.log(`Successfully generated post ${i + 1}/${totalPostsToGenerate}`)
         
-        for (let i = 0; i < postsPerSubreddit; i++) {
-          try {
-            console.log(`Calling generatePostForSubreddit for r/${subreddit}, variation ${i}`)
-            const post = await generatePostForSubreddit(
-              subreddit,
-              productName,
-              productDescription,
-              websiteUrl,
-              i, // Use index as variation
-              features,
-              benefits,
-              painPoints,
-              idealCustomerProfile
-            )
-            console.log(`Post generated successfully for r/${subreddit}:`, { title: post.title, bodyLength: post.body.length })
-            generatedPosts.push(post)
-            console.log(`Successfully generated post ${i + 1}/${postsPerSubreddit} for r/${subreddit}`)
-            
-            // Add small delay between variations to avoid rate limiting
-            if (i < postsPerSubreddit - 1) {
-              await new Promise(resolve => setTimeout(resolve, 1000))
-            }
-          } catch (postError) {
-            console.error(`Error generating post ${i + 1} for r/${subreddit}:`, {
-              error: postError,
-              message: postError instanceof Error ? postError.message : 'Unknown error',
-              stack: postError instanceof Error ? postError.stack : undefined,
-              subreddit,
-              productName,
-              variation: i
-            })
-            // Continue with next post instead of failing completely
-            continue
-          }
+        // Add small delay between posts to avoid rate limiting
+        if (i < totalPostsToGenerate - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000))
         }
         
-        console.log(`Completed post generation for r/${subreddit}`)
-        
       } catch (error) {
-        console.error(`Error generating posts for r/${subreddit}:`, error)
-        // Continue with next subreddit instead of failing completely
+        console.error(`Error generating post ${i + 1}:`, error)
+        // Continue with next post instead of failing completely
         continue
       }
     }
@@ -335,16 +318,6 @@ Create content that will genuinely help the r/${subreddit} community and encoura
     }
   } catch (error) {
     console.error(`Error generating post for r/${subreddit}:`, error)
-    if (error instanceof Error && error.name === 'TimeoutError') {
-      console.error('Gemini API timeout - using fallback content')
-      // Return a simple fallback post instead of throwing
-      return {
-        subreddit,
-        title: `Looking for help with ${productName}`,
-        body: `I'm working on ${productName} and could use some advice from the r/${subreddit} community. ${productDescription}\n\nWhat are your thoughts?`,
-        type: 'educational' as const
-      }
-    }
     throw error
   }
 }
