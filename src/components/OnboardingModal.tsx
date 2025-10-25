@@ -477,7 +477,7 @@ const ProductForm = ({ onProductAdded }: { onProductAdded: () => void }) => {
 
       <button
         type="submit"
-        disabled={isAddingProduct || (newProduct.name && newProduct.description && newProduct.subreddits.length === 0)}
+        disabled={isAddingProduct || !newProduct.name || !newProduct.description || newProduct.subreddits.length === 0}
         className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center py-4"
       >
         {isAddingProduct ? (
@@ -770,7 +770,7 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
               {isFindingLeads 
                 ? "We're scanning relevant subreddits and analyzing discussions to find potential customers for your product."
                 : leadsFound 
-                  ? `We've found ${leadsCount} potential customers discussing problems your product solves!`
+                  ? `We've found ${leadsCount || 0} potential customers discussing problems your product solves!`
                   : "Preparing to search Reddit for leads..."
               }
             </p>
@@ -788,7 +788,7 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
               <div className="text-center mt-4">
                 <div className="inline-flex items-center space-x-2 text-lg font-semibold text-green-700">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span>{leadsCount} leads found so far...</span>
+                  <span>{leadsCount || 0} leads found so far...</span>
                 </div>
               </div>
             )}
@@ -811,13 +811,13 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
               {isFirstLeadFound ? (
                 <>
                   <Search className="w-6 h-6 mr-3" />
-                  View Your {leadsCount} Discovered Leads
+                  View Your {leadsCount || 0} Discovered Leads
                   <ArrowRight className="w-5 h-5 ml-3" />
                 </>
               ) : (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-400 mr-3"></div>
-                  Finding Leads... ({leadsCount} found so far)
+                  Finding Leads... ({leadsCount || 0} found so far)
                 </>
               )}
             </button>
