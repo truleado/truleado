@@ -68,8 +68,8 @@ export async function POST(request: NextRequest) {
         status: "new"
       },
       {
-        title: "Comment on: Best project management tools for remote teams",
-        content: "We've been using Trello but it's not cutting it anymore. Need something more robust for our 15-person team. Budget is around $50/month per user.",
+        title: "Best project management tools for remote teams?",
+        content: "We've been using Trello but it's not cutting it anymore. Need something more robust for our 15-person team. Budget is around $50/month per user. Any recommendations?",
         subreddit: "entrepreneur",
         author: "startup_founder",
         url: "https://reddit.com/r/entrepreneur/comments/sample2",
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
         ai_analysis_reasons: ["Specific budget mentioned", "Team size matches target", "Actively seeking solution", "High engagement"],
         ai_sample_reply: "I can relate to outgrowing Trello! For a team your size, you might want to check out [Product Name]. It's designed specifically for growing teams and offers advanced features like time tracking, resource planning, and client collaboration. The pricing fits your budget perfectly. Happy to share more details if you're interested!",
         ai_analysis_score: 9,
-        lead_type: "comment",
+        lead_type: "post",
         status: "new"
       },
       {

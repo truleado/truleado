@@ -812,9 +812,9 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
               </div>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="text-center">
-                  <h4 className="font-semibold text-blue-900 mb-2">🚀 Ready to see your leads!</h4>
+                  <h4 className="font-semibold text-blue-900 mb-2">🚀 Ready to find leads!</h4>
                   <p className="text-blue-800 text-sm">
-                    Click "Next" to immediately see the leads we've discovered for your product!
+                    Click "Find My Leads!" to start searching Reddit for potential customers.
                   </p>
                 </div>
               </div>
