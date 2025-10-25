@@ -31,6 +31,7 @@
     
     <button class="test-button" onclick="testEverything()">🧪 Test Everything</button>
     <button class="test-button" onclick="createTestUser()">👤 Create Test User</button>
+    <button class="test-button" onclick="loginTestUser()">🔐 Login Test User</button>
     <button class="test-button" onclick="testDatabase()">Test Database Connection</button>
     <button class="test-button" onclick="testAuth()">Test Authentication</button>
     <button class="test-button" onclick="testSimple()">Test Simple Operations</button>
@@ -309,6 +310,53 @@
                 }
             } catch (error) {
                 resultsDiv.innerHTML = `<div class="error">❌ Create Test User Error: ${error.message}</div>`;
+            }
+        }
+
+        async function loginTestUser() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">🔐 Logging in test user...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/debug/login-test-user`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Test User Logged In Successfully!</div>
+                        <p><strong>Message:</strong> ${data.message}</p>
+                        <h3>User Details:</h3>
+                        <div style="background: #f0f0f0; padding: 10px; margin: 10px 0;">
+                            <strong>ID:</strong> ${data.user.id}<br>
+                            <strong>Email:</strong> ${data.user.email}
+                        </div>
+                        <h3>Data Found:</h3>
+                        <ul>
+                            <li><strong>Leads:</strong> ${data.counts.leads}</li>
+                            <li><strong>Products:</strong> ${data.counts.products}</li>
+                        </ul>
+                        <h3>Next Steps:</h3>
+                        <ol>
+                            <li>Go to <a href="/leads" target="_blank">/leads</a> to see the leads</li>
+                            <li>Go to <a href="/products" target="_blank">/products</a> to see your products</li>
+                            <li>The test user is now logged in and data should be visible!</li>
+                        </ol>
+                        <div style="background: #e8f5e8; padding: 10px; margin: 10px 0; border: 1px solid #4caf50;">
+                            <strong>🎉 SUCCESS:</strong> You should now see leads on the /leads page!
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="error">❌ Test User Login: FAILED</div>
+                        <p><strong>Error:</strong> ${data.error}</p>
+                        <p><strong>Details:</strong> ${data.details}</p>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ Login Test User Error: ${error.message}</div>`;
             }
         }
 

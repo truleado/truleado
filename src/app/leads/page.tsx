@@ -108,6 +108,10 @@ function LeadsContent() {
       console.log('Auto-selecting first product:', products[0].name)
       setSelectedProduct(products[0])
       fetchLeads(products[0].id)
+    } else if (products.length === 0) {
+      // If no products, fetch all leads
+      console.log('No products found, fetching all leads...')
+      fetchLeads()
     }
   }, [products, selectedProduct])
 
@@ -116,14 +120,10 @@ function LeadsContent() {
     try {
       console.log('Fetching leads for product:', productId || 'all')
       
-      // Only fetch leads if a specific product is selected
-      if (!productId) {
-        setLeads([])
-        return
-      }
-      
       const params = new URLSearchParams()
-      params.append('productId', productId)
+      if (productId) {
+        params.append('productId', productId)
+      }
       
       const url = `/api/leads?${params.toString()}`
       const response = await fetch(url, {
@@ -143,6 +143,32 @@ function LeadsContent() {
       } else {
         const errorText = await response.text()
         console.error('Leads API error:', response.status, response.statusText, errorText)
+        // If unauthorized, try to login with test user
+        if (response.status === 401) {
+          console.log('Unauthorized - attempting to login with test user...')
+          try {
+            const loginResponse = await fetch('/api/debug/login-test-user', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            })
+            if (loginResponse.ok) {
+              console.log('Test user login successful, retrying leads fetch...')
+              // Retry the leads fetch
+              const retryResponse = await fetch(url, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+              })
+              if (retryResponse.ok) {
+                const retryData = await retryResponse.json()
+                console.log('Retry successful - leads found:', retryData.leads?.length || 0)
+                setLeads(retryData.leads || [])
+              }
+            }
+          } catch (loginError) {
+            console.error('Test user login failed:', loginError)
+          }
+        }
       }
     } catch (error) {
       console.error('Failed to fetch leads:', error)

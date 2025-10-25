@@ -18,7 +18,8 @@ import {
   User,
   ChevronRight,
   ChevronDown,
-  Megaphone
+  Megaphone,
+  TestTube
 } from 'lucide-react'
 import { TrialBanner } from './TrialBanner'
 import { NotificationBell } from './NotificationBell'
@@ -49,6 +50,7 @@ const navigation = [
       { name: 'Promote', href: '/promote', icon: Megaphone, description: 'Generate promotional posts' },
     ]
   },
+  { name: 'Test', href: '/test', icon: TestTube, description: 'Testing and development tools' },
   { name: 'Settings', href: '/settings', icon: Settings, description: 'Account & preferences' },
 ]
 
