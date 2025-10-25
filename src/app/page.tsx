@@ -94,12 +94,12 @@ export default function Home() {
               AI-Powered Lead Generation
             </div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 mb-3 sm:mb-4 md:mb-6 leading-tight px-2 sm:px-4">
-              Find Quality Leads on
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent block sm:inline"> Reddit</span>
+              Research Websites & Find
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent block sm:inline"> Reddit Leads</span>
             </h1>
             <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-gray-600 mb-4 sm:mb-6 max-w-4xl mx-auto leading-relaxed px-2 sm:px-4">
-              Find your next customers on Reddit by discovering people actively discussing problems your product solves. 
-              <span className="font-semibold text-gray-800"> Powered by AI analysis.</span>
+              Analyze any website, extract keywords, and discover strategic Reddit opportunities with AI-powered insights and pitch ideas. 
+              <span className="font-semibold text-gray-800"> Start your 7-day free trial today.</span>
             </p>
             
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8 md:mb-12 px-2 sm:px-4">
@@ -121,16 +121,16 @@ export default function Home() {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-3xl mx-auto px-2 sm:px-4">
               <div className="text-center">
-                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">1000+</div>
-                <div className="text-xs sm:text-sm md:text-base text-gray-600">Leads Found Daily</div>
+                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">7 Days</div>
+                <div className="text-xs sm:text-sm md:text-base text-gray-600">Free Trial</div>
               </div>
               <div className="text-center">
-                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">95%</div>
-                <div className="text-xs sm:text-sm md:text-base text-gray-600">Accuracy Rate</div>
+                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">AI-Powered</div>
+                <div className="text-xs sm:text-sm md:text-base text-gray-600">Analysis</div>
               </div>
               <div className="text-center">
-                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">24/7</div>
-                <div className="text-xs sm:text-sm md:text-base text-gray-600">Monitoring</div>
+                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">Strategic</div>
+                <div className="text-xs sm:text-sm md:text-base text-gray-600">Pitch Ideas</div>
               </div>
             </div>
           </div>
@@ -145,7 +145,7 @@ export default function Home() {
               How Truleado Works
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-2">
-              Our AI-powered platform discovers Reddit conversations where people are actively seeking solutions your product provides.
+              Research any website, discover strategic Reddit opportunities, and get AI-generated pitch ideas to connect with potential customers.
             </p>
           </div>
           
@@ -153,41 +153,41 @@ export default function Home() {
             
             <div className="text-center group">
               <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-200">
-                <Target className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
+                <Search className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
               </div>
-              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">Define Your Product</h3>
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">Research Websites</h3>
               <p className="text-sm sm:text-base text-gray-600 leading-relaxed px-2">
-                Add your product details and let our AI understand what problems you solve and who your ideal customers are.
+                Analyze any website URL to extract product information, keywords, and understand what problems it solves.
               </p>
             </div>
             
             <div className="text-center group">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-200">
-                <Search className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-200">
+                <Users className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
               </div>
-              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">Discover Reddit</h3>
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">Find Reddit Leads</h3>
               <p className="text-sm sm:text-base text-gray-600 leading-relaxed px-2">
-                We scan all relevant subreddits 24/7 to find discussions where people need your solution.
+                Discover strategic Reddit opportunities where people are discussing problems your product can solve.
               </p>
             </div>
             
             <div className="text-center group">
               <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-200">
-                <Zap className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
+                <Brain className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
               </div>
-              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">Get Notified</h3>
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">AI Pitch Ideas</h3>
               <p className="text-sm sm:text-base text-gray-600 leading-relaxed px-2">
-                Receive instant notifications with full context from Reddit conversations when high-intent prospects appear.
+                Get AI-generated reasoning and sample pitch ideas for each Reddit opportunity to maximize your success.
               </p>
             </div>
             
             <div className="text-center group">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-200">
-                <Megaphone className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-200">
+                <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
               </div>
-              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">Promote Your Product</h3>
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">Track Performance</h3>
               <p className="text-sm sm:text-base text-gray-600 leading-relaxed px-2">
-                Generate highly engaging Reddit posts tailored to each subreddit's rules and culture to promote your product.
+                Save leads, track your Reddit outreach performance, and optimize your strategy with detailed analytics.
               </p>
             </div>
           </div>
@@ -203,16 +203,16 @@ export default function Home() {
                 Why Choose Truleado?
               </h2>
               <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">
-                Stop wasting time on cold outreach. Find customers who are already looking for your solution.
+                Research any website, discover strategic Reddit opportunities, and get AI-powered insights to connect with potential customers.
               </p>
               <div className="space-y-4 sm:space-y-6">
                 <div className="flex items-start group">
                   <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-xl flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                    <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+                    <Search className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                   </div>
                   <div className="ml-3 sm:ml-4">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">Real Conversation Context</h3>
-                    <p className="text-sm sm:text-base text-gray-600">Get the exact Reddit post that proves they're interested in your solution.</p>
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">Website Research</h3>
+                    <p className="text-sm sm:text-base text-gray-600">Analyze any website to extract product information and discover relevant keywords.</p>
                   </div>
                 </div>
                 
@@ -221,28 +221,28 @@ export default function Home() {
                     <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                   </div>
                   <div className="ml-3 sm:ml-4">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">AI-Powered Analysis</h3>
-                    <p className="text-sm sm:text-base text-gray-600">Our AI filters out noise and finds only the most relevant opportunities.</p>
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">AI-Powered Insights</h3>
+                    <p className="text-sm sm:text-base text-gray-600">Get strategic reasoning and sample pitch ideas for each Reddit opportunity.</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start group">
                   <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                    <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+                    <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
                   </div>
                   <div className="ml-3 sm:ml-4">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">Continuous Monitoring</h3>
-                    <p className="text-sm sm:text-base text-gray-600">Background jobs run 24/7 to find new leads as they appear.</p>
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">Strategic Lead Discovery</h3>
+                    <p className="text-sm sm:text-base text-gray-600">Find high-quality Reddit opportunities where people are actively seeking solutions.</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start group">
                   <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-indigo-100 rounded-xl flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-                    <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
+                    <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
                   </div>
                   <div className="ml-3 sm:ml-4">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">Easy Integration</h3>
-                    <p className="text-sm sm:text-base text-gray-600">Works seamlessly with your existing workflow and tools.</p>
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">Performance Tracking</h3>
+                    <p className="text-sm sm:text-base text-gray-600">Save leads, track outreach performance, and optimize your Reddit strategy.</p>
                   </div>
                 </div>
               </div>
@@ -252,21 +252,21 @@ export default function Home() {
               <div className="space-y-6 sm:space-y-8">
                 <div className="flex items-center">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
-                    <Globe className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                    <Search className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                   <div className="ml-3 sm:ml-4">
-                    <p className="text-xl sm:text-2xl font-bold text-gray-900">All</p>
-                    <p className="text-sm sm:text-base text-gray-600">Subreddits Monitored</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">Any Website</p>
+                    <p className="text-sm sm:text-base text-gray-600">Research & Analysis</p>
                   </div>
                 </div>
                 
                 <div className="flex items-center">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center">
-                    <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-red-500 to-red-600 rounded-xl flex items-center justify-center">
+                    <Users className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                   <div className="ml-3 sm:ml-4">
-                    <p className="text-xl sm:text-2xl font-bold text-gray-900">24/7</p>
-                    <p className="text-sm sm:text-base text-gray-600">Continuous Monitoring</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">Strategic</p>
+                    <p className="text-sm sm:text-base text-gray-600">Reddit Opportunities</p>
                   </div>
                 </div>
                 
@@ -275,8 +275,8 @@ export default function Home() {
                     <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                   <div className="ml-3 sm:ml-4">
-                    <p className="text-xl sm:text-2xl font-bold text-gray-900">AI-Powered</p>
-                    <p className="text-sm sm:text-base text-gray-600">Smart Lead Filtering</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">AI-Generated</p>
+                    <p className="text-sm sm:text-base text-gray-600">Pitch Ideas</p>
                   </div>
                 </div>
               </div>
@@ -302,12 +302,12 @@ export default function Home() {
             <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-gray-200 p-6 sm:p-8 hover:shadow-2xl transition-shadow duration-300">
               <div className="text-center">
                 <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Free Trial</h3>
-                <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8">Try everything for 1 day</p>
+                <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8">Try everything for 7 days</p>
                 
                 <div className="mb-6 sm:mb-8">
                   <div className="flex items-baseline justify-center">
                     <span className="text-4xl sm:text-5xl font-bold text-gray-900">$0</span>
-                    <span className="text-lg sm:text-xl text-gray-500 ml-2">for 1 day</span>
+                    <span className="text-lg sm:text-xl text-gray-500 ml-2">for 7 days</span>
                   </div>
                   <p className="mt-2 text-xs sm:text-sm text-gray-600">No credit card required</p>
                 </div>
@@ -326,27 +326,27 @@ export default function Home() {
                 <ul className="space-y-3 sm:space-y-4">
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">Full access to all features</span>
+                    <span className="text-sm sm:text-base text-gray-700">Website research & analysis</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">Unlimited product monitoring</span>
+                    <span className="text-sm sm:text-base text-gray-700">AI-powered keyword extraction</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">All subreddits monitored</span>
+                    <span className="text-sm sm:text-base text-gray-700">Strategic Reddit lead discovery</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">AI-powered lead analysis</span>
+                    <span className="text-sm sm:text-base text-gray-700">AI-generated pitch ideas</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">24/7 background monitoring</span>
+                    <span className="text-sm sm:text-base text-gray-700">Lead saving & organization</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">AI-powered Reddit post generation</span>
+                    <span className="text-sm sm:text-base text-gray-700">Performance tracking</span>
                   </li>
                 </ul>
               </div>
@@ -386,27 +386,27 @@ export default function Home() {
                 <ul className="space-y-3 sm:space-y-4">
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">Unlimited product monitoring</span>
+                    <span className="text-sm sm:text-base text-gray-700">Unlimited website research</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">All subreddits monitored</span>
+                    <span className="text-sm sm:text-base text-gray-700">Advanced AI analysis</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">AI-powered lead analysis</span>
+                    <span className="text-sm sm:text-base text-gray-700">Unlimited Reddit lead discovery</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">24/7 background monitoring</span>
+                    <span className="text-sm sm:text-base text-gray-700">AI-generated pitch ideas</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">Real-time lead notifications</span>
+                    <span className="text-sm sm:text-base text-gray-700">Advanced lead management</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">AI-powered Reddit post generation</span>
+                    <span className="text-sm sm:text-base text-gray-700">Detailed performance analytics</span>
                   </li>
                 </ul>
               </div>
@@ -429,10 +429,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
-              Ready to Find Your Next Customers?
+              Ready to Research Websites & Find Reddit Leads?
             </h2>
             <p className="text-xl text-blue-100 max-w-3xl mx-auto mb-8">
-              Join hundreds of SaaS founders who are already finding quality leads on Reddit with Truleado.
+              Join SaaS founders who are discovering strategic Reddit opportunities with AI-powered insights and pitch ideas.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 
@@ -470,7 +470,7 @@ export default function Home() {
                 <span className="ml-3 text-xl font-bold text-white">Truleado</span>
               </div>
               <p className="text-gray-400 text-sm mb-6 max-w-md leading-relaxed">
-                Find your next customers on Reddit. Stop cold emailing strangers and discover relevant discussions where people are actively seeking your solution.
+                Research any website, discover strategic Reddit opportunities, and get AI-powered insights to connect with potential customers.
               </p>
               <div className="flex space-x-4">
                 <a href="https://x.com/truleado" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">

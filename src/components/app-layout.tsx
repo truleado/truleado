@@ -19,7 +19,8 @@ import {
   ChevronRight,
   ChevronDown,
   Megaphone,
-  Plane
+  Plane,
+  BarChart3
 } from 'lucide-react'
 import { TrialBanner } from './TrialBanner'
 import { NotificationBell } from './NotificationBell'
@@ -45,12 +46,12 @@ const navigation = [
     icon: RedditIcon, 
     description: 'Reddit tools and features',
     children: [
-      { name: 'Products', href: '/products', icon: Package, description: 'Manage your products' },
-      { name: 'Leads', href: '/leads', icon: Users, description: 'Discover new opportunities' },
+      { name: 'Research', href: '/research', icon: Plane, description: 'Website research and Reddit lead discovery' },
+      { name: 'Reddit Leads', href: '/reddit-leads', icon: Users, description: 'Saved Reddit opportunities' },
+      { name: 'Track Leads', href: '/track-leads', icon: BarChart3, description: 'Track and monitor lead performance' },
       { name: 'Promote', href: '/promote', icon: Megaphone, description: 'Generate promotional posts' },
     ]
   },
-  { name: 'Pilot', href: '/pilot', icon: Plane, description: 'Pilot features and experiments' },
   { name: 'Settings', href: '/settings', icon: Settings, description: 'Account & preferences' },
 ]
 
