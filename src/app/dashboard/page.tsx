@@ -73,7 +73,6 @@ export default function Dashboard() {
   const [statsLoading, setStatsLoading] = useState(true)
   const [activityLoading, setActivityLoading] = useState(true)
   const [trendsLoading, setTrendsLoading] = useState(true)
-  const [redditConnected, setRedditConnected] = useState(false)
   const [hasProducts, setHasProducts] = useState(false)
   const [leadFindingActive, setLeadFindingActive] = useState(false)
   const [currentTrialTime, setCurrentTrialTime] = useState(trialTimeRemaining)
@@ -181,7 +180,7 @@ export default function Dashboard() {
         const statsData = await statsResponse.json()
         setStats(statsData)
         setHasProducts(statsData.activeProducts > 0)
-        setLeadFindingActive(statsData.activeProducts > 0 && redditConnected)
+        setLeadFindingActive(statsData.activeProducts > 0)
       }
       setStatsLoading(false)
 
@@ -211,17 +210,6 @@ export default function Dashboard() {
       }
       setTrendsLoading(false)
 
-      // Check Reddit connection
-      const redditResponse = await fetch('/api/auth/reddit/status', {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      if (redditResponse.ok) {
-        const redditData = await redditResponse.json()
-        setRedditConnected(redditData.connected)
-      }
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
       setStatsLoading(false)
@@ -230,20 +218,6 @@ export default function Dashboard() {
     }
   }
 
-  const handleRedditConnect = async () => {
-    try {
-      const response = await fetch('/api/auth/reddit')
-      if (response.ok) {
-        const data = await response.json()
-        window.location.href = data.authUrl
-      } else {
-        alert('Failed to initiate Reddit connection')
-      }
-    } catch (error) {
-      console.error('Failed to connect Reddit:', error)
-      alert('Failed to connect Reddit')
-    }
-  }
 
   const statsCards = [
     {
@@ -429,48 +403,8 @@ export default function Dashboard() {
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-200/50 p-6 sm:p-8 mb-6 sm:mb-8">
             <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Let's get started quick</h3>
             <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {/* Step 1: Connect Reddit */}
-              <div className={`relative block w-full rounded-xl sm:rounded-2xl border-2 p-4 sm:p-6 text-center transition-all duration-200 ${
-                redditConnected 
-                  ? 'border-green-300 bg-green-50' 
-                  : 'border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-              }`}>
-                {redditConnected && (
-                  <div className="absolute top-3 right-3 sm:top-4 sm:right-4">
-                    <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
-                  </div>
-                )}
-                <div className="flex items-center justify-center mb-3 sm:mb-4">
-                  {redditConnected ? (
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-xl sm:rounded-2xl flex items-center justify-center">
-                      <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
-                    </div>
-                  ) : (
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-xl sm:rounded-2xl flex items-center justify-center">
-                      <Filter className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
-                    </div>
-                  )}
-                </div>
-                <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
-                  {redditConnected ? 'Reddit Connected!' : 'Connect Reddit Account'}
-                </h4>
-                <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
-                  {redditConnected 
-                    ? 'Your Reddit account is ready for lead discovery' 
-                    : 'Connect your Reddit account to start finding leads'
-                  }
-                </p>
-                {!redditConnected && (
-                  <button 
-                    onClick={handleRedditConnect}
-                    className="inline-flex items-center px-3 sm:px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-lg sm:rounded-xl hover:from-orange-600 hover:to-red-600 transition-all duration-200 shadow-lg hover:shadow-xl text-xs sm:text-sm"
-                  >
-                    Connect Now
-                  </button>
-                )}
-              </div>
 
-              {/* Step 2: Add Products */}
+              {/* Step 1: Add Products */}
               <div className={`relative block w-full rounded-xl sm:rounded-2xl border-2 p-4 sm:p-6 text-center transition-all duration-200 ${
                 hasProducts 
                   ? 'border-green-300 bg-green-50' 
@@ -511,19 +445,19 @@ export default function Dashboard() {
                 )}
               </div>
 
-              {/* Step 3: Lead Finding Magic */}
+              {/* Step 2: Lead Finding Magic */}
               <div className={`relative block w-full rounded-xl sm:rounded-2xl border-2 p-4 sm:p-6 text-center transition-all duration-200 ${
-                (redditConnected && hasProducts) || leadFindingActive
+                hasProducts || leadFindingActive
                   ? 'border-green-300 bg-green-50' 
                   : 'border-dashed border-gray-300'
               }`}>
-                {(redditConnected && hasProducts) || leadFindingActive ? (
+                {(hasProducts || leadFindingActive) ? (
                   <div className="absolute top-4 right-4">
                     <CheckCircle className="h-6 w-6 text-green-600" />
                   </div>
                 ) : null}
                 <div className="flex items-center justify-center mb-4">
-                  {(redditConnected && hasProducts) || leadFindingActive ? (
+                  {(hasProducts || leadFindingActive) ? (
                     <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-xl sm:rounded-2xl flex items-center justify-center">
                       <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
                     </div>
@@ -534,18 +468,18 @@ export default function Dashboard() {
                   )}
                 </div>
                 <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
-                  {(redditConnected && hasProducts) || leadFindingActive 
+                  {(hasProducts || leadFindingActive) 
                     ? 'Lead Finding Active! 🚀' 
                     : 'Lead Finding Ready'
                   }
                 </h4>
                 <p className="text-xs sm:text-sm text-gray-600 mb-4">
-                  {(redditConnected && hasProducts) || leadFindingActive
+                  {(hasProducts || leadFindingActive)
                     ? 'We\'re automatically finding leads for you!' 
-                    : 'Complete steps 1 & 2 to start the magic'
+                    : 'Complete step 1 to start the magic'
                   }
                 </p>
-                {(redditConnected && hasProducts) && !leadFindingActive && (
+                {hasProducts && !leadFindingActive && (
                   <div className="inline-flex items-center px-3 sm:px-4 py-2 bg-green-100 text-green-700 font-semibold rounded-lg sm:rounded-xl text-sm">
                     <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                     Starting automatically...

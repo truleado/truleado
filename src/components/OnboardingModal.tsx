@@ -575,10 +575,6 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
     }
   }
 
-  const handleRedditConnect = () => {
-    // Redirect to Reddit OAuth
-    window.location.href = '/api/auth/reddit/connect'
-  }
 
   const startLeadFinding = async () => {
     setIsLoading(true)
