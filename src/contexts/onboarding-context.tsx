@@ -40,65 +40,12 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       return
     }
 
-    // Check if user has products and Reddit connected
-    checkOnboardingStatus()
+    // For new users, show onboarding immediately
+    setIsOnboarding(true)
+    setCurrentStep(1)
   }, [user])
 
-  // Check URL parameters for onboarding triggers
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search)
-      const tab = urlParams.get('tab')
-      
-      if (tab === 'integrations') {
-        // User was directed here from onboarding, check if they completed the step
-        setTimeout(() => {
-          checkOnboardingStatus()
-        }, 1000)
-      }
-    }
-  }, [])
 
-  const checkOnboardingStatus = async () => {
-    if (!user) return
-
-    try {
-      // Check if user has products
-      const productsResponse = await fetch('/api/products', {
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
-      })
-      
-      const productsData = await productsResponse.json()
-      const hasProducts = productsData?.products?.length > 0
-
-      // Check Reddit connection
-      const redditResponse = await fetch('/api/auth/reddit/status', {
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
-      })
-      
-      const redditData = await redditResponse.json()
-      const hasReddit = redditData?.connected
-
-      // If user already has both, complete onboarding
-      if (hasProducts && hasReddit) {
-        completeOnboarding()
-      } else if (!isOnboarding) {
-        // Only start onboarding if not already in progress
-        setIsOnboarding(true)
-        setCurrentStep(1)
-      }
-      // If already onboarding, don't reset the current step
-    } catch (error) {
-      console.error('Error checking onboarding status:', error)
-      // Only start onboarding as fallback if not already in progress
-      if (!isOnboarding) {
-        setIsOnboarding(true)
-        setCurrentStep(1)
-      }
-    }
-  }
 
   const nextStep = () => {
     if (currentStep < totalSteps) {

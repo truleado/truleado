@@ -507,7 +507,6 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [hasProducts, setHasProducts] = useState(false)
-  const [hasReddit, setHasReddit] = useState(false)
   const [isFindingLeads, setIsFindingLeads] = useState(false)
   const [leadsFound, setLeadsFound] = useState(false)
 
@@ -517,31 +516,6 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
       checkCurrentStatus()
     }
   }, [isOpen])
-
-  // Check for Reddit connection success when modal opens
-  useEffect(() => {
-    if (isOpen && currentStep === 3) {
-      const urlParams = new URLSearchParams(window.location.search)
-      const redditConnected = urlParams.get('reddit_connected')
-      
-      if (redditConnected === 'true') {
-        // Clean up URL
-        const url = new URL(window.location.href)
-        url.searchParams.delete('reddit_connected')
-        window.history.replaceState({}, '', url.toString())
-        
-        // Refresh Reddit status
-        checkCurrentStatus()
-      }
-    }
-  }, [isOpen, currentStep])
-
-  // Check status when moving to specific steps that need status updates
-  useEffect(() => {
-    if (isOpen && (currentStep === 2 || currentStep === 3)) {
-      checkCurrentStatus()
-    }
-  }, [currentStep])
 
   // Auto-start lead finding when reaching step 3
   useEffect(() => {
@@ -582,14 +556,6 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
       })
       const productsData = await productsResponse.json()
       setHasProducts(productsData?.products?.length > 0)
-
-      // Check Reddit
-      const redditResponse = await fetch('/api/auth/reddit/status', {
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
-      })
-      const redditData = await redditResponse.json()
-      setHasReddit(redditData?.connected)
     } catch (error) {
       console.error('Error checking status:', error)
     }
