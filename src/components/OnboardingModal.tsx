@@ -511,6 +511,8 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
   const [leadsFound, setLeadsFound] = useState(false)
   const [leadsCount, setLeadsCount] = useState(0)
   const [isFirstLeadFound, setIsFirstLeadFound] = useState(false)
+  const [discoveryStarted, setDiscoveryStarted] = useState(false)
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null)
 
   // Check current status when modal opens
   useEffect(() => {
@@ -521,53 +523,108 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
 
   // Auto-start lead finding when reaching step 3
   useEffect(() => {
-    if (isOpen && currentStep === 3 && !isFindingLeads && !leadsFound) {
+    if (isOpen && currentStep === 3 && !isFindingLeads && !leadsFound && !discoveryStarted) {
       startLeadFindingProcess()
     }
   }, [isOpen, currentStep])
+
+  // Cleanup polling interval on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval)
+      }
+    }
+  }, [pollingInterval])
 
   const startLeadFindingProcess = async () => {
     setIsFindingLeads(true)
     setLeadsCount(0)
     setIsFirstLeadFound(false)
+    setDiscoveryStarted(true)
     
     try {
-      // Simulate progressive lead finding
-      const leadFindingSteps = [
-        { delay: 1000, message: "Scanning Reddit posts..." },
-        { delay: 1500, message: "Analyzing discussions..." },
-        { delay: 2000, message: "Found 1 lead!" },
-        { delay: 1000, message: "Found 2 leads!" },
-        { delay: 1000, message: "Found 3 leads!" },
-        { delay: 500, message: "Finalizing results..." }
-      ]
+      // Start the actual lead discovery
+      await startLeadDiscovery()
       
-      for (let i = 0; i < leadFindingSteps.length; i++) {
-        const step = leadFindingSteps[i]
-        await new Promise(resolve => setTimeout(resolve, step.delay))
-        
-        if (step.message.includes("Found")) {
-          const count = parseInt(step.message.match(/\d+/)?.[0] || "0")
-          setLeadsCount(count)
-          
-          if (count === 1) {
-            setIsFirstLeadFound(true)
-          }
-        }
-      }
-      
-      // Start the actual lead finding
-      await startLeadFinding()
-      
-      // Mark leads as found
-      setLeadsFound(true)
+      // Start polling for leads
+      startPollingForLeads()
     } catch (error) {
       console.error('Error in lead finding process:', error)
-      // Still mark as found even if there's an error
-      setLeadsFound(true)
-    } finally {
       setIsFindingLeads(false)
     }
+  }
+
+  const startLeadDiscovery = async () => {
+    try {
+      const response = await fetch('/api/leads/start-discovery', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to start lead discovery')
+      }
+
+      const data = await response.json()
+      console.log('Lead discovery started:', data)
+    } catch (error) {
+      console.error('Error starting lead discovery:', error)
+      throw error
+    }
+  }
+
+  const startPollingForLeads = () => {
+    // Poll every 3 seconds for leads
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch('/api/leads', {
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' }
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          const leadsCount = data.leads?.length || 0
+          
+          setLeadsCount(leadsCount)
+          
+          if (leadsCount > 0 && !isFirstLeadFound) {
+            setIsFirstLeadFound(true)
+          }
+          
+          // If we found leads, stop polling and mark as complete
+          if (leadsCount > 0) {
+            setLeadsFound(true)
+            setIsFindingLeads(false)
+            clearInterval(interval)
+            setPollingInterval(null)
+          }
+        }
+      } catch (error) {
+        console.error('Error polling for leads:', error)
+      }
+    }, 3000)
+    
+    setPollingInterval(interval)
+    
+    // Stop polling after 2 minutes if no leads found
+    setTimeout(() => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval)
+        setPollingInterval(null)
+      }
+      if (!leadsFound) {
+        setIsFindingLeads(false)
+        // Still allow user to proceed even if no leads found
+        setLeadsFound(true)
+        setLeadsCount(0) // Set to 0 to show no leads found
+      }
+    }, 120000) // 2 minutes timeout
   }
 
   const checkCurrentStatus = async () => {
@@ -601,30 +658,6 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
   }
 
 
-  const startLeadFinding = async () => {
-    setIsLoading(true)
-    try {
-      const response = await fetch('/api/leads/start-discovery', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to start lead discovery')
-      }
-
-      const data = await response.json()
-      console.log('Lead discovery started:', data)
-    } catch (error) {
-      console.error('Error starting lead finding:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const handleSkip = () => {
     skipOnboarding()
@@ -768,7 +801,7 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
             </div>
             <p className="text-green-700 text-center mb-4">
               {isFindingLeads 
-                ? "We're scanning relevant subreddits and analyzing discussions to find potential customers for your product."
+                ? "We're actively scanning Reddit and analyzing discussions to find potential customers for your product. This may take a few moments..."
                 : leadsFound 
                   ? `We've found ${leadsCount || 0} potential customers discussing problems your product solves!`
                   : "Preparing to search Reddit for leads..."
@@ -801,30 +834,43 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
                 completeOnboarding()
                 router.push('/leads')
               }}
-              disabled={!isFirstLeadFound}
+              disabled={!leadsFound}
               className={`w-full px-8 py-4 rounded-lg text-lg font-semibold shadow-lg transition-all duration-200 flex items-center justify-center ${
-                isFirstLeadFound
+                leadsFound
                   ? 'bg-gradient-to-r from-green-600 to-blue-600 text-white hover:from-green-700 hover:to-blue-700 cursor-pointer'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
             >
-              {isFirstLeadFound ? (
-                <>
-                  <Search className="w-6 h-6 mr-3" />
-                  View Your {leadsCount || 0} Discovered Leads
-                  <ArrowRight className="w-5 h-5 ml-3" />
-                </>
+              {leadsFound ? (
+                leadsCount > 0 ? (
+                  <>
+                    <Search className="w-6 h-6 mr-3" />
+                    View Your {leadsCount} Discovered Leads
+                    <ArrowRight className="w-5 h-5 ml-3" />
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-6 h-6 mr-3" />
+                    View Leads Page (No leads found yet)
+                    <ArrowRight className="w-5 h-5 ml-3" />
+                  </>
+                )
               ) : (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-400 mr-3"></div>
-                  Finding Leads... ({leadsCount || 0} found so far)
+                  {isFindingLeads ? `Finding Leads... (${leadsCount} found so far)` : 'Preparing to find leads...'}
                 </>
               )}
             </button>
             
-            {isFirstLeadFound && (
+            {leadsFound && leadsCount > 0 && (
               <p className="text-sm text-gray-500 mt-3">
-                ✨ Great! We found your first lead. Click the button above to see all discovered leads!
+                ✨ Great! We found {leadsCount} lead{leadsCount > 1 ? 's' : ''} for your product. Click the button above to see all discovered leads!
+              </p>
+            )}
+            {leadsFound && leadsCount === 0 && (
+              <p className="text-sm text-gray-500 mt-3">
+                No leads found yet, but you can still explore the leads page to see how the system works. New leads will appear as they're discovered!
               </p>
             )}
           </div>

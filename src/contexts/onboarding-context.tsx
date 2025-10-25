@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { useSubscription } from '@/lib/subscription-context'
 
@@ -24,12 +24,13 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   const [isOnboarding, setIsOnboarding] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
   const [isCompleted, setIsCompleted] = useState(false)
+  const hasInitialized = useRef(false)
 
   const totalSteps = 3
 
   // Check if user needs onboarding
   useEffect(() => {
-    if (!user) return
+    if (!user || hasInitialized.current) return
 
     // Check if user has completed onboarding before
     const hasCompletedOnboarding = localStorage.getItem(`onboarding_completed_${user.id}`)
@@ -37,12 +38,13 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     if (hasCompletedOnboarding) {
       setIsCompleted(true)
       setIsOnboarding(false)
-      return
+    } else {
+      // For new users, show onboarding immediately
+      setIsOnboarding(true)
+      setCurrentStep(1)
     }
-
-    // For new users, show onboarding immediately
-    setIsOnboarding(true)
-    setCurrentStep(1)
+    
+    hasInitialized.current = true
   }, [user])
 
 
@@ -79,6 +81,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     setIsOnboarding(true)
     setCurrentStep(1)
     setIsCompleted(false)
+    hasInitialized.current = false
   }
 
   const value: OnboardingContextType = {

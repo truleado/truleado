@@ -35,27 +35,8 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Check Reddit connection
-    const { data: apiKeys, error: apiKeysError } = await supabase
-      .from('api_keys')
-      .select('reddit_access_token, reddit_token_expires_at')
-      .eq('user_id', user.id)
-      .single()
-
-    if (apiKeysError || !apiKeys?.reddit_access_token) {
-      return NextResponse.json({ 
-        error: 'Reddit account not connected' 
-      }, { status: 400 })
-    }
-
-    const tokenExpired = apiKeys.reddit_token_expires_at && 
-      new Date(apiKeys.reddit_token_expires_at) < new Date()
-
-    if (tokenExpired) {
-      return NextResponse.json({ 
-        error: 'Reddit token has expired. Please reconnect your Reddit account.' 
-      }, { status: 400 })
-    }
+    // Reddit authentication no longer required - using public API
+    console.log('Using Reddit public API for lead discovery')
 
     const results = {
       productsProcessed: 0,

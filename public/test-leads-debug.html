@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Leads - Truleado</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 10px; }
+        #results { margin-top: 20px; border: 1px solid #ccc; padding: 15px; background-color: #f9f9f9; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .info { color: blue; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Debug Leads Discovery</h1>
+    <p>This page helps debug why leads aren't being saved.</p>
+    
+    <button id="createProductButton">Create Test Product</button>
+    <button id="testSaveButton">Test Lead Save</button>
+    <button id="checkLeadsButton">Check Current Leads</button>
+    <button id="populateButton">Populate Sample Leads</button>
+    
+    <div id="results">
+        Click a button to start debugging...
+    </div>
+
+    <script>
+        document.getElementById('createProductButton').addEventListener('click', async () => {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Creating test product to trigger lead discovery...</div>';
+            
+            try {
+                const productData = {
+                    name: 'Test CRM for Debugging',
+                    website: 'https://example.com/test-crm-debug',
+                    description: 'A test CRM product for debugging lead discovery',
+                    features: ['contact management', 'lead tracking', 'email automation'],
+                    benefits: ['save time', 'increase sales', 'better organization'],
+                    painPoints: ['disorganized contacts', 'lost leads', 'manual processes'],
+                    idealCustomerProfile: 'small business owners, sales teams'
+                };
+                
+                const response = await fetch('/api/products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(productData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Test product created!</div>
+                        <p><strong>Product:</strong> ${result.product.name}</p>
+                        <p><strong>Message:</strong> ${result.message}</p>
+                        <p><strong>Check the terminal logs for lead discovery progress...</strong></p>
+                        <p>Look for messages like:</p>
+                        <ul>
+                            <li>"Found X unique high-quality leads"</li>
+                            <li>"Preparing to save leads to database..."</li>
+                            <li>"✅ Saved X leads to database"</li>
+                            <li>Any error messages</li>
+                        </ul>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<div class="error">❌ Error: ${result.error}</div>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        });
+        
+        document.getElementById('testSaveButton').addEventListener('click', async () => {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing lead save functionality...</div>';
+            
+            try {
+                const response = await fetch('/api/debug/test-save-lead', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Lead save test successful!</div>
+                        <p><strong>Test lead created:</strong> ${result.lead.title}</p>
+                        <p>This means the database insertion is working. The issue might be in the lead discovery process.</p>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<div class="error">❌ Lead save test failed: ${result.error}</div>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        });
+        
+        document.getElementById('checkLeadsButton').addEventListener('click', async () => {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Checking current leads...</div>';
+            
+            try {
+                const response = await fetch('/api/leads');
+                const result = await response.json();
+                
+                if (result.leads && result.leads.length > 0) {
+                    let html = `<div class="success">🎉 Found ${result.leads.length} leads!</div>`;
+                    result.leads.slice(0, 5).forEach((lead, index) => {
+                        html += `
+                            <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; background: white;">
+                                <strong>${index + 1}. ${lead.title}</strong><br>
+                                <small>r/${lead.subreddit} | Score: ${lead.ai_analysis?.qualityScore || 'N/A'}</small>
+                            </div>
+                        `;
+                    });
+                    resultsDiv.innerHTML = html;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="info">📝 No leads found in database.</div>
+                        <p>This could mean:</p>
+                        <ul>
+                            <li>Lead discovery is still running (check terminal)</li>
+                            <li>Leads are being found but not saved (check terminal for errors)</li>
+                            <li>No relevant posts were found</li>
+                        </ul>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        });
+        
+        document.getElementById('populateButton').addEventListener('click', async () => {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Populating sample leads...</div>';
+            
+            try {
+                const response = await fetch('/api/debug/populate-leads', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Sample leads created!</div>
+                        <p><strong>Created:</strong> ${result.leads.length} sample leads</p>
+                        <p>Now check your leads page to see them.</p>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<div class="error">❌ Error: ${result.error}</div>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        });
+    </script>
+</body>
+</html>

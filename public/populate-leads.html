@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Populate Leads - Truleado</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { 
+            color: #333; 
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        button { 
+            padding: 15px 30px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            margin: 10px; 
+            border: none;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .primary-btn {
+            background: #007bff;
+            color: white;
+        }
+        .primary-btn:hover {
+            background: #0056b3;
+        }
+        .secondary-btn {
+            background: #6c757d;
+            color: white;
+        }
+        .secondary-btn:hover {
+            background: #545b62;
+        }
+        .success-btn {
+            background: #28a745;
+            color: white;
+        }
+        .success-btn:hover {
+            background: #1e7e34;
+        }
+        #results { 
+            margin-top: 30px; 
+            border: 1px solid #ddd; 
+            padding: 20px; 
+            background-color: #f9f9f9; 
+            border-radius: 5px;
+            min-height: 100px;
+        }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .info { color: #17a2b8; }
+        .lead-item { 
+            margin: 15px 0; 
+            padding: 15px; 
+            border: 1px solid #eee; 
+            background: white; 
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .lead-item h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .lead-meta {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .lead-link {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .lead-link:hover {
+            text-decoration: underline;
+        }
+        .button-group {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .status.loading {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Populate Leads</h1>
+        <p class="subtitle">Quickly add sample leads to test your Truleado dashboard</p>
+        
+        <div class="button-group">
+            <button id="populateButton" class="primary-btn">🚀 Populate Sample Leads</button>
+            <button id="checkButton" class="secondary-btn">📊 Check Current Leads</button>
+            <button id="goToLeadsButton" class="success-btn">👀 Go to Leads Page</button>
+        </div>
+        
+        <div id="results">
+            <div class="info">Click "Populate Sample Leads" to add test data to your dashboard...</div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('populateButton').addEventListener('click', async () => {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="status loading">🔄 Creating sample leads... Please wait.</div>';
+            
+            try {
+                const response = await fetch('/api/debug/populate-leads', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Sample leads created successfully!</div>
+                        <p><strong>Created:</strong> ${result.leads.length} sample leads</p>
+                        <h3>Sample leads added:</h3>
+                        ${result.leads.map((lead, index) => `
+                            <div class="lead-item">
+                                <h3>${index + 1}. ${lead.title}</h3>
+                                <div class="lead-meta">
+                                    <strong>Subreddit:</strong> r/${lead.subreddit} | 
+                                    <strong>AI Score:</strong> ${lead.score}/10
+                                </div>
+                                <a href="${lead.url}" target="_blank" class="lead-link">View on Reddit</a>
+                            </div>
+                        `).join('')}
+                        <div class="success">
+                            <p><strong>🎉 Success!</strong> Now go to your <a href="/leads" target="_blank">Leads Page</a> to see them!</p>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<div class="error">❌ Error: ${result.error}</div>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        });
+        
+        document.getElementById('checkButton').addEventListener('click', async () => {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="status loading">🔄 Checking current leads...</div>';
+            
+            try {
+                const response = await fetch('/api/leads');
+                const result = await response.json();
+                
+                if (result.leads && result.leads.length > 0) {
+                    let html = `<div class="success">🎉 Found ${result.leads.length} existing leads!</div>`;
+                    result.leads.slice(0, 10).forEach((lead, index) => {
+                        html += `
+                            <div class="lead-item">
+                                <h3>${index + 1}. ${lead.title}</h3>
+                                <div class="lead-meta">
+                                    <strong>Subreddit:</strong> r/${lead.subreddit} | 
+                                    <strong>Reddit Score:</strong> ${lead.score} | 
+                                    <strong>AI Score:</strong> ${lead.ai_analysis?.qualityScore || 'N/A'}/10
+                                </div>
+                                <a href="${lead.reddit_post_url}" target="_blank" class="lead-link">View on Reddit</a>
+                            </div>
+                        `;
+                    });
+                    if (result.leads.length > 10) {
+                        html += `<p class="info">... and ${result.leads.length - 10} more leads</p>`;
+                    }
+                    resultsDiv.innerHTML = html;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="info">📝 No leads found in database yet.</div>
+                        <p>Click "Populate Sample Leads" to add some test data.</p>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        });
+        
+        document.getElementById('goToLeadsButton').addEventListener('click', () => {
+            window.open('/leads', '_blank');
+        });
+    </script>
+</body>
+</html>

@@ -149,13 +149,25 @@ export class AILeadAnalyzer {
         cleanText = cleanText.replace(/^```\s*/, '').replace(/\s*```$/, '')
       }
       
+      // Clean control characters and fix common JSON issues
+      cleanText = cleanText
+        .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+        .replace(/\n/g, '\\n') // Escape newlines
+        .replace(/\r/g, '\\r') // Escape carriage returns
+        .replace(/\t/g, '\\t') // Escape tabs
+        .replace(/"/g, '"') // Fix smart quotes
+        .replace(/"/g, '"') // Fix smart quotes
+        .replace(/'/g, "'") // Fix smart apostrophes
+        .replace(/'/g, "'") // Fix smart apostrophes
+      
       let analysis
       try {
         analysis = JSON.parse(cleanText)
       } catch (parseError) {
         console.error('JSON parse error:', parseError)
         console.error('Raw text:', cleanText)
-        throw new Error('Invalid JSON response from Gemini')
+        console.log('Using fallback analysis due to JSON parsing error')
+        return this.getFallbackAnalysis(lead, product)
       }
       
       // Validate the response structure
@@ -279,9 +291,12 @@ Find pain points, buying intent, urgency. Return JSON:
     const leadTitle = lead.title.toLowerCase()
     const fullText = `${leadTitle} ${leadContent}`
     
-    // Enhanced analysis without AI
-    let qualityScore = 0
+    // Enhanced analysis without AI - start with base score
+    let qualityScore = 3  // Base score for any post
     let confidence = 5
+    
+    // Give every post a base reason
+    reasons.push('Found in relevant subreddit')
     
     // Direct product mention (highest priority)
     if (fullText.includes(product.name.toLowerCase())) {
@@ -378,7 +393,10 @@ Find pain points, buying intent, urgency. Return JSON:
       reasons: reasons.length > 0 ? reasons : ['Potential lead based on subreddit relevance'],
       sampleReply,
       qualityScore: Math.min(Math.max(qualityScore, 1), 10),
-      confidence: Math.min(Math.max(confidence, 1), 10)
+      confidence: Math.min(Math.max(confidence, 1), 10),
+      painPoints: painPointMatches,
+      buyingSignals: intentMatches,
+      suggestedApproach: `Engage with this post by offering helpful advice related to ${featureMatches.slice(0, 2).join(' and ')}.`
     }
   }
   

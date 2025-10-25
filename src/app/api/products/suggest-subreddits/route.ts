@@ -8,8 +8,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Product information is required' }, { status: 400 })
     }
 
-    // Find relevant subreddits based on product analysis (fast version)
-    const subreddits = getDefaultSubreddits({
+    // Find relevant subreddits using AI analysis
+    const subreddits = await findRelevantSubreddits({
       name,
       description,
       features,
@@ -26,58 +26,239 @@ export async function POST(request: NextRequest) {
 }
 
 async function findRelevantSubreddits(productInfo: {
-  name: string
-  description: string
-  features: string[]
-  benefits: string[]
-  painPoints: string[]
-  idealCustomerProfile: string
+  name?: string
+  description?: string
+  features?: string[]
+  benefits?: string[]
+  painPoints?: string[]
+  idealCustomerProfile?: string
 }) {
+  try {
+    // Try Gemini first (cheaper), then fallback to OpenAI
+    const geminiApiKey = process.env.GOOGLE_GEMINI_API_KEY
   const openaiApiKey = process.env.OPENAI_API_KEY
   
-  if (!openaiApiKey) {
-    // Return default subreddits if OpenAI key is not configured
+    if (geminiApiKey) {
+      try {
+        console.log('Finding subreddits with Gemini...')
+        return await findSubredditsWithGemini(productInfo)
+      } catch (error) {
+        console.error('Gemini subreddit discovery failed, trying OpenAI:', error)
+        // Continue to OpenAI fallback
+      }
+    }
+    
+    if (openaiApiKey) {
+      try {
+        console.log('Finding subreddits with OpenAI...')
+        return await findSubredditsWithOpenAI(productInfo)
+      } catch (error) {
+        console.error('OpenAI subreddit discovery failed:', error)
+        // Continue to fallback
+      }
+    }
+    
+    console.log('No AI API keys available, using fallback subreddit suggestions')
+    return getDefaultSubreddits(productInfo)
+    
+  } catch (error) {
+    console.error('Subreddit discovery error:', error)
     return getDefaultSubreddits(productInfo)
   }
+}
 
-  try {
-    const productSummary = `
-Product: ${productInfo.name}
-Description: ${productInfo.description}
-Features: ${productInfo.features.join(', ')}
-Benefits: ${productInfo.benefits.join(', ')}
-Pain Points: ${productInfo.painPoints.join(', ')}
-Target Customers: ${productInfo.idealCustomerProfile}
-    `.trim()
+async function findSubredditsWithGemini(productInfo: {
+  name?: string
+  description?: string
+  features?: string[]
+  benefits?: string[]
+  painPoints?: string[]
+  idealCustomerProfile?: string
+}) {
+  const productSummary = `
+Product: ${productInfo.name || 'Unknown'}
+Description: ${productInfo.description || 'No description provided'}
+Features: ${(productInfo.features || []).join(', ') || 'No features specified'}
+Benefits: ${(productInfo.benefits || []).join(', ') || 'No benefits specified'}
+Pain Points: ${(productInfo.painPoints || []).join(', ') || 'No pain points specified'}
+Target Customers: ${productInfo.idealCustomerProfile || 'No target customer profile specified'}
+  `.trim()
+
+  const prompt = `You are a Reddit community expert and lead generation specialist. Analyze this product and suggest 8-12 highly targeted subreddits where potential customers actively discuss the EXACT problems this product solves.
+
+CRITICAL ANALYSIS APPROACH:
+1. IDENTIFY THE CORE PROBLEM: What specific pain points does this product solve?
+2. FIND THE SUFFERERS: Who experiences these problems most acutely?
+3. LOCATE THE COMMUNITIES: Where do these people go to discuss their problems and seek solutions?
+4. PRIORITIZE BY RELEVANCE: Focus on communities where the product would provide genuine value
+
+INDUSTRY-SPECIFIC MAPPING:
+- HR/Recruiting: r/recruiting, r/humanresources, r/jobs, r/careerguidance, r/HR, r/talentacquisition
+- E-commerce: r/ecommerce, r/shopify, r/dropship, r/amazon, r/onlinebusiness, r/entrepreneur
+- Marketing: r/marketing, r/digitalmarketing, r/socialmedia, r/PPC, r/content_marketing, r/SEO
+- Sales: r/sales, r/salesforce, r/CRM, r/entrepreneur, r/smallbusiness
+- Project Management: r/projectmanagement, r/productivity, r/agile, r/scrum, r/entrepreneur
+- Communication: r/productivity, r/remotework, r/digitalnomad, r/entrepreneur, r/smallbusiness
+- Design: r/userexperience, r/web_design, r/graphic_design, r/design, r/entrepreneur
+- Development: r/webdev, r/programming, r/saas, r/startups, r/entrepreneur
+- Finance: r/personalfinance, r/accounting, r/investing, r/smallbusiness, r/entrepreneur
+- Healthcare: r/healthcare, r/medicine, r/nursing, r/pharmacy, r/healthcareIT
+- Education: r/teachers, r/education, r/college, r/studying, r/edtech
+- Real Estate: r/realestate, r/realestateinvesting, r/firsttimehomebuyer, r/realestateagent
+
+PAIN POINT-BASED SELECTION:
+- "Manual processes" → Productivity, automation, efficiency communities
+- "Disconnected systems" → Integration, workflow, management communities  
+- "Poor tracking" → Analytics, data, reporting communities
+- "Team collaboration" → Remote work, productivity, management communities
+- "Customer management" → CRM, sales, customer service communities
+- "Hiring challenges" → HR, recruiting, jobs communities
+- "E-commerce setup" → E-commerce, online business, entrepreneurship communities
+
+AUDIENCE-SPECIFIC TARGETING:
+- Small Business Owners: r/smallbusiness, r/entrepreneur, r/startups
+- Enterprise Users: r/business, r/consulting, r/enterprise
+- Technical Users: r/programming, r/webdev, r/sysadmin, r/technology
+- Non-Technical Users: r/entrepreneur, r/smallbusiness, r/productivity
+- Industry Professionals: Use industry-specific subreddits
+- Freelancers/Consultants: r/freelance, r/consulting, r/digitalnomad
+
+QUALITY CRITERIA:
+- Active communities with regular discussions
+- People seeking help, advice, or solutions
+- Professional or semi-professional tone
+- Relevant to the specific problems this product solves
+- Mix of broad and niche communities
+- Avoid promotional or spammy subreddits
+
+Return ONLY a valid JSON array of 8-12 subreddit names (without r/ prefix). 
+Example: ["recruiting", "humanresources", "jobs", "entrepreneur", "smallbusiness", "careerguidance", "HR", "talentacquisition"]`
+
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GOOGLE_GEMINI_API_KEY}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      contents: [{
+        parts: [{
+          text: prompt + '\n\nProduct Analysis:\n' + productSummary
+        }]
+      }],
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: 1000,
+      }
+    })
+  })
+
+  if (!response.ok) {
+    throw new Error(`Gemini API error: ${response.status}`)
+  }
+
+  const data = await response.json()
+  const content = data.candidates?.[0]?.content?.parts?.[0]?.text
+
+  if (!content) {
+    throw new Error('No content generated by Gemini')
+  }
+
+  // Extract JSON array from the response
+  const jsonMatch = content.match(/\[[\s\S]*?\]/)
+  if (!jsonMatch) {
+    throw new Error('No JSON array found in Gemini response')
+  }
+
+  const subreddits = JSON.parse(jsonMatch[0])
+  console.log('Gemini subreddit suggestions:', subreddits)
+  return subreddits
+}
+
+async function findSubredditsWithOpenAI(productInfo: {
+  name?: string
+  description?: string
+  features?: string[]
+  benefits?: string[]
+  painPoints?: string[]
+  idealCustomerProfile?: string
+}) {
+  const productSummary = `
+Product: ${productInfo.name || 'Unknown'}
+Description: ${productInfo.description || 'No description provided'}
+Features: ${(productInfo.features || []).join(', ') || 'No features specified'}
+Benefits: ${(productInfo.benefits || []).join(', ') || 'No benefits specified'}
+Pain Points: ${(productInfo.painPoints || []).join(', ') || 'No pain points specified'}
+Target Customers: ${productInfo.idealCustomerProfile || 'No target customer profile specified'}
+  `.trim()
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
+      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+      model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
-            content: `You are a Reddit community expert. Based on the product information provided, suggest 6-8 relevant subreddits where potential customers might discuss problems this product solves.
+          content: `You are a Reddit community expert and lead generation specialist. Analyze this product and suggest 8-12 highly targeted subreddits where potential customers actively discuss the EXACT problems this product solves.
 
-Consider:
-- Business/entrepreneurship subreddits for B2B products
-- Industry-specific subreddits
-- Problem-solving communities
-- Professional development subreddits
+CRITICAL ANALYSIS APPROACH:
+1. IDENTIFY THE CORE PROBLEM: What specific pain points does this product solve?
+2. FIND THE SUFFERERS: Who experiences these problems most acutely?
+3. LOCATE THE COMMUNITIES: Where do these people go to discuss their problems and seek solutions?
+4. PRIORITIZE BY RELEVANCE: Focus on communities where the product would provide genuine value
 
-Return ONLY a valid JSON array of subreddit names (without r/ prefix). Example: ["entrepreneur", "smallbusiness", "marketing"]`
+INDUSTRY-SPECIFIC MAPPING:
+- HR/Recruiting: r/recruiting, r/humanresources, r/jobs, r/careerguidance, r/HR, r/talentacquisition
+- E-commerce: r/ecommerce, r/shopify, r/dropship, r/amazon, r/onlinebusiness, r/entrepreneur
+- Marketing: r/marketing, r/digitalmarketing, r/socialmedia, r/PPC, r/content_marketing, r/SEO
+- Sales: r/sales, r/salesforce, r/CRM, r/entrepreneur, r/smallbusiness
+- Project Management: r/projectmanagement, r/productivity, r/agile, r/scrum, r/entrepreneur
+- Communication: r/productivity, r/remotework, r/digitalnomad, r/entrepreneur, r/smallbusiness
+- Design: r/userexperience, r/web_design, r/graphic_design, r/design, r/entrepreneur
+- Development: r/webdev, r/programming, r/saas, r/startups, r/entrepreneur
+- Finance: r/personalfinance, r/accounting, r/investing, r/smallbusiness, r/entrepreneur
+- Healthcare: r/healthcare, r/medicine, r/nursing, r/pharmacy, r/healthcareIT
+- Education: r/teachers, r/education, r/college, r/studying, r/edtech
+- Real Estate: r/realestate, r/realestateinvesting, r/firsttimehomebuyer, r/realestateagent
+
+PAIN POINT-BASED SELECTION:
+- "Manual processes" → Productivity, automation, efficiency communities
+- "Disconnected systems" → Integration, workflow, management communities  
+- "Poor tracking" → Analytics, data, reporting communities
+- "Team collaboration" → Remote work, productivity, management communities
+- "Customer management" → CRM, sales, customer service communities
+- "Hiring challenges" → HR, recruiting, jobs communities
+- "E-commerce setup" → E-commerce, online business, entrepreneurship communities
+
+AUDIENCE-SPECIFIC TARGETING:
+- Small Business Owners: r/smallbusiness, r/entrepreneur, r/startups
+- Enterprise Users: r/business, r/consulting, r/enterprise
+- Technical Users: r/programming, r/webdev, r/sysadmin, r/technology
+- Non-Technical Users: r/entrepreneur, r/smallbusiness, r/productivity
+- Industry Professionals: Use industry-specific subreddits
+- Freelancers/Consultants: r/freelance, r/consulting, r/digitalnomad
+
+QUALITY CRITERIA:
+- Active communities with regular discussions
+- People seeking help, advice, or solutions
+- Professional or semi-professional tone
+- Relevant to the specific problems this product solves
+- Mix of broad and niche communities
+- Avoid promotional or spammy subreddits
+
+Return ONLY a valid JSON array of 8-12 subreddit names (without r/ prefix). 
+Example: ["recruiting", "humanresources", "jobs", "entrepreneur", "smallbusiness", "careerguidance", "HR", "talentacquisition"]`
           },
           {
             role: 'user',
             content: productSummary
           }
         ],
-        temperature: 0.7,
-        max_tokens: 200,
+      temperature: 0.3,
+      max_tokens: 500,
       }),
     })
 
@@ -89,97 +270,165 @@ Return ONLY a valid JSON array of subreddit names (without r/ prefix). Example: 
     const subredditsText = data.choices[0]?.message?.content
 
     if (!subredditsText) {
-      throw new Error('No subreddits returned from OpenAI')
-    }
-
-    // Parse JSON response - handle markdown code blocks
-    let cleanText = subredditsText.trim()
-    
-    // Remove markdown code blocks if present
-    if (cleanText.startsWith('```json')) {
-      cleanText = cleanText.replace(/^```json\s*/, '').replace(/\s*```$/, '')
-    } else if (cleanText.startsWith('```')) {
-      cleanText = cleanText.replace(/^```\s*/, '').replace(/\s*```$/, '')
-    }
-    
-    const subreddits = JSON.parse(cleanText)
-    
-    // Validate and clean the response
-    if (Array.isArray(subreddits)) {
-      return subreddits.slice(0, 8) // Limit to 8 subreddits
-    }
-    
-    return getDefaultSubreddits(productInfo)
-  } catch (error) {
-    console.error('OpenAI subreddit discovery error:', error)
-    return getDefaultSubreddits(productInfo)
+    throw new Error('No content generated by OpenAI')
   }
+
+  // Extract JSON array from the response
+  const jsonMatch = subredditsText.match(/\[[\s\S]*?\]/)
+  if (!jsonMatch) {
+    throw new Error('No JSON array found in OpenAI response')
+  }
+
+  const subreddits = JSON.parse(jsonMatch[0])
+  console.log('OpenAI subreddit suggestions:', subreddits)
+  return subreddits
 }
 
 function getDefaultSubreddits(productInfo: any): string[] {
-  // Use AI to suggest relevant subreddits based on the product
-  // This is more dynamic than hardcoded lists
-  
+  // Enhanced fallback subreddit selection with industry-specific mapping
   const text = `${productInfo.name} ${productInfo.description} ${productInfo.features?.join(' ') || ''} ${productInfo.painPoints?.join(' ') || ''} ${productInfo.idealCustomerProfile || ''}`.toLowerCase()
   
-  // Intelligent subreddit selection based on product characteristics
+  // Industry-specific subreddit categories with better targeting
   const subredditCategories = {
-    // Business & Entrepreneurship
-    business: ['entrepreneur', 'smallbusiness', 'startups', 'business'],
+    // HR & Recruiting
+    hr_recruiting: ['recruiting', 'humanresources', 'jobs', 'careerguidance', 'HR', 'talentacquisition', 'hiring'],
     
-    // Sales & Marketing
-    sales: ['sales', 'marketing', 'b2bsales', 'digitalmarketing'],
+    // E-commerce & Online Business
+    ecommerce: ['ecommerce', 'shopify', 'dropship', 'amazon', 'onlinebusiness', 'entrepreneur', 'smallbusiness'],
     
-    // Technology & Development
-    tech: ['saas', 'webdev', 'programming', 'technology'],
+    // Sales & CRM
+    sales: ['sales', 'salesforce', 'CRM', 'entrepreneur', 'smallbusiness', 'marketing'],
     
-    // Design & Creative
-    design: ['userexperience', 'web_design', 'graphic_design', 'design'],
+    // Marketing & Advertising
+    marketing: ['marketing', 'digitalmarketing', 'socialmedia', 'PPC', 'content_marketing', 'SEO', 'entrepreneur'],
     
-    // Productivity & Management
-    productivity: ['productivity', 'projectmanagement', 'freelance', 'digitalnomad'],
+    // Project Management & Productivity
+    project_management: ['projectmanagement', 'productivity', 'agile', 'scrum', 'entrepreneur', 'smallbusiness'],
     
-    // Industry Specific
-    ecommerce: ['ecommerce', 'shopify', 'dropship'],
-    analytics: ['analytics', 'datascience', 'businessintelligence'],
-    finance: ['personalfinance', 'investing', 'financialindependence']
+    // Communication & Collaboration
+    communication: ['productivity', 'remotework', 'digitalnomad', 'entrepreneur', 'smallbusiness', 'freelance'],
+    
+    // Design & UX
+    design: ['userexperience', 'web_design', 'graphic_design', 'design', 'entrepreneur', 'webdev'],
+    
+    // Development & Technology
+    development: ['webdev', 'programming', 'saas', 'startups', 'entrepreneur', 'technology', 'software'],
+    
+    // Finance & Accounting
+    finance: ['personalfinance', 'accounting', 'investing', 'smallbusiness', 'entrepreneur', 'financialindependence'],
+    
+    // Healthcare
+    healthcare: ['healthcare', 'medicine', 'nursing', 'pharmacy', 'healthcareIT', 'medical'],
+    
+    // Education
+    education: ['teachers', 'education', 'college', 'studying', 'edtech', 'academia'],
+    
+    // Real Estate
+    realestate: ['realestate', 'realestateinvesting', 'firsttimehomebuyer', 'realestateagent', 'property'],
+    
+    // Consulting & Freelance
+    consulting: ['consulting', 'freelance', 'entrepreneur', 'smallbusiness', 'digitalnomad'],
+    
+    // Analytics & Data
+    analytics: ['analytics', 'datascience', 'businessintelligence', 'excel', 'data', 'entrepreneur'],
+    
+    // Core Business (always included)
+    business: ['entrepreneur', 'smallbusiness', 'startups', 'business']
   }
   
   let selectedSubreddits: string[] = []
   
-  // Analyze product characteristics to select relevant categories
-  if (text.includes('sales') || text.includes('crm') || text.includes('lead') || text.includes('pipeline')) {
-    selectedSubreddits.push(...subredditCategories.sales)
+  // Pain point-based keyword analysis for better targeting
+  const painPointMappings = {
+    // HR & Recruiting pain points
+    hr_recruiting: {
+      keywords: ['recruiting', 'hiring', 'hr', 'human resources', 'talent', 'candidate', 'applicant', 'staffing', 'ats', 'crm'],
+      painPoints: ['manual recruitment', 'hiring process', 'candidate tracking', 'talent acquisition', 'staffing challenges']
+    },
+    
+    // E-commerce pain points
+    ecommerce: {
+      keywords: ['ecommerce', 'online store', 'shopify', 'selling', 'retail', 'dropship', 'amazon', 'marketplace'],
+      painPoints: ['ecommerce setup', 'online selling', 'payment processing', 'inventory management', 'shipping']
+    },
+    
+    // Sales & CRM pain points
+    sales: {
+      keywords: ['sales', 'crm', 'lead', 'pipeline', 'conversion', 'revenue', 'client', 'customer', 'salesforce'],
+      painPoints: ['losing leads', 'disorganized contacts', 'sales tracking', 'customer management', 'lead generation']
+    },
+    
+    // Marketing pain points
+    marketing: {
+      keywords: ['marketing', 'advertising', 'promotion', 'brand', 'social', 'content', 'seo', 'ppc', 'campaigns'],
+      painPoints: ['marketing challenges', 'low engagement', 'advertising costs', 'content creation', 'brand awareness']
+    },
+    
+    // Project Management pain points
+    project_management: {
+      keywords: ['project', 'management', 'task', 'deadline', 'workflow', 'team', 'collaboration', 'planning'],
+      painPoints: ['project chaos', 'missed deadlines', 'team coordination', 'task management', 'workflow issues']
+    },
+    
+    // Communication pain points
+    communication: {
+      keywords: ['communication', 'team', 'collaboration', 'remote', 'messaging', 'slack', 'meetings', 'coordination'],
+      painPoints: ['team communication', 'remote work', 'information scattered', 'meeting overload', 'collaboration issues']
+    },
+    
+    // Design pain points
+    design: {
+      keywords: ['design', 'ui', 'ux', 'user experience', 'interface', 'visual', 'branding', 'creative'],
+      painPoints: ['design challenges', 'user experience', 'branding issues', 'visual design', 'interface problems']
+    },
+    
+    // Development pain points
+    development: {
+      keywords: ['development', 'programming', 'coding', 'software', 'app', 'platform', 'saas', 'tech'],
+      painPoints: ['development challenges', 'technical issues', 'software problems', 'integration issues', 'coding problems']
+    },
+    
+    // Finance pain points
+    finance: {
+      keywords: ['finance', 'accounting', 'bookkeeping', 'tax', 'budget', 'money', 'financial', 'investment'],
+      painPoints: ['financial management', 'accounting challenges', 'budget tracking', 'tax issues', 'money management']
+    },
+    
+    // Analytics pain points
+    analytics: {
+      keywords: ['analytics', 'data', 'metrics', 'tracking', 'reporting', 'dashboard', 'kpi', 'insights'],
+      painPoints: ['data scattered', 'no insights', 'tracking issues', 'reporting challenges', 'metrics problems']
+    }
   }
   
-  if (text.includes('design') || text.includes('ui') || text.includes('ux') || text.includes('figma')) {
-    selectedSubreddits.push(...subredditCategories.design)
-  }
+  // Analyze product characteristics using pain point mapping
+  Object.entries(painPointMappings).forEach(([category, mapping]) => {
+    const hasKeywords = mapping.keywords.some(keyword => text.includes(keyword))
+    const hasPainPoints = mapping.painPoints.some(painPoint => text.includes(painPoint))
+    
+    if (hasKeywords || hasPainPoints) {
+      selectedSubreddits.push(...(subredditCategories[category as keyof typeof subredditCategories] || []))
+    }
+  })
   
-  if (text.includes('analytics') || text.includes('data') || text.includes('metrics') || text.includes('tracking')) {
-    selectedSubreddits.push(...subredditCategories.analytics)
-  }
-  
-  if (text.includes('ecommerce') || text.includes('shopify') || text.includes('store') || text.includes('payment')) {
-    selectedSubreddits.push(...subredditCategories.ecommerce)
-  }
-  
-  if (text.includes('project') || text.includes('task') || text.includes('team') || text.includes('collaboration')) {
-    selectedSubreddits.push(...subredditCategories.productivity)
-  }
-  
-  if (text.includes('saas') || text.includes('software') || text.includes('app') || text.includes('platform')) {
-    selectedSubreddits.push(...subredditCategories.tech)
-  }
-  
-  // Always include business categories as fallback
+  // If no specific matches, analyze the ideal customer profile
   if (selectedSubreddits.length === 0) {
+    const customerProfile = (productInfo.idealCustomerProfile || '').toLowerCase()
+    
+    if (customerProfile.includes('small business') || customerProfile.includes('startup')) {
+      selectedSubreddits.push(...subredditCategories.business)
+    } else if (customerProfile.includes('enterprise') || customerProfile.includes('large')) {
+      selectedSubreddits.push('business', 'consulting', 'entrepreneur')
+    } else if (customerProfile.includes('developer') || customerProfile.includes('technical')) {
+      selectedSubreddits.push(...subredditCategories.development)
+    } else {
     selectedSubreddits.push(...subredditCategories.business)
+    }
   }
   
-  // Add some general business subreddits
-  selectedSubreddits.push(...subredditCategories.business)
+  // Always include core business subreddits as a baseline
+  selectedSubreddits.push('entrepreneur', 'smallbusiness')
   
-  // Remove duplicates and return unique subreddits (max 8)
-  return [...new Set(selectedSubreddits)].slice(0, 8)
+  // Remove duplicates and return unique subreddits (max 12)
+  return [...new Set(selectedSubreddits)].slice(0, 12)
 }

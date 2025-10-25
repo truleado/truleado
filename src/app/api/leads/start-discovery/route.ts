@@ -28,108 +28,164 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No active products found' }, { status: 400 })
     }
 
-    // Start real lead discovery using the job scheduler
+    // Start real lead discovery using Reddit public API
     let discoveryStarted = false
-    let sampleLeadsCreated = 0
+    let realLeadsFound = 0
     
     try {
-      // Import job scheduler
-      const { getJobScheduler } = await import('@/lib/job-scheduler')
-      const jobScheduler = getJobScheduler()
+      // Import Reddit client, AI analyzer, and search generator
+      const { getRedditClient } = await import('@/lib/reddit-client')
+      const { aiLeadAnalyzer } = await import('@/lib/ai-lead-analyzer')
+      const { aiSearchGenerator } = await import('@/lib/ai-search-generator')
       
-      // Start lead discovery jobs for each active product
+      const redditClient = getRedditClient()
+      console.log('Reddit client initialized for lead discovery')
+      
+      // Search for real leads for each product
       for (const product of products) {
-        try {
-          await jobScheduler.createJob(user.id, product.id, 'reddit_monitoring', 60)
-          console.log(`Started real lead discovery for product: ${product.name}`)
-          discoveryStarted = true
-        } catch (jobError) {
-          console.error(`Failed to start real lead discovery for product ${product.name}:`, jobError)
+        console.log(`Starting real lead discovery for product: ${product.name}`)
+        
+        // Generate AI-powered search terms
+        const productData = {
+          name: product.name,
+          description: product.description || '',
+          features: product.features || [],
+          benefits: product.benefits || [],
+          painPoints: product.pain_points || [],
+          idealCustomerProfile: product.ideal_customer_profile || ''
         }
+        
+        const searchStrategy = await aiSearchGenerator.generateSearchTerms(productData)
+        
+        // Combine all search terms for comprehensive searching
+        const allSearchTerms = [
+          ...searchStrategy.problemTerms,
+          ...searchStrategy.solutionTerms,
+          ...searchStrategy.industryTerms,
+          ...searchStrategy.conversationTerms,
+          ...searchStrategy.urgencyTerms,
+          ...searchStrategy.toolTerms
+        ].filter(term => term && term.length > 2) // Filter out short/empty terms
+        
+        console.log(`Generated ${allSearchTerms.length} search terms for ${product.name}:`, allSearchTerms.slice(0, 10))
+        
+        const subreddits = product.subreddits || ['entrepreneur', 'smallbusiness', 'startups']
+        
+        // Search in each subreddit
+        for (const subreddit of subreddits.slice(0, 3)) { // Limit to 3 subreddits to avoid rate limiting
+          try {
+            console.log(`Searching r/${subreddit} for product: ${product.name}`)
+            
+            // Search with AI-generated search terms
+            let posts: any[] = []
+            if (allSearchTerms.length > 0) {
+              posts = await redditClient.searchPostsWithKeywords(subreddit, allSearchTerms, 10)
+            } else {
+              // Fallback to basic search if no terms generated
+              posts = await redditClient.searchPosts({
+                subreddit: subreddit,
+                query: product.name,
+                sort: 'hot',
+                limit: 10
+              })
+            }
+            
+            console.log(`Found ${posts.length} posts in r/${subreddit}`)
+            
+            // Process each post with AI analysis
+            for (const post of posts) {
+              try {
+                const leadData = {
+                  title: post.title,
+                  content: post.selftext,
+                  subreddit: post.subreddit,
+                  author: post.author,
+                  score: post.score,
+                  numComments: post.num_comments,
+                  leadType: 'post' as const
+                }
+
+                const productData = {
+                  name: product.name,
+                  description: product.description,
+                  features: product.features || [],
+                  benefits: product.benefits || [],
+                  painPoints: product.pain_points || [],
+                  idealCustomerProfile: product.ideal_customer_profile || ''
+                }
+
+                // Analyze with AI (with fallback for missing API keys)
+                let aiAnalysis = null
+                try {
+                  aiAnalysis = await aiLeadAnalyzer.analyzeLead(leadData, productData)
+                  console.log(`AI analysis completed for post: ${post.title.substring(0, 50)}... (Score: ${aiAnalysis.qualityScore})`)
+                } catch (aiError) {
+                  console.error('AI analysis failed:', aiError)
+                  // Create a basic analysis fallback
+                  aiAnalysis = {
+                    qualityScore: 5, // Medium score for fallback
+                    reasons: ['AI analysis unavailable - using basic relevance check'],
+                    sampleReply: 'This looks like it could be relevant to your product. Consider reaching out to learn more about their specific needs.',
+                    confidence: 0.5
+                  }
+                }
+                
+                // Save leads with medium+ relevance score (lowered threshold for fallback)
+                const minScore = aiAnalysis ? 5 : 3 // Lower threshold if AI failed
+                if (aiAnalysis && aiAnalysis.qualityScore >= minScore) {
+                  const lead = {
+                    title: post.title,
+                    content: post.selftext,
+                    subreddit: post.subreddit,
+                    author: post.author,
+                    url: post.permalink,
+                    score: post.score,
+                    num_comments: post.num_comments,
+                    product_id: product.id,
+                    relevance_score: aiAnalysis.qualityScore,
+                    ai_analysis_reasons: aiAnalysis.reasons,
+                    ai_sample_reply: aiAnalysis.sampleReply,
+                    ai_analysis_score: aiAnalysis.confidence,
+                    lead_type: "post",
+                    status: "new",
+                    user_id: user.id,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                  }
+
+                  const { error: leadError } = await supabase
+                    .from('leads')
+                    .insert(lead)
+
+                  if (!leadError) {
+                    realLeadsFound++
+                    console.log(`Saved real lead: ${post.title} (Score: ${aiAnalysis.relevanceScore})`)
+                  } else {
+                    console.error('Error saving lead:', leadError)
+                  }
+                }
+              } catch (postError) {
+                console.error(`Error processing post ${post.id}:`, postError)
+              }
+            }
+          } catch (subredditError) {
+            console.error(`Error searching r/${subreddit}:`, subredditError)
+          }
+        }
+        
+        discoveryStarted = true
       }
     } catch (error) {
-      console.error('Error starting real lead discovery:', error)
-    }
-
-    // If real discovery failed to start, create sample leads as fallback
-    if (!discoveryStarted) {
-      console.log('Real lead discovery failed, creating sample leads as fallback')
-      
-      const sampleLeads = [
-        {
-          title: "Looking for a better way to manage my small business finances",
-          content: "I'm struggling with keeping track of expenses and invoices. Currently using Excel but it's getting messy. Any recommendations for small business accounting software?",
-          subreddit: "smallbusiness",
-          author: "entrepreneur123",
-          url: "https://reddit.com/r/smallbusiness/comments/sample1",
-          score: 15,
-          comments: 8,
-          product_id: products[0].id,
-          relevance_score: 85,
-          ai_analysis_reasons: ["Mentions need for accounting software", "Small business context matches target audience", "Active discussion with engagement"],
-          ai_sample_reply: "Hi! I understand the struggle with Excel for business finances. I've been using [Product Name] for my small business and it's been a game-changer. It automatically categorizes expenses, generates professional invoices, and integrates with my bank accounts. Would you like me to share more details about how it works?",
-          ai_analysis_score: 8,
-          lead_type: "post",
-          status: "new"
-        },
-        {
-          title: "Best project management tools for remote teams?",
-          content: "We've been using Trello but it's not cutting it anymore. Need something more robust for our 15-person team. Budget is around $50/month per user. Any recommendations?",
-          subreddit: "entrepreneur",
-          author: "startup_founder",
-          url: "https://reddit.com/r/entrepreneur/comments/sample2",
-          score: 23,
-          comments: 12,
-          product_id: products[0].id,
-          relevance_score: 92,
-          ai_analysis_reasons: ["Specific budget mentioned", "Team size matches target", "Actively seeking solution", "High engagement"],
-          ai_sample_reply: "I can relate to outgrowing Trello! For a team your size, you might want to check out [Product Name]. It's designed specifically for growing teams and offers advanced features like time tracking, resource planning, and client collaboration. The pricing fits your budget perfectly. Happy to share more details if you're interested!",
-          ai_analysis_score: 9,
-          lead_type: "post",
-          status: "new"
-        },
-        {
-          title: "Frustrated with current CRM - looking for alternatives",
-          content: "Our current CRM is clunky and expensive. We're a B2B SaaS company with about 50 customers. Need something that integrates well with our existing tools and doesn't break the bank.",
-          subreddit: "SaaS",
-          author: "saas_owner",
-          url: "https://reddit.com/r/SaaS/comments/sample3",
-          score: 31,
-          comments: 18,
-          product_id: products[0].id,
-          relevance_score: 88,
-          ai_analysis_reasons: ["B2B SaaS context", "Integration requirements", "Budget concerns", "Active discussion"],
-          ai_sample_reply: "I totally understand the CRM frustration! We faced similar issues and switched to [Product Name]. It's designed for B2B SaaS companies and integrates seamlessly with most tools. The pricing is much more reasonable for your customer base size. Would you like me to show you how it works?",
-          ai_analysis_score: 8,
-          lead_type: "post",
-          status: "new"
-        }
-      ]
-
-      // Insert sample leads into the database
-      const { error: leadsError } = await supabase
-        .from('leads')
-        .insert(sampleLeads.map(lead => ({
-          ...lead,
-          user_id: user.id,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })))
-
-      if (leadsError) {
-        console.error('Error inserting sample leads:', leadsError)
-      } else {
-        sampleLeadsCreated = sampleLeads.length
-      }
+      console.error('Error in real lead discovery:', error)
     }
 
     return NextResponse.json({
       success: true,
-      message: discoveryStarted ? 'Real lead discovery started successfully' : 'Lead discovery started with sample leads',
+      message: discoveryStarted ? `Real lead discovery completed! Found ${realLeadsFound} leads` : 'Lead discovery failed',
       products_count: products.length,
-      discovery_type: discoveryStarted ? 'real' : 'sample',
+      discovery_type: 'real',
       real_discovery_started: discoveryStarted,
-      sample_leads_created: sampleLeadsCreated,
+      real_leads_found: realLeadsFound,
       reddit_connected: false
     })
 

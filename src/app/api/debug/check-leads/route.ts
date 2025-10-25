@@ -3,63 +3,53 @@ import { createClient } from '@/lib/supabase-server'
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('Checking leads in database...')
+    
     const supabase = await createClient()
     
-    // Get the current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Get all leads for the user
+    // Check all leads in the database
     const { data: leads, error: leadsError } = await supabase
       .from('leads')
-      .select(`
-        id,
-        title,
-        content,
-        author,
-        subreddit,
-        score,
-        num_comments,
-        relevance_score,
-        status,
-        created_at,
-        products!inner(name)
-      `)
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(20)
+      .select('*')
+      .limit(10)
+    
+    if (leadsError) {
+      console.error('Error fetching leads:', leadsError)
+      return NextResponse.json({ 
+        success: false,
+        error: 'Failed to fetch leads', 
+        details: leadsError.message 
+      })
+    }
 
-    // Get lead count by status
-    const { data: statusCounts, error: statusError } = await supabase
-      .from('leads')
-      .select('status')
-      .eq('user_id', user.id)
+    console.log(`Found ${leads?.length || 0} leads in database`)
+    
+    // Check products too
+    const { data: products, error: productsError } = await supabase
+      .from('products')
+      .select('id, name, user_id')
+      .limit(10)
+    
+    if (productsError) {
+      console.error('Error fetching products:', productsError)
+    }
 
-    const statusCount = statusCounts?.reduce((acc: any, lead: any) => {
-      acc[lead.status] = (acc[lead.status] || 0) + 1
-      return acc
-    }, {}) || {}
+    console.log(`Found ${products?.length || 0} products in database`)
 
     return NextResponse.json({
       success: true,
-      user: {
-        id: user.id,
-        email: user.email
-      },
-      leads: {
-        total: leads?.length || 0,
-        data: leads || [],
-        error: leadsError?.message
-      },
-      statusCounts: statusCount,
-      timestamp: new Date().toISOString()
+      leadsCount: leads?.length || 0,
+      productsCount: products?.length || 0,
+      leads: leads || [],
+      products: products || []
     })
+
   } catch (error) {
+    console.error('Error in check-leads:', error)
     return NextResponse.json({ 
-      error: error instanceof Error ? error.message : 'Failed to check leads'
-    }, { status: 500 })
+      success: false,
+      error: 'Check failed', 
+      details: error.message 
+    })
   }
 }

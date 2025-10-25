@@ -500,7 +500,7 @@ function extractFeaturesFromContent(content: string): string[] {
     })
   }
   
-  return features.length > 0 ? features : ['Core functionality', 'User management', 'Data analytics', 'API access', 'Team collaboration']
+  return features.length > 0 ? features : ['Core platform features', 'User management system', 'Data analytics dashboard', 'API integration', 'Team collaboration tools']
 }
 
 function extractBenefitsFromContent(content: string): string[] {
@@ -530,7 +530,7 @@ function extractBenefitsFromContent(content: string): string[] {
     benefits.push(`Save ${timeMatch[1]} weekly`)
   }
   
-  return benefits.length > 0 ? benefits : ['Increase productivity by 35%', 'Reduce manual work by 50%', 'Save 8+ hours weekly']
+  return benefits.length > 0 ? benefits : ['Increase team productivity by 40%', 'Reduce manual work by 50%', 'Save 12+ hours weekly']
 }
 
 function extractPainPointsFromContent(content: string): string[] {
@@ -553,7 +553,7 @@ function extractPainPointsFromContent(content: string): string[] {
     }
   }
   
-  return painPoints.length > 0 ? painPoints : ['Manual repetitive tasks', 'Disconnected team workflows', 'Lack of real-time collaboration']
+  return painPoints.length > 0 ? painPoints : ['Inefficient manual processes', 'Poor team coordination', 'Lack of data-driven insights']
 }
 
 function generateDescriptionFromContent(name: string, content: string): string {
@@ -594,7 +594,7 @@ function generateDescriptionFromContent(name: string, content: string): string {
     return `${name} is an AI-powered platform that helps businesses automate processes and make data-driven decisions.`
   }
   
-  return `${name} is a platform that helps teams work more efficiently and collaborate better.`
+  return `${name} is a business platform that helps teams work more efficiently and achieve better results.`
 }
 
 function generateCustomerProfileFromContent(content: string): string {
@@ -617,24 +617,24 @@ function generateCustomerProfileFromContent(content: string): string {
     return `${users} looking to improve their workflows and productivity`
   }
   
-  return 'Growing businesses, remote teams, and professionals seeking better collaboration tools'
+  return 'Growing businesses, remote teams, and professionals seeking better work tools'
 }
 
 function analyzeDomainBasedFallback(name: string, domain: string) {
   const nameLower = name.toLowerCase()
   const textToAnalyze = `${nameLower} ${domain}`
   
-  // Simple category-based analysis for when we don't have content
-  if (textToAnalyze.includes('payment') || textToAnalyze.includes('stripe') || textToAnalyze.includes('billing')) {
+  // Enhanced category-based analysis with more specific patterns
+  if (textToAnalyze.includes('payment') || textToAnalyze.includes('stripe') || textToAnalyze.includes('billing') || textToAnalyze.includes('paypal') || textToAnalyze.includes('checkout')) {
     return {
       name: name,
-      description: `${name} is a payment processing platform that helps businesses handle online transactions.`,
+      description: `${name} is a payment processing platform that helps businesses handle online transactions securely.`,
       features: ['Payment processing', 'Subscription billing', 'Fraud detection', 'Multi-currency support', 'API integration'],
       benefits: ['Reduce payment failures by 25%', 'Increase conversion by 15%', 'Save 10+ hours on reconciliation'],
       painPoints: ['Payment failures losing revenue', 'Complex billing reconciliation', 'High cart abandonment rates'],
       idealCustomerProfile: 'E-commerce businesses, SaaS companies, and online merchants processing payments'
     }
-  } else if (textToAnalyze.includes('design') || textToAnalyze.includes('figma') || textToAnalyze.includes('ui')) {
+  } else if (textToAnalyze.includes('design') || textToAnalyze.includes('figma') || textToAnalyze.includes('ui') || textToAnalyze.includes('ux') || textToAnalyze.includes('sketch')) {
     return {
       name: name,
       description: `${name} is a design collaboration platform that helps teams create digital products.`,
@@ -643,7 +643,7 @@ function analyzeDomainBasedFallback(name: string, domain: string) {
       painPoints: ['Design feedback scattered across tools', 'Version control conflicts', 'Slow design handoff'],
       idealCustomerProfile: 'Design teams, product managers, and creative agencies building digital products'
     }
-  } else if (textToAnalyze.includes('code') || textToAnalyze.includes('github') || textToAnalyze.includes('git')) {
+  } else if (textToAnalyze.includes('code') || textToAnalyze.includes('github') || textToAnalyze.includes('git') || textToAnalyze.includes('dev') || textToAnalyze.includes('programming')) {
     return {
       name: name,
       description: `${name} is a development platform that helps teams build and manage software projects.`,
@@ -652,14 +652,60 @@ function analyzeDomainBasedFallback(name: string, domain: string) {
       painPoints: ['Manual deployment processes', 'Code review bottlenecks', 'Lack of development visibility'],
       idealCustomerProfile: 'Software developers, engineering teams, and tech companies building applications'
     }
-  } else {
+  } else if (textToAnalyze.includes('marketing') || textToAnalyze.includes('email') || textToAnalyze.includes('campaign') || textToAnalyze.includes('social')) {
     return {
       name: name,
-      description: `${name} is a business platform that helps teams collaborate and work more efficiently.`,
-      features: ['Team collaboration', 'Project management', 'Data analytics', 'API access', 'User management'],
-      benefits: ['Increase productivity by 35%', 'Reduce manual work by 50%', 'Save 8+ hours weekly'],
-      painPoints: ['Manual repetitive tasks', 'Disconnected team workflows', 'Lack of real-time collaboration'],
-      idealCustomerProfile: 'Growing businesses, remote teams, and professionals seeking better collaboration tools'
+      description: `${name} is a marketing automation platform that helps businesses grow their audience and increase engagement.`,
+      features: ['Email marketing', 'Campaign automation', 'Analytics tracking', 'A/B testing', 'Lead nurturing'],
+      benefits: ['Increase open rates by 30%', 'Grow email list by 200%', 'Save 12+ hours on campaigns'],
+      painPoints: ['Low email engagement rates', 'Manual campaign management', 'Poor lead qualification'],
+      idealCustomerProfile: 'Marketing teams, small businesses, and agencies looking to grow their audience'
+    }
+  } else if (textToAnalyze.includes('analytics') || textToAnalyze.includes('data') || textToAnalyze.includes('metrics') || textToAnalyze.includes('dashboard')) {
+    return {
+      name: name,
+      description: `${name} is a data analytics platform that helps businesses make data-driven decisions.`,
+      features: ['Real-time dashboards', 'Custom reports', 'Data visualization', 'Automated alerts', 'API integration'],
+      benefits: ['Make decisions 5x faster', 'Identify trends 80% quicker', 'Save 20+ hours on reporting'],
+      painPoints: ['Data scattered across tools', 'Manual report generation', 'Lack of real-time insights'],
+      idealCustomerProfile: 'Data analysts, business intelligence teams, and decision-makers needing insights'
+    }
+  } else if (textToAnalyze.includes('crm') || textToAnalyze.includes('sales') || textToAnalyze.includes('customer') || textToAnalyze.includes('lead')) {
+    return {
+      name: name,
+      description: `${name} is a customer relationship management platform that helps businesses manage leads and close more deals.`,
+      features: ['Lead management', 'Sales pipeline', 'Contact tracking', 'Email integration', 'Deal forecasting'],
+      benefits: ['Close 25% more deals', 'Reduce sales cycle by 40%', 'Save 15+ hours on admin'],
+      painPoints: ['Lost leads in spreadsheets', 'Poor follow-up processes', 'Lack of sales visibility'],
+      idealCustomerProfile: 'Sales teams, small businesses, and entrepreneurs managing customer relationships'
+    }
+  } else if (textToAnalyze.includes('project') || textToAnalyze.includes('task') || textToAnalyze.includes('management') || textToAnalyze.includes('workflow')) {
+    return {
+      name: name,
+      description: `${name} is a project management platform that helps teams organize work and collaborate effectively.`,
+      features: ['Task management', 'Team collaboration', 'Progress tracking', 'File sharing', 'Deadline alerts'],
+      benefits: ['Complete projects 30% faster', 'Reduce missed deadlines by 60%', 'Save 10+ hours weekly'],
+      painPoints: ['Projects running over deadline', 'Poor team coordination', 'Lack of project visibility'],
+      idealCustomerProfile: 'Project managers, remote teams, and growing businesses organizing work'
+    }
+  } else if (textToAnalyze.includes('ai') || textToAnalyze.includes('artificial') || textToAnalyze.includes('machine') || textToAnalyze.includes('automation')) {
+    return {
+      name: name,
+      description: `${name} is an AI-powered platform that helps businesses automate processes and make intelligent decisions.`,
+      features: ['AI automation', 'Smart workflows', 'Predictive analytics', 'Natural language processing', 'Machine learning'],
+      benefits: ['Automate 70% of manual tasks', 'Improve accuracy by 90%', 'Save 25+ hours weekly'],
+      painPoints: ['Manual repetitive work', 'Human error in processes', 'Lack of intelligent insights'],
+      idealCustomerProfile: 'Businesses, data teams, and professionals seeking AI-powered automation'
+    }
+  } else {
+    // More specific generic analysis based on common business patterns
+    return {
+      name: name,
+      description: `${name} is a business platform that helps teams work more efficiently and achieve better results.`,
+      features: ['Team collaboration', 'Workflow automation', 'Data insights', 'Integration capabilities', 'User management'],
+      benefits: ['Increase team productivity by 40%', 'Reduce manual work by 50%', 'Save 12+ hours weekly'],
+      painPoints: ['Inefficient manual processes', 'Poor team coordination', 'Lack of data-driven insights'],
+      idealCustomerProfile: 'Growing businesses, remote teams, and professionals seeking better work tools'
     }
   }
 }

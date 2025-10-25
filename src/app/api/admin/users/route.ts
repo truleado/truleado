@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
         created_at,
         updated_at,
         subscription_status,
-        subscription_plan,
+        subscription_plan
       `)
       .order('created_at', { ascending: false })
 

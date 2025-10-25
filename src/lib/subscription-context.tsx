@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { UserWithSubscription, getAccessLevel, canAccessFeature, formatTrialTimeRemaining, shouldShowUpgradePrompt, needsTrialStart } from '@/lib/access-control'
 
@@ -48,28 +48,30 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const showUpgradePrompt = user ? shouldShowUpgradePrompt(user) : false
   const needsTrial = user ? needsTrialStart(user) : true
 
-  // Debug logging for PRO users and new users
-  if (user) {
-    if (user.subscription_status === 'active') {
-      console.log('PRO user detected:', {
-        subscription_status: user.subscription_status,
-        needsTrial,
-        showUpgradePrompt,
-        accessLevel
-      })
-    } else if (!user.subscription_status || user.subscription_status === 'trial') {
-      console.log('New/Trial user detected:', {
-        subscription_status: user.subscription_status,
-        needsTrial,
-        showUpgradePrompt,
-        accessLevel
-      })
+  // Debug logging for PRO users and new users (only log once per user change)
+  useEffect(() => {
+    if (user) {
+      if (user.subscription_status === 'active') {
+        console.log('PRO user detected:', {
+          subscription_status: user.subscription_status,
+          needsTrial,
+          showUpgradePrompt,
+          accessLevel
+        })
+      } else if (!user.subscription_status || user.subscription_status === 'trial') {
+        console.log('New/Trial user detected:', {
+          subscription_status: user.subscription_status,
+          needsTrial,
+          showUpgradePrompt,
+          accessLevel
+        })
+      }
     }
-  }
+  }, [user?.id, user?.subscription_status]) // Only log when user or subscription status changes
 
   const canAccess = (feature: string, currentProductCount?: number) => user ? canAccessFeature(user, feature, currentProductCount) : false
 
-  const refreshSubscription = async () => {
+  const refreshSubscription = useCallback(async () => {
     if (!authUser) return
 
     try {
@@ -116,7 +118,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       setUser(fallbackUser)
       setIsLoading(false)
     }
-  }
+  }, [authUser])
 
   const forceRefresh = async () => {
     console.log('Force refreshing subscription...')
@@ -135,7 +137,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       // Keep loading state while auth is loading
       setIsLoading(true)
     }
-  }, [authUser, authLoading])
+  }, [authUser, authLoading, refreshSubscription])
 
   useEffect(() => {
     try {
@@ -174,6 +176,10 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     if (!isDummyEnv && !authLoading && authUser) {
       console.log('Production environment - fetching subscription for user:', authUser.id)
       refreshSubscription()
+    } else if (!isDummyEnv && !authLoading && !authUser) {
+      // No authenticated user, set loading to false
+      setUser(null)
+      setIsLoading(false)
     }
   }, [isDummyEnv, authLoading, authUser])
 
@@ -183,7 +189,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       const interval = setInterval(() => {
         console.log('Periodic subscription refresh for user:', authUser.id)
         refreshSubscription()
-      }, 300000) // Refresh every 5 minutes instead of 30 seconds
+      }, 600000) // Refresh every 10 minutes to reduce console spam
 
       return () => clearInterval(interval)
     }

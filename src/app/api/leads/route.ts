@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
       author: lead.author,
       url: lead.lead_type === 'comment' ? lead.reddit_comment_url : lead.reddit_post_url,
       score: lead.score,
-      comments: lead.num_comments,
+      num_comments: lead.num_comments,
       createdAt: lead.created_at,
       status: lead.status,
       productId: lead.product_id,

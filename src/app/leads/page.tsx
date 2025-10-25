@@ -26,7 +26,8 @@ import {
   Globe,
   Star,
   TrendingUp,
-  BarChart3
+  BarChart3,
+  Activity
 } from 'lucide-react'
 import { AccessGuard, UpgradeButton } from '@/components/AccessGuard'
 import { useSubscription } from '@/lib/subscription-context'
@@ -511,6 +512,7 @@ function LeadsContent() {
               </div>
             </div>
           )}
+
 
           {/* Filters */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-200/50 p-4 sm:p-6 mb-6 sm:mb-8">
