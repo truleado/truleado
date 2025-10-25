@@ -19,7 +19,7 @@ import {
   ChevronRight,
   ChevronDown,
   Megaphone,
-  TestTube
+  Plane
 } from 'lucide-react'
 import { TrialBanner } from './TrialBanner'
 import { NotificationBell } from './NotificationBell'
@@ -50,7 +50,7 @@ const navigation = [
       { name: 'Promote', href: '/promote', icon: Megaphone, description: 'Generate promotional posts' },
     ]
   },
-  { name: 'Test', href: '/test', icon: TestTube, description: 'Testing and development tools' },
+  { name: 'Pilot', href: '/pilot', icon: Plane, description: 'Pilot features and experiments' },
   { name: 'Settings', href: '/settings', icon: Settings, description: 'Account & preferences' },
 ]
 
