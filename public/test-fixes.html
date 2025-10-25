@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Fixes</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 10px; border-radius: 5px; border: none; }
+        .test-button { background-color: #4CAF50; color: white; }
+        .clear-button { background-color: #f44336; color: white; }
+        #results { margin-top: 20px; padding: 15px; background-color: #f9f9f9; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test Fixes</h1>
+    <p>Testing the fixes for production issues:</p>
+    
+    <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <h3>⚠️ Important: Authentication Required</h3>
+        <p>To test the full functionality, you need to be logged in:</p>
+        <ol>
+            <li>Go to <a href="/auth/signin" target="_blank">Sign In</a> or <a href="/auth/signup" target="_blank">Sign Up</a></li>
+            <li>Create an account or sign in</li>
+            <li>Come back to this page and run the tests</li>
+        </ol>
+    </div>
+    
+    <button class="test-button" onclick="testDatabase()">Test Database Connection</button>
+    <button class="test-button" onclick="testAuth()">Test Authentication</button>
+    <button class="test-button" onclick="testSimple()">Test Simple Operations</button>
+    <button class="test-button" onclick="testLeadDiscovery()">Test Lead Discovery</button>
+    <button class="test-button" onclick="populateLeads()">Populate Sample Leads</button>
+    <button class="clear-button" onclick="clearResults()">Clear Results</button>
+    
+    <div id="results">
+        Click a button above to test the fixes...
+    </div>
+
+    <script>
+        const API_BASE_URL = ''; // Relative path
+
+        async function testDatabase() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing database connection...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/debug/test-db-connection`);
+                const data = await response.json();
+
+                if (data.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Database Connection: SUCCESS</div>
+                        <p><strong>Message:</strong> ${data.message}</p>
+                        <p><strong>Test UUID:</strong> ${data.testUuid}</p>
+                        <p><strong>Inserted ID:</strong> ${data.insertedId}</p>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="error">❌ Database Connection: FAILED</div>
+                        <p><strong>Error:</strong> ${data.error}</p>
+                        <p><strong>Details:</strong> ${data.details}</p>
+                        <p><strong>Code:</strong> ${data.code || 'N/A'}</p>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ Database Test Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testAuth() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing authentication...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/debug/test-auth`);
+                const data = await response.json();
+
+                if (data.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Authentication: SUCCESS</div>
+                        <p><strong>Message:</strong> ${data.message}</p>
+                        <p><strong>User ID:</strong> ${data.user.id}</p>
+                        <p><strong>Email:</strong> ${data.user.email}</p>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="error">❌ Authentication: FAILED</div>
+                        <p><strong>Error:</strong> ${data.error}</p>
+                        <p><strong>Details:</strong> ${data.details}</p>
+                        <p><strong>Message:</strong> ${data.message || 'N/A'}</p>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ Auth Test Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testSimple() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing simple operations...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/debug/test-simple`);
+                const data = await response.json();
+
+                if (data.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Simple Operations: SUCCESS</div>
+                        <p><strong>Message:</strong> ${data.message}</p>
+                        <h3>Results:</h3>
+                        <ul>
+                            <li><strong>Database Connection:</strong> ${data.results.basicConnection}</li>
+                            <li><strong>Existing Products:</strong> ${data.results.existingProducts}</li>
+                            <li><strong>Existing Leads:</strong> ${data.results.existingLeads}</li>
+                            <li><strong>Authentication:</strong> ${data.results.authentication}</li>
+                            ${data.results.authError ? `<li><strong>Auth Error:</strong> ${data.results.authError}</li>` : ''}
+                        </ul>
+                        ${data.data.products.length > 0 ? `
+                            <h3>Existing Products:</h3>
+                            ${data.data.products.map(product => `
+                                <div style="margin: 5px 0; padding: 5px; background: #f0f0f0;">
+                                    ${product.name} (ID: ${product.id})
+                                </div>
+                            `).join('')}
+                        ` : ''}
+                        ${data.data.leads.length > 0 ? `
+                            <h3>Existing Leads:</h3>
+                            ${data.data.leads.map(lead => `
+                                <div style="margin: 5px 0; padding: 5px; background: #f0f0f0;">
+                                    ${lead.title} (ID: ${lead.id})
+                                </div>
+                            `).join('')}
+                        ` : ''}
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="error">❌ Simple Operations: FAILED</div>
+                        <p><strong>Error:</strong> ${data.error}</p>
+                        <p><strong>Details:</strong> ${data.details}</p>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ Simple Test Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testLeadDiscovery() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing lead discovery (this may take a moment)...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/debug/test-lead-discovery-direct`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Lead Discovery: SUCCESS</div>
+                        <p><strong>Message:</strong> ${data.message}</p>
+                        <p><strong>Leads Found:</strong> ${data.leadsFound}</p>
+                        <p><strong>Leads Saved:</strong> ${data.leadsSaved}</p>
+                        <p><strong>Product ID:</strong> ${data.product.id}</p>
+                        ${data.sampleLeads && data.sampleLeads.length > 0 ? `
+                            <h3>Sample Leads:</h3>
+                            ${data.sampleLeads.map((lead, index) => `
+                                <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; background: white;">
+                                    <strong>${index + 1}. ${lead.title}</strong><br>
+                                    <small>r/${lead.subreddit} | Score: ${lead.score}/10</small><br>
+                                    <a href="${lead.url}" target="_blank">View on Reddit</a>
+                                </div>
+                            `).join('')}
+                        ` : ''}
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="error">❌ Lead Discovery: FAILED</div>
+                        <p><strong>Error:</strong> ${data.error}</p>
+                        <p><strong>Details:</strong> ${data.details}</p>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ Lead Discovery Error: ${error.message}</div>`;
+            }
+        }
+
+        async function populateLeads() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Populating sample leads...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/debug/populate-leads`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Sample Leads: CREATED</div>
+                        <p><strong>Created:</strong> ${data.leads.length} sample leads</p>
+                        <h3>Sample leads:</h3>
+                        ${data.leads.map((lead, index) => `
+                            <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; background: white;">
+                                <strong>${index + 1}. ${lead.title}</strong><br>
+                                <small>r/${lead.subreddit} | AI Score: ${lead.ai_analysis?.qualityScore || 'N/A'}/10</small><br>
+                                <a href="${lead.reddit_post_url}" target="_blank">View on Reddit</a>
+                            </div>
+                        `).join('')}
+                        <p><strong>Now go to <a href="/leads" target="_blank">/leads</a> to see them!</strong></p>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="error">❌ Sample Leads: FAILED</div>
+                        <p><strong>Error:</strong> ${data.error}</p>
+                        <p><strong>Details:</strong> ${data.details}</p>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ Populate Leads Error: ${error.message}</div>`;
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = 'Click a button above to test the fixes...';
+        }
+    </script>
+</body>
+</html>
