@@ -475,14 +475,12 @@ function LeadsContent() {
                         </div>
                       </div>
                       
-                      {redditConnected && (
-                        <div className="flex gap-2 ml-4">
-                          <div className="flex items-center gap-1 px-3 py-1 text-sm bg-green-100 text-green-700 rounded-xl">
-                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                            Auto-discovering
-                          </div>
+                      <div className="flex gap-2 ml-4">
+                        <div className="flex items-center gap-1 px-3 py-1 text-sm bg-green-100 text-green-700 rounded-xl">
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                          Auto-discovering
                         </div>
-                      )}
+                      </div>
                     </div>
                   </div>
                 ))}

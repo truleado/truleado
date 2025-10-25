@@ -662,73 +662,23 @@ function SettingsContent() {
                   </div>
 
                   <div className="space-y-6">
-                    {/* Reddit Connection */}
-                    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center">
-                            <ExternalLink className="w-6 h-6 text-white" />
-                          </div>
-                          <div>
-                            <h4 className="text-lg font-semibold text-gray-900">Reddit</h4>
-                            <p className="text-gray-600">
-                              {redditConnected 
-                                ? `Connected as u/${redditUsername}` 
-                                : 'Connect your Reddit account to enable lead discovery'
-                              }
-                            </p>
-                          </div>
+                    <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6">
+                      <div className="flex items-start space-x-3">
+                        <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <CheckCircle className="w-4 h-4 text-white" />
                         </div>
-                        <div className="flex items-center space-x-3">
-                          {redditConnected ? (
-                            <>
-                              <CheckCircle className="w-6 h-6 text-green-500" />
-                              <button
-                                onClick={handleDisconnectReddit}
-                                className="px-4 py-2 text-sm font-semibold text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-colors"
-                              >
-                                Disconnect
-                              </button>
-                            </>
-                          ) : (
-                            <button
-                              onClick={handleConnectReddit}
-                              disabled={isConnectingReddit}
-                              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-red-600 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
-                            >
-                              {isConnectingReddit ? (
-                                <>
-                                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                                  Connecting...
-                                </>
-                              ) : (
-                                'Connect Reddit'
-                              )}
-                            </button>
-                          )}
+                        <div>
+                          <h4 className="text-lg font-semibold text-blue-900 mb-2">Lead Discovery Status</h4>
+                          <p className="text-blue-700 text-sm mb-3">
+                            Lead discovery is now fully automated and works without requiring Reddit account connections. 
+                            We automatically find leads based on your product information.
+                          </p>
+                          <div className="flex items-center space-x-2 text-sm text-blue-600">
+                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            <span>Lead discovery is running automatically</span>
+                          </div>
                         </div>
                       </div>
-                    
-                      {!redditConnected && (
-                        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
-                          <div className="flex">
-                            <div className="flex-shrink-0">
-                              <AlertCircle className="h-6 w-6 text-blue-500" />
-                            </div>
-                            <div className="ml-4">
-                              <h3 className="text-sm font-semibold text-blue-800">Why connect Reddit?</h3>
-                              <div className="mt-2 text-sm text-blue-700">
-                                <p>Connecting your Reddit account allows Truleado to:</p>
-                                <ul className="list-disc list-inside mt-2 space-y-1">
-                                  <li>Monitor relevant subreddits for your products</li>
-                                  <li>Find potential customers discussing your solutions</li>
-                                  <li>Provide better lead discovery with authenticated access</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
