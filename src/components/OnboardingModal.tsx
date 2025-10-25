@@ -570,14 +570,23 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
       // Step 1: Reddit sales pitch - always allow next
       nextStep()
     } else if (currentStep === 2 && hasProducts) {
-      // Step 2: Add product - only allow next if product is added
-      nextStep()
+      // Step 2: Add product - start lead discovery automatically and move to next step
+      setIsLoading(true)
+      try {
+        await startLeadFinding()
+        nextStep()
+      } catch (error) {
+        console.error('Error starting lead discovery:', error)
+        // Still move to next step even if there's an error
+        nextStep()
+      } finally {
+        setIsLoading(false)
+      }
     } else if (currentStep === 3 && hasReddit) {
       // Step 3: Connect Reddit - only allow next if Reddit is connected
       nextStep()
     } else if (currentStep === 4) {
-      // Step 4: Finding leads - start lead finding and complete onboarding
-      await startLeadFinding()
+      // Step 4: Show discovered leads - complete onboarding and redirect to leads page
       completeOnboarding()
       router.push('/leads')
     }
@@ -706,10 +715,21 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
           </div>
           
           {hasProducts ? (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="flex items-center">
-                <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-                <span className="text-green-800 font-medium">Product added successfully!</span>
+            <div className="space-y-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+                  <span className="text-green-800 font-medium">Product added successfully!</span>
+                </div>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center">
+                  <Search className="w-5 h-5 text-blue-600 mr-2" />
+                  <span className="text-blue-800 font-medium">Lead discovery will start automatically!</span>
+                </div>
+                <p className="text-blue-700 text-sm mt-2">
+                  As soon as you click "Next", we'll begin searching Reddit for potential customers discussing problems your product solves.
+                </p>
               </div>
             </div>
           ) : (
@@ -736,19 +756,19 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
           </div>
           
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
-            <h4 className="font-semibold text-orange-900 mb-2">How it works:</h4>
+            <h4 className="font-semibold text-orange-900 mb-2">Lead discovery is already running!</h4>
             <ol className="space-y-2 text-sm text-orange-800">
               <li className="flex items-start">
-                <span className="bg-orange-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0">1</span>
-                We monitor relevant subreddits 24/7
+                <span className="bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0">✓</span>
+                We're monitoring relevant subreddits 24/7
               </li>
               <li className="flex items-start">
-                <span className="bg-orange-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0">2</span>
-                AI identifies posts mentioning problems your product solves
+                <span className="bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0">✓</span>
+                AI is identifying posts mentioning problems your product solves
               </li>
               <li className="flex items-start">
                 <span className="bg-orange-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0">3</span>
-                We deliver qualified leads directly to your dashboard
+                We'll deliver qualified leads directly to your dashboard
               </li>
             </ol>
           </div>
@@ -779,8 +799,8 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
       )
     },
     {
-      title: "Finding Your Leads",
-      description: "We're now actively finding leads for you. Let's see what we discovered!",
+      title: "Your Leads Are Ready!",
+      description: "We've discovered leads for you. Let's see what we found!",
       icon: Search,
       content: (
         <div className="space-y-6">
@@ -788,77 +808,46 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
             <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
               <Search className="w-10 h-10 text-white" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">We're Finding Your Leads!</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">Lead Discovery Complete!</h3>
             <p className="text-gray-600 text-lg leading-relaxed">
-              Our AI is now actively scanning Reddit for people discussing problems your product solves. 
-              Let's see what we've discovered for you.
+              Our AI has been scanning Reddit for people discussing problems your product solves. 
+              We've found some potential leads for you to review.
             </p>
           </div>
           
           <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6">
             <div className="flex items-center justify-center mb-4">
-              <div className="w-3 h-3 bg-green-500 rounded-full mr-3 animate-pulse"></div>
-              <span className="text-green-800 font-bold text-lg">Lead Discovery Active</span>
+              <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+              <span className="text-green-800 font-bold text-lg">Leads Discovered</span>
             </div>
             <p className="text-green-700 text-center mb-4">
-              We're continuously monitoring Reddit and will notify you when we find relevant leads.
+              We've found potential customers discussing problems your product solves. 
+              These leads are ready for you to review and contact.
             </p>
             <div className="text-center">
               <div className="inline-flex items-center space-x-2 text-sm text-green-600">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span>Scanning subreddits...</span>
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span>Ready to view</span>
               </div>
             </div>
           </div>
           
-          {isLoading ? (
-            <div className="text-center py-6">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mb-4"></div>
-              <p className="text-gray-600 text-lg">Starting lead discovery...</p>
-              <p className="text-gray-500 text-sm mt-2">This may take a few moments</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <button
-                onClick={async () => {
-                  setIsLoading(true)
-                  try {
-                    const response = await fetch('/api/leads/start-discovery', {
-                      method: 'POST',
-                      credentials: 'include',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                    })
-
-                    if (!response.ok) {
-                      const error = await response.json()
-                      throw new Error(error.error || 'Failed to start lead discovery')
-                    }
-
-                    const data = await response.json()
-                    console.log('Lead discovery started:', data)
-                    
-                    // Complete onboarding and redirect to leads
-                    completeOnboarding()
-                    router.push('/leads')
-                  } catch (error) {
-                    console.error('Error starting lead finding:', error)
-                  } finally {
-                    setIsLoading(false)
-                  }
-                }}
-                className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white px-6 py-4 rounded-lg hover:from-green-700 hover:to-blue-700 transition-all duration-200 flex items-center justify-center text-lg font-semibold shadow-lg"
-              >
-                <Search className="w-6 h-6 mr-3" />
-                View Your Discovered Leads
-                <ArrowRight className="w-5 h-5 ml-3" />
-              </button>
-              <p className="text-sm text-gray-500 text-center">
-                We'll take you to the leads page to see what we've discovered for you.
-              </p>
-            </div>
-          )}
+          <div className="space-y-4">
+            <button
+              onClick={() => {
+                completeOnboarding()
+                router.push('/leads')
+              }}
+              className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white px-6 py-4 rounded-lg hover:from-green-700 hover:to-blue-700 transition-all duration-200 flex items-center justify-center text-lg font-semibold shadow-lg"
+            >
+              <Search className="w-6 h-6 mr-3" />
+              View Your Discovered Leads
+              <ArrowRight className="w-5 h-5 ml-3" />
+            </button>
+            <p className="text-sm text-gray-500 text-center">
+              We'll take you to the leads page where you can see all the potential customers we found for you.
+            </p>
+          </div>
         </div>
       )
     }
@@ -925,8 +914,17 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
               disabled={isLoading}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
             >
-              {currentStep === totalSteps ? 'Complete' : 'Next'}
-              {currentStep < totalSteps && <ArrowRight className="w-4 h-4 ml-1" />}
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  {currentStep === 2 ? 'Starting Lead Discovery...' : 'Loading...'}
+                </>
+              ) : (
+                <>
+                  {currentStep === totalSteps ? 'Complete' : 'Next'}
+                  {currentStep < totalSteps && <ArrowRight className="w-4 h-4 ml-1" />}
+                </>
+              )}
             </button>
           </div>
         </div>
