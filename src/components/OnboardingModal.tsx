@@ -509,6 +509,8 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
   const [hasProducts, setHasProducts] = useState(false)
   const [isFindingLeads, setIsFindingLeads] = useState(false)
   const [leadsFound, setLeadsFound] = useState(false)
+  const [leadsCount, setLeadsCount] = useState(0)
+  const [isFirstLeadFound, setIsFirstLeadFound] = useState(false)
 
   // Check current status when modal opens
   useEffect(() => {
@@ -526,10 +528,33 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
 
   const startLeadFindingProcess = async () => {
     setIsFindingLeads(true)
+    setLeadsCount(0)
+    setIsFirstLeadFound(false)
     
     try {
-      // Simulate lead finding process with a delay
-      await new Promise(resolve => setTimeout(resolve, 3000)) // 3 second delay
+      // Simulate progressive lead finding
+      const leadFindingSteps = [
+        { delay: 1000, message: "Scanning Reddit posts..." },
+        { delay: 1500, message: "Analyzing discussions..." },
+        { delay: 2000, message: "Found 1 lead!" },
+        { delay: 1000, message: "Found 2 leads!" },
+        { delay: 1000, message: "Found 3 leads!" },
+        { delay: 500, message: "Finalizing results..." }
+      ]
+      
+      for (let i = 0; i < leadFindingSteps.length; i++) {
+        const step = leadFindingSteps[i]
+        await new Promise(resolve => setTimeout(resolve, step.delay))
+        
+        if (step.message.includes("Found")) {
+          const count = parseInt(step.message.match(/\d+/)?.[0] || "0")
+          setLeadsCount(count)
+          
+          if (count === 1) {
+            setIsFirstLeadFound(true)
+          }
+        }
+      }
       
       // Start the actual lead finding
       await startLeadFinding()
@@ -737,56 +762,72 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
           <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6">
             <div className="flex items-center justify-center mb-4">
               <div className="w-3 h-3 bg-green-500 rounded-full mr-3 animate-pulse"></div>
-              <span className="text-green-800 font-bold text-lg">Searching Reddit...</span>
+              <span className="text-green-800 font-bold text-lg">
+                {isFindingLeads ? "Searching Reddit..." : leadsFound ? "Search Complete!" : "Starting Search..."}
+              </span>
             </div>
             <p className="text-green-700 text-center mb-4">
-              We're scanning relevant subreddits and analyzing discussions to find potential customers for your product.
+              {isFindingLeads 
+                ? "We're scanning relevant subreddits and analyzing discussions to find potential customers for your product."
+                : leadsFound 
+                  ? `We've found ${leadsCount} potential customers discussing problems your product solves!`
+                  : "Preparing to search Reddit for leads..."
+              }
             </p>
-            <div className="text-center">
-              <div className="inline-flex items-center space-x-2 text-sm text-green-600">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span>Analyzing posts and comments...</span>
+            
+            {isFindingLeads && (
+              <div className="text-center">
+                <div className="inline-flex items-center space-x-2 text-sm text-green-600">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span>Analyzing posts and comments...</span>
+                </div>
               </div>
-            </div>
+            )}
+            
+            {leadsCount > 0 && (
+              <div className="text-center mt-4">
+                <div className="inline-flex items-center space-x-2 text-lg font-semibold text-green-700">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span>{leadsCount} leads found so far...</span>
+                </div>
+              </div>
+            )}
           </div>
           
-          {isFindingLeads ? (
-            <div className="text-center py-6">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mb-4"></div>
-              <p className="text-gray-600 text-lg">Searching for leads...</p>
-              <p className="text-gray-500 text-sm mt-2">This may take a few moments</p>
-            </div>
-          ) : leadsFound ? (
-            <div className="space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-center justify-center mb-2">
-                  <CheckCircle className="w-6 h-6 text-green-600 mr-2" />
-                  <span className="text-green-800 font-bold text-lg">Leads Found!</span>
-                </div>
-                <p className="text-green-700 text-center">
-                  We've discovered potential customers discussing problems your product solves. 
-                  Let's see what we found!
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  completeOnboarding()
-                  router.push('/leads')
-                }}
-                className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white px-6 py-4 rounded-lg hover:from-green-700 hover:to-blue-700 transition-all duration-200 flex items-center justify-center text-lg font-semibold shadow-lg"
-              >
-                <Search className="w-6 h-6 mr-3" />
-                View Your Discovered Leads
-                <ArrowRight className="w-5 h-5 ml-3" />
-              </button>
-            </div>
-          ) : (
-            <div className="text-center py-6">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mb-4"></div>
-              <p className="text-gray-600 text-lg">Starting lead search...</p>
-              <p className="text-gray-500 text-sm mt-2">Please wait while we find leads for you</p>
-            </div>
-          )}
+          {/* Single Button - becomes clickable when first lead is found */}
+          <div className="text-center">
+            <button
+              onClick={() => {
+                completeOnboarding()
+                router.push('/leads')
+              }}
+              disabled={!isFirstLeadFound}
+              className={`w-full px-8 py-4 rounded-lg text-lg font-semibold shadow-lg transition-all duration-200 flex items-center justify-center ${
+                isFirstLeadFound
+                  ? 'bg-gradient-to-r from-green-600 to-blue-600 text-white hover:from-green-700 hover:to-blue-700 cursor-pointer'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              {isFirstLeadFound ? (
+                <>
+                  <Search className="w-6 h-6 mr-3" />
+                  View Your {leadsCount} Discovered Leads
+                  <ArrowRight className="w-5 h-5 ml-3" />
+                </>
+              ) : (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-400 mr-3"></div>
+                  Finding Leads... ({leadsCount} found so far)
+                </>
+              )}
+            </button>
+            
+            {isFirstLeadFound && (
+              <p className="text-sm text-gray-500 mt-3">
+                ✨ Great! We found your first lead. Click the button above to see all discovered leads!
+              </p>
+            )}
+          </div>
         </div>
       )
     }
