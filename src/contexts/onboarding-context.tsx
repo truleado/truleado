@@ -25,7 +25,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   const [currentStep, setCurrentStep] = useState(1)
   const [isCompleted, setIsCompleted] = useState(false)
 
-  const totalSteps = 4
+  const totalSteps = 3
 
   // Check if user needs onboarding
   useEffect(() => {

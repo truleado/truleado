@@ -28,24 +28,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No active products found' }, { status: 400 })
     }
 
-    // Check Reddit connection
-    const { data: apiKeys, error: apiKeysError } = await supabase
-      .from('api_keys')
-      .select('reddit_access_token, reddit_token_expires_at')
-      .eq('user_id', user.id)
-      .single()
-
-    if (apiKeysError || !apiKeys?.reddit_access_token) {
-      return NextResponse.json({ error: 'Reddit not connected' }, { status: 400 })
-    }
-
-    // Check if token is expired
-    if (apiKeys.reddit_token_expires_at) {
-      const expiresAt = new Date(apiKeys.reddit_token_expires_at)
-      if (expiresAt <= new Date()) {
-        return NextResponse.json({ error: 'Reddit token expired' }, { status: 400 })
-      }
-    }
+    // Note: We can search for leads without Reddit connection
+    // This allows us to provide immediate value to users
 
     // Simulate lead discovery by creating some sample leads
     // In a real implementation, this would trigger the actual Reddit monitoring process
@@ -120,7 +104,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Lead discovery started successfully',
       products_count: products.length,
-      reddit_connected: true,
+      reddit_connected: false,
       sample_leads_created: sampleLeads.length
     })
 

@@ -543,9 +543,9 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
     }
   }, [currentStep])
 
-  // Auto-start lead finding when reaching step 4
+  // Auto-start lead finding when reaching step 3
   useEffect(() => {
-    if (isOpen && currentStep === 4 && !isFindingLeads && !leadsFound) {
+    if (isOpen && currentStep === 3 && !isFindingLeads && !leadsFound) {
       startLeadFindingProcess()
     }
   }, [isOpen, currentStep])
@@ -600,23 +600,10 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
       // Step 1: Reddit sales pitch - always allow next
       nextStep()
     } else if (currentStep === 2 && hasProducts) {
-      // Step 2: Add product - start lead discovery automatically and move to next step
-      setIsLoading(true)
-      try {
-        await startLeadFinding()
-        nextStep()
-      } catch (error) {
-        console.error('Error starting lead discovery:', error)
-        // Still move to next step even if there's an error
-        nextStep()
-      } finally {
-        setIsLoading(false)
-      }
-    } else if (currentStep === 3 && hasReddit) {
-      // Step 3: Connect Reddit - move to finding leads step
+      // Step 2: Add product - move to finding leads step
       nextStep()
-    } else if (currentStep === 4) {
-      // Step 4: Finding leads - complete onboarding and redirect to leads page
+    } else if (currentStep === 3) {
+      // Step 3: Finding leads - complete onboarding and redirect to leads page
       completeOnboarding()
       router.push('/leads')
     }
@@ -755,84 +742,15 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-center">
                   <Search className="w-5 h-5 text-blue-600 mr-2" />
-                  <span className="text-blue-800 font-medium">Lead discovery will start automatically!</span>
+                  <span className="text-blue-800 font-medium">Ready to find leads!</span>
                 </div>
                 <p className="text-blue-700 text-sm mt-2">
-                  As soon as you click "Next", we'll begin searching Reddit for potential customers discussing problems your product solves.
+                  Click "Next" to start searching Reddit for potential customers discussing problems your product solves.
                 </p>
               </div>
             </div>
           ) : (
             <ProductForm onProductAdded={() => setHasProducts(true)} />
-          )}
-        </div>
-      )
-    },
-    {
-      title: "Connect Reddit",
-      description: "Connect your Reddit account to start the lead discovery process.",
-      icon: RedditIcon,
-      content: (
-        <div className="space-y-6">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <RedditIcon className="w-8 h-8 text-orange-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Connect Reddit to Find Leads</h3>
-            <p className="text-gray-600 mb-6">
-              Connect your Reddit account so we can start searching for people discussing problems your product solves.
-            </p>
-          </div>
-          
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
-            <h4 className="font-semibold text-orange-900 mb-2">Ready to find your leads!</h4>
-            <ol className="space-y-2 text-sm text-orange-800">
-              <li className="flex items-start">
-                <span className="bg-orange-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0">1</span>
-                We'll monitor relevant subreddits for posts
-              </li>
-              <li className="flex items-start">
-                <span className="bg-orange-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0">2</span>
-                AI will identify posts mentioning problems your product solves
-              </li>
-              <li className="flex items-start">
-                <span className="bg-orange-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0">3</span>
-                We'll deliver qualified leads directly to your dashboard
-              </li>
-            </ol>
-          </div>
-          
-          {hasReddit ? (
-            <div className="space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-center">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-                  <span className="text-green-800 font-medium">Reddit connected successfully!</span>
-                </div>
-              </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="text-center">
-                  <h4 className="font-semibold text-blue-900 mb-2">🚀 Ready to find leads!</h4>
-                  <p className="text-blue-800 text-sm">
-                    Click "Find My Leads!" to start searching Reddit for potential customers.
-                  </p>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <button
-                onClick={handleRedditConnect}
-                className="w-full bg-orange-600 text-white px-6 py-4 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center text-lg font-semibold"
-              >
-                <RedditIcon className="w-6 h-6 mr-3" />
-                Connect Reddit Account
-                <ExternalLink className="w-5 h-5 ml-3" />
-              </button>
-              <p className="text-sm text-gray-500 text-center">
-                Click to securely connect your Reddit account via OAuth.
-              </p>
-            </div>
           )}
         </div>
       )
@@ -980,7 +898,7 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
                 </>
               ) : (
                 <>
-                  {currentStep === 3 ? 'Find My Leads!' : currentStep === totalSteps ? 'Complete' : 'Next'}
+                  {currentStep === 2 ? 'Find My Leads!' : currentStep === totalSteps ? 'Complete' : 'Next'}
                   {currentStep < totalSteps && <ArrowRight className="w-4 h-4 ml-1" />}
                 </>
               )}
