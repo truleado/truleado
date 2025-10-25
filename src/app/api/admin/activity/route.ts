@@ -57,18 +57,6 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(20)
 
-    // Get recent chat find searches
-    const { data: recentChatFindSearches } = await supabase
-      .from('chat_find_searches')
-      .select(`
-        id,
-        query,
-        total_leads_found,
-        created_at,
-        profiles!inner(email)
-      `)
-      .order('created_at', { ascending: false })
-      .limit(20)
 
     // Combine all activities
     const activities = []
@@ -117,16 +105,6 @@ export async function GET(request: NextRequest) {
       })
     })
 
-    // Add chat find searches
-    recentChatFindSearches?.forEach(search => {
-      activities.push({
-        id: `chatfind-${search.id}`,
-        type: 'lead_generated',
-        user_email: search.profiles.email,
-        description: `Chat & Find: Found ${search.total_leads_found} leads for "${search.query}"`,
-        created_at: search.created_at
-      })
-    })
 
     // Sort by date and return most recent
     activities.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())

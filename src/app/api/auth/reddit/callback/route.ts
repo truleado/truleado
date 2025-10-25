@@ -37,7 +37,10 @@ export async function GET(request: NextRequest) {
       // Exchange code for access token
       const clientId = process.env.REDDIT_OAUTH_CLIENT_ID
       const clientSecret = process.env.REDDIT_OAUTH_CLIENT_SECRET
-      const redirectUri = process.env.REDDIT_OAUTH_REDIRECT_URI
+      
+      // Build redirect URI dynamically based on environment
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `${request.nextUrl.protocol}//${request.nextUrl.host}`
+      const redirectUri = `${baseUrl}/api/auth/reddit/callback`
 
       console.log('OAuth callback debug:', {
         clientId,
@@ -149,7 +152,15 @@ export async function GET(request: NextRequest) {
 
       console.log('Reddit OAuth completed successfully. Lead discovery jobs started.')
 
-      return NextResponse.redirect(new URL('/products?reddit_connected=true', request.url))
+      // Check if user is in onboarding flow by looking at referer
+      const referer = request.headers.get('referer') || ''
+      const isOnboarding = referer.includes('onboarding') || referer.includes('dashboard')
+      
+      if (isOnboarding) {
+        return NextResponse.redirect(new URL('/dashboard?reddit_connected=true', request.url))
+      } else {
+        return NextResponse.redirect(new URL('/products?reddit_connected=true', request.url))
+      }
     })()
 
     // Race between OAuth process and timeout

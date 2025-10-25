@@ -131,7 +131,12 @@ function SettingsContent() {
 
   const fetchBillingInfo = async () => {
     try {
-      const response = await fetch('/api/billing/status')
+      const response = await fetch('/api/billing/status', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
       if (response.ok) {
         const data = await response.json()
         setBillingInfo({
@@ -510,6 +515,7 @@ function SettingsContent() {
   const tabs = [
     { id: 'profile', name: 'Profile', icon: User },
     { id: 'account', name: 'Account', icon: Link },
+    { id: 'integrations', name: 'Integrations', icon: Link },
     { id: 'notifications', name: 'Notifications', icon: Bell },
     { id: 'billing', name: 'Billing', icon: CreditCard },
   ]
@@ -786,6 +792,77 @@ function SettingsContent() {
                           </div>
                         </div>
                       )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Integrations Tab */}
+              {activeTab === 'integrations' && (
+                <div className="space-y-8">
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Integrations</h3>
+                    <p className="text-gray-600">Connect your accounts to enable lead discovery and automation.</p>
+                  </div>
+
+                  <div className="space-y-6">
+                    {/* Reddit Connection */}
+                    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center">
+                            <ExternalLink className="w-6 h-6 text-white" />
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900">Reddit</h4>
+                            <p className="text-gray-600">
+                              {redditConnected 
+                                ? `Connected as u/${redditUsername}` 
+                                : 'Connect your Reddit account to enable lead discovery'
+                              }
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          {redditConnected ? (
+                            <div className="flex items-center space-x-2">
+                              <CheckCircle className="w-5 h-5 text-green-500" />
+                              <span className="text-sm font-medium text-green-600">Connected</span>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={handleRedditConnect}
+                              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
+                            >
+                              Connect Reddit
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Integration Status */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6">
+                      <div className="flex items-start space-x-3">
+                        <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <CheckCircle className="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-semibold text-blue-900 mb-2">Lead Discovery Status</h4>
+                          <p className="text-blue-700 text-sm mb-3">
+                            {redditConnected 
+                              ? 'Your Reddit account is connected and lead discovery is active. We\'re monitoring relevant subreddits for opportunities.'
+                              : 'Connect your Reddit account to start discovering leads automatically.'
+                            }
+                          </p>
+                          {redditConnected && (
+                            <div className="flex items-center space-x-2 text-sm text-blue-600">
+                              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                              <span>Lead discovery is running</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from "next/link";
-import { ArrowRight, Filter, Target, Zap, Users, TrendingUp, CheckCircle, Sparkles, BarChart3, Clock, Shield, Globe, Star, Brain, Search, Bell, Mail, Megaphone, Instagram, MessageCircle } from "lucide-react";
+import { ArrowRight, Filter, Target, Zap, Users, TrendingUp, CheckCircle, Sparkles, BarChart3, Clock, Shield, Globe, Star, Brain, Search, Bell, Mail, Megaphone, Instagram } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -59,13 +59,6 @@ export default function Home() {
                 Pricing
               </Link>
               <Link 
-                href="/chat-find" 
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors flex items-center"
-              >
-                <MessageCircle className="w-4 h-4 mr-1" />
-                Chat & Find
-              </Link>
-              <Link 
                 href="/auth/signin" 
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
               >
@@ -109,35 +102,6 @@ export default function Home() {
               <span className="font-semibold text-gray-800"> Powered by AI analysis.</span>
             </p>
             
-            {/* Chat & Find Feature Highlight */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 max-w-4xl mx-auto">
-              <div className="flex items-center justify-center mb-3 sm:mb-4">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mr-3">
-                  <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </div>
-                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
-                  <span className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">NEW:</span> Chat & Find
-                </h2>
-              </div>
-              <p className="text-sm sm:text-base md:text-lg text-gray-700 text-center mb-4">
-                <span className="font-semibold text-gray-900">Ask in plain English what leads you want to find,</span> and our AI will search Reddit for you. 
-                No more guessing which subreddits to monitor - just describe your ideal customer and we'll find them!
-              </p>
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center text-xs sm:text-sm text-gray-600">
-                <span className="flex items-center justify-center">
-                  <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-1" />
-                  Natural language search
-                </span>
-                <span className="flex items-center justify-center">
-                  <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-1" />
-                  Instant results
-                </span>
-                <span className="flex items-center justify-center">
-                  <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-1" />
-                  AI-powered analysis
-                </span>
-              </div>
-            </div>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8 md:mb-12 px-2 sm:px-4">
               <Link 
                 href="/auth/signup" 
@@ -186,20 +150,6 @@ export default function Home() {
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            {/* Chat & Find - Featured prominently */}
-            <div className="text-center group lg:col-span-1 sm:col-span-2">
-              <div className="w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-200 shadow-lg">
-                <MessageCircle className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-white" />
-              </div>
-              <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs sm:text-sm font-semibold mb-3 sm:mb-4">
-                <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                NEW FEATURE
-              </div>
-              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Chat & Find</h3>
-              <p className="text-sm sm:text-base md:text-lg text-gray-600 leading-relaxed px-2 max-w-md mx-auto">
-                <span className="font-semibold text-gray-800">Ask in plain English what leads you want to find.</span> Our AI searches Reddit instantly and returns high-quality prospects with full context and analysis.
-              </p>
-            </div>
             
             <div className="text-center group">
               <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-200">

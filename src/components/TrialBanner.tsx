@@ -69,13 +69,13 @@ export function TrialBanner() {
         </div>
         <div className="ml-2 sm:ml-3 flex-1">
           <h3 className={`text-xs sm:text-sm font-medium ${isExpired ? 'text-red-800' : 'text-blue-800'}`}>
-            {isExpired ? 'Trial Expired' : 'Free Trial Active'}
+            {isExpired ? '7-Day Trial Expired' : '7-Day Free Trial Active'}
           </h3>
           <div className={`mt-1 text-xs sm:text-sm ${isExpired ? 'text-red-700' : 'text-blue-700'}`}>
             <p>
               {isExpired 
-                ? 'Your trial is expired. Upgrade now to avoid interruption.'
-                : `Your trial ends in ${currentTrialTime}. Upgrade now to avoid interruption.`
+                ? 'Your 7-day trial has ended. Upgrade now to continue using all features.'
+                : `Your 7-day trial ends in ${currentTrialTime}. Upgrade now to avoid interruption.`
               }
             </p>
           </div>

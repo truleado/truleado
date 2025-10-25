@@ -26,10 +26,6 @@ PADDLE_VENDOR_ID=your-paddle-vendor-id
 PADDLE_API_KEY=your-paddle-api-key
 PADDLE_WEBHOOK_SECRET=your-paddle-webhook-secret
 
-# Optional: Zoho Configuration
-ZOHO_CLIENT_ID=your-zoho-client-id
-ZOHO_CLIENT_SECRET=your-zoho-client-secret
-ZOHO_REFRESH_TOKEN=your-zoho-refresh-token
 
 # Optional: Cron Configuration
 CRON_SECRET=your-cron-secret-for-authentication

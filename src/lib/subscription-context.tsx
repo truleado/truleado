@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/auth-context'
-import { UserWithSubscription, getAccessLevel, canAccessFeature, formatTrialTimeRemaining, shouldShowUpgradePrompt } from '@/lib/access-control'
+import { UserWithSubscription, getAccessLevel, canAccessFeature, formatTrialTimeRemaining, shouldShowUpgradePrompt, needsTrialStart } from '@/lib/access-control'
 
 interface SubscriptionContextType {
   user: UserWithSubscription | null
@@ -10,6 +10,7 @@ interface SubscriptionContextType {
   accessLevel: 'full' | 'limited' | 'none'
   trialTimeRemaining: string
   showUpgradePrompt: boolean
+  needsTrial: boolean
   isLoading: boolean
   refreshSubscription: () => Promise<void>
   canAccess: (feature: string, currentProductCount?: number) => boolean
@@ -45,6 +46,26 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const accessLevel = user ? getAccessLevel(user) : 'none'
   const trialTimeRemaining = user ? formatTrialTimeRemaining(user) : ''
   const showUpgradePrompt = user ? shouldShowUpgradePrompt(user) : false
+  const needsTrial = user ? needsTrialStart(user) : true
+
+  // Debug logging for PRO users and new users
+  if (user) {
+    if (user.subscription_status === 'active') {
+      console.log('PRO user detected:', {
+        subscription_status: user.subscription_status,
+        needsTrial,
+        showUpgradePrompt,
+        accessLevel
+      })
+    } else if (!user.subscription_status || user.subscription_status === 'trial') {
+      console.log('New/Trial user detected:', {
+        subscription_status: user.subscription_status,
+        needsTrial,
+        showUpgradePrompt,
+        accessLevel
+      })
+    }
+  }
 
   const canAccess = (feature: string, currentProductCount?: number) => user ? canAccessFeature(user, feature, currentProductCount) : false
 
@@ -56,7 +77,12 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       if (!user) {
         console.log('Refreshing subscription for user:', authUser.id)
       }
-      const response = await fetch('/api/billing/status')
+      const response = await fetch('/api/billing/status', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
       if (response.ok) {
         const data = await response.json()
         if (!user) {
@@ -66,14 +92,28 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         setIsLoading(false) // Ensure loading is set to false after successful fetch
       } else {
         console.error('Failed to fetch subscription status:', response.status, response.statusText)
-        // Set a default user state even if API fails to prevent infinite loading
-        setUser({ ...authUser, subscription_status: 'trial', trial_ends_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() } as UserWithSubscription)
+        // For PRO users, maintain their subscription status even if API fails
+        // For new users, they'll need to start a trial
+        const fallbackUser = authUser as UserWithSubscription
+        if (!fallbackUser.subscription_status) {
+          // Only set trial status if user has no subscription status at all
+          fallbackUser.subscription_status = 'trial'
+          fallbackUser.trial_ends_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        }
+        setUser(fallbackUser)
         setIsLoading(false)
       }
     } catch (error) {
       console.error('Error refreshing subscription:', error)
-      // Set a default user state even if API fails to prevent infinite loading
-      setUser({ ...authUser, subscription_status: 'trial', trial_ends_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() } as UserWithSubscription)
+      // For PRO users, maintain their subscription status even if API fails
+      // For new users, they'll need to start a trial
+      const fallbackUser = authUser as UserWithSubscription
+      if (!fallbackUser.subscription_status) {
+        // Only set trial status if user has no subscription status at all
+        fallbackUser.subscription_status = 'trial'
+        fallbackUser.trial_ends_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      }
+      setUser(fallbackUser)
       setIsLoading(false)
     }
   }
@@ -155,6 +195,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     accessLevel,
     trialTimeRemaining,
     showUpgradePrompt,
+    needsTrial,
     isLoading,
     refreshSubscription,
     canAccess,

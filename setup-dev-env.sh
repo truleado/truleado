@@ -37,15 +37,10 @@ DODO_PAYMENTS_API_KEY=0aBYUwVb1LZ5YQRE.m3TFoToJKYq89kJ0M6dIq9oaMLISOdbG-KS8C0RLg
 DODO_PAYMENTS_PRODUCT_ID=pdt_bPZdA5CeE8F4tjvgG43sD
 DODO_PAYMENTS_WEBHOOK_SECRET=whsec_1aGRk2itD6qLpF2l+Etr/hz9fTOn7JFN
 
-# Zoho Configuration (with fallback)
-ZOHO_CLIENT_ID=placeholder_zoho_id
-ZOHO_CLIENT_SECRET=placeholder_zoho_secret
-ZOHO_REFRESH_TOKEN=placeholder_refresh_token
 
 # Reddit Configuration (with fallback)
 REDDIT_CLIENT_ID=placeholder_reddit_id
 REDDIT_CLIENT_SECRET=placeholder_reddit_secret
-REDDIT_REDIRECT_URI=http://localhost:3000/api/auth/reddit/callback
 
 # Development Settings
 NEXT_PUBLIC_APP_URL=http://localhost:3000

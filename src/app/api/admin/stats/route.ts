@@ -65,19 +65,10 @@ export async function GET(request: NextRequest) {
       .select('*', { count: 'exact', head: true })
       .gte('created_at', monthAgo.toISOString())
 
-    // Get chat find leads count
-    const { count: chatFindLeads } = await supabase
-      .from('chat_find_results')
-      .select('*', { count: 'exact', head: true })
 
-    const { count: chatFindLeadsThisMonth } = await supabase
-      .from('chat_find_results')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', monthAgo.toISOString())
-
-    // Calculate total leads including chat find
-    const totalLeadsCount = (totalLeads || 0) + (chatFindLeads || 0)
-    const leadsThisMonthCount = (leadsThisMonth || 0) + (chatFindLeadsThisMonth || 0)
+    // Calculate total leads
+    const totalLeadsCount = totalLeads || 0
+    const leadsThisMonthCount = leadsThisMonth || 0
 
     // Get revenue data from subscriptions
     const { data: revenueData } = await supabase

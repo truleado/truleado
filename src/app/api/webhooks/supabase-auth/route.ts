@@ -2,70 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { sendWelcomeEmailDirect } from '@/lib/direct-email-service'
 
-// Zoho contact creation function for webhook
-async function createZohoContactWebhook(email: string, fullName: string) {
-  try {
-    console.log('🔗 Creating Zoho contact for Google sign-in user:', email)
-    
-    // Split full name into first and last name
-    const nameParts = fullName.trim().split(' ')
-    const firstName = nameParts[0] || 'User'
-    const lastName = nameParts.slice(1).join(' ') || ''
-
-    // Get access token
-    const tokenResponse = await fetch('https://accounts.zoho.in/oauth/v2/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        grant_type: 'refresh_token',
-        client_id: process.env.ZOHO_CLIENT_ID || '',
-        client_secret: process.env.ZOHO_CLIENT_SECRET || '',
-        refresh_token: process.env.ZOHO_REFRESH_TOKEN || '',
-      }),
-    })
-
-    if (!tokenResponse.ok) {
-      console.warn('Failed to get Zoho access token for Google sign-in user')
-      return
-    }
-
-    const tokenData = await tokenResponse.json()
-
-    // Create contact in Zoho CRM
-    const contactData = {
-      First_Name: firstName,
-      Last_Name: lastName,
-      Email: email,
-      Lead_Source: 'Truleado Website (Google Sign-in)',
-      Lead_Status: 'Not Contacted',
-      Company: 'Individual',
-      Description: `New user signup via Google - ${fullName} (${email})`
-    }
-
-    const contactResponse = await fetch('https://www.zohoapis.in/crm/v2/Contacts', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Zoho-oauthtoken ${tokenData.access_token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        data: [contactData]
-      }),
-    })
-
-    if (contactResponse.ok) {
-      const result = await contactResponse.json()
-      console.log('✅ Zoho contact created successfully for Google sign-in user:', result.data[0]?.details?.id)
-    } else {
-      const errorText = await contactResponse.text()
-      console.warn('Failed to create Zoho contact for Google sign-in user:', errorText)
-    }
-  } catch (error) {
-    console.warn('Zoho contact creation failed for Google sign-in user:', error)
-  }
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -126,13 +62,6 @@ export async function POST(request: NextRequest) {
 
     // Send welcome email using the new service
     const emailResult = await sendWelcomeEmailDirect(userEmail, userName || 'User')
-
-    // Create Zoho contact for Google sign-in users
-    if (userName) {
-      createZohoContactWebhook(userEmail, userName).catch(err => 
-        console.warn('Zoho contact creation failed for Google sign-in:', err)
-      )
-    }
 
     if (emailResult.success) {
       // Mark welcome email as sent

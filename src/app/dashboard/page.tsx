@@ -171,7 +171,12 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       // Fetch stats
-      const statsResponse = await fetch('/api/dashboard/stats')
+      const statsResponse = await fetch('/api/dashboard/stats', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
       if (statsResponse.ok) {
         const statsData = await statsResponse.json()
         setStats(statsData)
@@ -181,7 +186,12 @@ export default function Dashboard() {
       setStatsLoading(false)
 
       // Fetch recent activity
-      const activityResponse = await fetch('/api/dashboard/activity')
+      const activityResponse = await fetch('/api/dashboard/activity', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
       if (activityResponse.ok) {
         const activityData = await activityResponse.json()
         setRecentActivity(activityData)
@@ -189,7 +199,12 @@ export default function Dashboard() {
       setActivityLoading(false)
 
       // Fetch trends
-      const trendsResponse = await fetch('/api/dashboard/trends')
+      const trendsResponse = await fetch('/api/dashboard/trends', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
       if (trendsResponse.ok) {
         const trendsData = await trendsResponse.json()
         setTrends(trendsData)
@@ -197,7 +212,12 @@ export default function Dashboard() {
       setTrendsLoading(false)
 
       // Check Reddit connection
-      const redditResponse = await fetch('/api/auth/reddit/status')
+      const redditResponse = await fetch('/api/auth/reddit/status', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
       if (redditResponse.ok) {
         const redditData = await redditResponse.json()
         setRedditConnected(redditData.connected)

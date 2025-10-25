@@ -215,8 +215,16 @@ export class RedditClient {
         process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       )
 
+      // Get current refresh token to preserve it if new one not provided
+      const { data: currentApiKeys } = await supabase
+        .from('api_keys')
+        .select('reddit_refresh_token')
+        .eq('user_id', this.userId)
+        .single()
+
       const newTokens = {
         reddit_access_token: data.access_token,
+        reddit_refresh_token: data.refresh_token || currentApiKeys?.reddit_refresh_token || refreshToken,
         reddit_token_expires_at: new Date(Date.now() + data.expires_in * 1000).toISOString(),
         updated_at: new Date().toISOString()
       }

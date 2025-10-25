@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.redirect(new URL('/auth/signin', request.url))
     }
 
     // Generate OAuth URL
@@ -22,14 +22,16 @@ export async function GET(request: NextRequest) {
     const redirectUri = `${baseUrl}/api/auth/reddit/callback`
 
     if (!clientId) {
-      return NextResponse.json({ error: 'Reddit OAuth not configured' }, { status: 500 })
+      console.error('Reddit OAuth not configured:', { clientId: !!clientId })
+      return NextResponse.redirect(new URL('/settings?error=oauth_not_configured', request.url))
     }
 
     const authUrl = `https://www.reddit.com/api/v1/authorize?client_id=${clientId}&response_type=code&state=${state}&redirect_uri=${encodeURIComponent(redirectUri)}&duration=permanent&scope=${scope}`
 
-    return NextResponse.json({ authUrl })
+    // Redirect directly to Reddit OAuth
+    return NextResponse.redirect(authUrl)
   } catch (error) {
-    console.error('Reddit OAuth URL generation error:', error)
-    return NextResponse.json({ error: 'Failed to generate OAuth URL' }, { status: 500 })
+    console.error('Reddit OAuth connect error:', error)
+    return NextResponse.redirect(new URL('/settings?error=oauth_connect_failed', request.url))
   }
 }

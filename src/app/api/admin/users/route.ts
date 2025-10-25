@@ -21,8 +21,6 @@ export async function GET(request: NextRequest) {
         updated_at,
         subscription_status,
         subscription_plan,
-        chat_find_searches_count,
-        chat_find_free_searches_used
       `)
       .order('created_at', { ascending: false })
 
@@ -89,16 +87,6 @@ export async function GET(request: NextRequest) {
       .select('user_id, created_at')
       .in('user_id', userIds)
 
-    // Get chat find searches and leads count for each user
-    const { data: chatFindSearches } = await supabase
-      .from('chat_find_searches')
-      .select('user_id, id, total_leads_found, created_at')
-      .in('user_id', userIds)
-
-    const { data: chatFindLeads } = await supabase
-      .from('chat_find_results')
-      .select('search_id, created_at')
-      .in('search_id', chatFindSearches?.map(s => s.id) || [])
 
     // Get subscriptions data
     const { data: subscriptionsData } = await supabase
@@ -111,14 +99,10 @@ export async function GET(request: NextRequest) {
       const userProducts = productsData?.filter(p => p.user_id === user.id) || []
       const productsCount = userProducts.length
       const leadsCount = leadsData?.filter(l => l.user_id === user.id).length || 0
-      const userChatFindSearches = chatFindSearches?.filter(s => s.user_id === user.id) || []
-      const userChatFindLeads = chatFindLeads?.filter(l => 
-        userChatFindSearches.some(s => s.id === l.search_id)
-      ).length || 0
       const userSubscription = subscriptionsData?.find(s => s.user_id === user.id)
 
-      // Calculate total leads from both sources
-      const totalLeads = leadsCount + userChatFindLeads
+      // Calculate total leads
+      const totalLeads = leadsCount
       
       // Calculate revenue based on subscription status
       const totalRevenue = user.subscription_status === 'active' || userSubscription?.status === 'active' ? 2900 : 0
@@ -129,7 +113,6 @@ export async function GET(request: NextRequest) {
       // Get last activity date
       const lastActivity = Math.max(
         new Date(user.updated_at || user.created_at).getTime(),
-        userChatFindSearches.length > 0 ? Math.max(...userChatFindSearches.map(s => new Date(s.created_at).getTime())) : 0,
         leadsCount > 0 ? Math.max(...leadsData?.filter(l => l.user_id === user.id).map(l => new Date(l.created_at || 0).getTime()) || [0]) : 0
       )
 
@@ -144,13 +127,9 @@ export async function GET(request: NextRequest) {
         subscription_plan: user.subscription_plan || 'free',
         products_count: productsCount,
         leads_count: totalLeads,
-        chat_find_searches: userChatFindSearches.length,
-        chat_find_leads: userChatFindLeads,
         traditional_leads: leadsCount,
         total_revenue: totalRevenue,
         is_active: isActive,
-        chat_find_searches_count: user.chat_find_searches_count || 0,
-        chat_find_free_searches_used: user.chat_find_free_searches_used || 0,
         products: userProducts.map(product => ({
           id: product.id,
           name: product.name,

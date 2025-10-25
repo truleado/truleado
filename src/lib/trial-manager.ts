@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase-server'
 const trialConfig = {
   maxTrialPerEmail: 1,
   maxTrialPerIP: 3,
-  trialDays: 1, // Changed from 7 to 1 day
+  trialDays: 7, // 7-day free trial for all features
   trialCooldownHours: 24
 }
 

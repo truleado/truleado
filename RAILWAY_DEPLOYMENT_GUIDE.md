@@ -41,10 +41,6 @@ NEXT_PUBLIC_PADDLE_CLIENT_TOKEN=your-paddle-client-token
 NEXT_PUBLIC_PADDLE_PRICE_ID=your-paddle-price-id
 PADDLE_WEBHOOK_SECRET=your-paddle-webhook-secret
 
-# Zoho CRM Configuration (CRITICAL for Contact Management)
-ZOHO_CLIENT_ID=your-zoho-client-id
-ZOHO_CLIENT_SECRET=your-zoho-client-secret
-ZOHO_REFRESH_TOKEN=your-zoho-refresh-token
 
 # Authentication Configuration
 NEXTAUTH_SECRET=your-random-secret-here
@@ -93,9 +89,6 @@ CRON_SECRET=your-cron-secret-for-authentication
 1. Set up Paddle account
 2. Get API keys and webhook secrets
 
-**Zoho CRM Setup:**
-1. Set up Zoho CRM account
-2. Get OAuth credentials
 
 ## 🚀 **Railway Deployment Steps**
 

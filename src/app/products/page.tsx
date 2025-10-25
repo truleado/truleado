@@ -1060,6 +1060,45 @@ function ProductsContent() {
                             </button>
                           </div>
                           
+                          {/* Manual Subreddit Input */}
+                          <div className="mb-4">
+                            <div className="flex gap-3">
+                              <input
+                                type="text"
+                                placeholder="Add subreddit manually (e.g., entrepreneur, smallbusiness)"
+                                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                onKeyPress={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault()
+                                    const input = e.target as HTMLInputElement
+                                    const subreddit = input.value.trim().replace('r/', '').replace('/', '')
+                                    if (subreddit && !newProduct.subreddits.includes(subreddit)) {
+                                      setNewProduct({ ...newProduct, subreddits: [...newProduct.subreddits, subreddit] })
+                                      input.value = ''
+                                    }
+                                  }
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  const input = (e.target as HTMLElement).parentElement?.querySelector('input') as HTMLInputElement
+                                  const subreddit = input.value.trim().replace('r/', '').replace('/', '')
+                                  if (subreddit && !newProduct.subreddits.includes(subreddit)) {
+                                    setNewProduct({ ...newProduct, subreddits: [...newProduct.subreddits, subreddit] })
+                                    input.value = ''
+                                  }
+                                }}
+                                className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold transition-colors"
+                              >
+                                Add
+                              </button>
+                            </div>
+                            <p className="mt-2 text-sm text-gray-500">
+                              Type a subreddit name and press Enter or click Add. You can include or exclude "r/" prefix.
+                            </p>
+                          </div>
+                          
                           {newProduct.subreddits.length > 0 && (
                             <div className="flex flex-wrap gap-2 mb-4">
                               {newProduct.subreddits.map((subreddit, index) => (
@@ -1084,7 +1123,7 @@ function ProductsContent() {
                           )}
                           
                           <p className="text-gray-600">
-                            Click "Find Subreddits" to automatically discover relevant Reddit communities based on your product analysis.
+                            Click "Find Subreddits" to automatically discover relevant Reddit communities, or add them manually above.
                           </p>
                         </div>
                     </div>
@@ -1379,6 +1418,45 @@ function ProductsContent() {
                         </button>
                       </div>
                       
+                      {/* Manual Subreddit Input */}
+                      <div className="mb-4">
+                        <div className="flex gap-3">
+                          <input
+                            type="text"
+                            placeholder="Add subreddit manually (e.g., entrepreneur, smallbusiness)"
+                            className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault()
+                                const input = e.target as HTMLInputElement
+                                const subreddit = input.value.trim().replace('r/', '').replace('/', '')
+                                if (subreddit && !newProduct.subreddits.includes(subreddit)) {
+                                  setNewProduct({ ...newProduct, subreddits: [...newProduct.subreddits, subreddit] })
+                                  input.value = ''
+                                }
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              const input = (e.target as HTMLElement).parentElement?.querySelector('input') as HTMLInputElement
+                              const subreddit = input.value.trim().replace('r/', '').replace('/', '')
+                              if (subreddit && !newProduct.subreddits.includes(subreddit)) {
+                                setNewProduct({ ...newProduct, subreddits: [...newProduct.subreddits, subreddit] })
+                                input.value = ''
+                              }
+                            }}
+                            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold transition-colors"
+                          >
+                            Add
+                          </button>
+                        </div>
+                        <p className="mt-2 text-sm text-gray-500">
+                          Type a subreddit name and press Enter or click Add. You can include or exclude "r/" prefix.
+                        </p>
+                      </div>
+                      
                       {newProduct.subreddits.length > 0 && (
                         <div className="flex flex-wrap gap-2 mb-4">
                           {newProduct.subreddits.map((subreddit, index) => (
@@ -1403,7 +1481,7 @@ function ProductsContent() {
                       )}
                       
                       <p className="text-gray-600">
-                        Click "Find Subreddits" to automatically discover relevant Reddit communities based on your product analysis.
+                        Click "Find Subreddits" to automatically discover relevant Reddit communities, or add them manually above.
                       </p>
                     </div>
                     

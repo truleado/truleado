@@ -51,13 +51,9 @@ interface User {
   subscription_plan: string
   products_count: number
   leads_count: number
-  chat_find_searches: number
-  chat_find_leads: number
   traditional_leads: number
   total_revenue: number
   is_active: boolean
-  chat_find_searches_count: number
-  chat_find_free_searches_used: number
   products?: Product[]
 }
 
@@ -158,11 +154,9 @@ export default function AdminDashboard() {
       'Email', 
       'Created At',
       'Subscription Status',
-      'Chat & Find',
       'Promote',
       'Products Count',
       'Leads Count',
-      'Chat Find Searches',
       'Total Revenue',
       'Is Active'
     ]
@@ -172,11 +166,9 @@ export default function AdminDashboard() {
       user.email,
       new Date(user.created_at).toLocaleDateString(),
       user.subscription_status,
-      user.chat_find_searches_count > 0 || user.chat_find_searches > 0 ? 'Yes' : 'No',
       user.products_count > 0 ? 'Yes' : 'No',
       user.products_count,
       user.leads_count,
-      user.chat_find_searches,
       user.total_revenue,
       user.is_active ? 'Yes' : 'No'
     ])
@@ -414,9 +406,6 @@ export default function AdminDashboard() {
                               Status
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Chat & Find
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                               Promote
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -454,15 +443,6 @@ export default function AdminDashboard() {
                                     : 'bg-gray-100 text-gray-800'
                                 }`}>
                                   {user.subscription_status}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                  user.chat_find_searches_count > 0 || user.chat_find_searches > 0
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-red-100 text-red-800'
-                                }`}>
-                                  {user.chat_find_searches_count > 0 || user.chat_find_searches > 0 ? 'Yes' : 'No'}
                                 </span>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

@@ -27,8 +27,6 @@ export async function GET(request: NextRequest) {
         updated_at,
         subscription_status,
         subscription_plan,
-        chat_find_searches_count,
-        chat_find_free_searches_used
       `)
       .eq('id', userId)
       .single()
@@ -62,16 +60,6 @@ export async function GET(request: NextRequest) {
       .select('id, created_at')
       .eq('user_id', userId)
 
-    // Get chat find searches and leads
-    const { data: chatFindSearches } = await supabase
-      .from('chat_find_searches')
-      .select('id, total_leads_found, created_at')
-      .eq('user_id', userId)
-
-    const { data: chatFindLeads } = await supabase
-      .from('chat_find_results')
-      .select('search_id, created_at')
-      .in('search_id', chatFindSearches?.map(s => s.id) || [])
 
     // Get subscription data
     const { data: subscriptionData } = await supabase
@@ -82,9 +70,7 @@ export async function GET(request: NextRequest) {
       .limit(1)
 
     const leadsCount = leadsData?.length || 0
-    const chatFindLeadsCount = chatFindLeads?.length || 0
-    const totalLeads = leadsCount + chatFindLeadsCount
-    const chatFindSearchesCount = chatFindSearches?.length || 0
+    const totalLeads = leadsCount
 
     // Calculate revenue
     const totalRevenue = user.subscription_status === 'active' || subscriptionData?.[0]?.status === 'active' ? 2900 : 0
@@ -92,7 +78,6 @@ export async function GET(request: NextRequest) {
     // Calculate last activity
     const lastActivity = Math.max(
       new Date(user.updated_at || user.created_at).getTime(),
-      chatFindSearchesCount > 0 ? Math.max(...chatFindSearches.map(s => new Date(s.created_at).getTime())) : 0,
       leadsCount > 0 ? Math.max(...leadsData?.map(l => new Date(l.created_at).getTime()) || [0]) : 0
     )
 
@@ -107,13 +92,9 @@ export async function GET(request: NextRequest) {
       subscription_plan: user.subscription_plan || 'free',
       products_count: products?.length || 0,
       leads_count: totalLeads,
-      chat_find_searches: chatFindSearchesCount,
-      chat_find_leads: chatFindLeadsCount,
       traditional_leads: leadsCount,
       total_revenue: totalRevenue,
       is_active: user.subscription_status === 'active' || subscriptionData?.[0]?.status === 'active',
-      chat_find_searches_count: user.chat_find_searches_count || 0,
-      chat_find_free_searches_used: user.chat_find_free_searches_used || 0,
       products: products || []
     }
 

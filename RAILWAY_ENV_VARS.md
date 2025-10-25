@@ -49,14 +49,6 @@ DODO_PAYMENTS_API_KEY=0aBYUwVb1LZ5YQRE.m3TFoToJKYq89kJ0M6dIq9oaMLISOdbG-KS8C0RLg
 DODO_PAYMENTS_PRODUCT_ID=pdt_bPZdA5CeE8F4tjvgG43sD
 DODO_PAYMENTS_WEBHOOK_SECRET=whsec_1aGRk2itD6qLpF2l+Etr/hz9fTOn7JFN
 
-# ===========================================
-# ZOHO CRM CONFIGURATION (CRITICAL)
-# ===========================================
-ZOHO_CLIENT_ID=1000.82DRWH7GU91XIPF7ZN9Q3W9KZ770GY
-ZOHO_CLIENT_SECRET=30c61a291d791a0d1caa6e2ce193d069be007d6ea9
-ZOHO_REFRESH_TOKEN=1000.1aa3bd63937b5fb65d8e970165babc99.4df927f0368af5b8807bea0ee715c8cb
-ZOHO_API_DOMAIN=https://www.zohoapis.in
-ZOHO_REDIRECT_URI=https://truleado.com/auth/zoho/callback
 
 # ===========================================
 # AUTHENTICATION CONFIGURATION
@@ -83,5 +75,4 @@ CRON_SECRET=your_cron_secret_for_authentication
 # 2. Replace "your-railway-domain.railway.app" with your actual Railway domain
 # 3. Generate new secrets for NEXTAUTH_SECRET and CRON_SECRET
 # 4. Set up Reddit API credentials (not included in Vercel)
-# 5. Update ZOHO_REDIRECT_URI with your Railway domain
 # 6. Update external service URLs (Reddit OAuth, Paddle webhooks, etc.)
