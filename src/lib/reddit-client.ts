@@ -288,14 +288,17 @@ export class RedditClient {
 
   // Search for posts in specific subreddits
   async searchPosts(options: RedditSearchOptions): Promise<RedditPost[]> {
+    // If OAuth client is not available, use public API fallback
     if (!this.isInitialized || !this.client) {
-      throw new Error('Reddit account not connected. Please connect your Reddit account to search for leads.')
+      console.log('OAuth client not available, using public API fallback')
+      return this.searchPostsPublic(options)
     }
 
     // Ensure token is valid before making API calls
     const tokenValid = await this.ensureValidToken()
     if (!tokenValid) {
-      throw new Error('Reddit token is invalid or expired. Please reconnect your Reddit account.')
+      console.log('OAuth token invalid, using public API fallback')
+      return this.searchPostsPublic(options)
     }
 
     try {
@@ -323,18 +326,31 @@ export class RedditClient {
 
       return searchResults.map(post => this.formatPost(post))
     } catch (error) {
-      console.error('Reddit search error:', error)
-      throw new Error('Failed to search Reddit. Please check your Reddit connection.')
+      console.error('Reddit OAuth search error, falling back to public API:', error)
+      return this.searchPostsPublic(options)
     }
   }
 
   // Fallback method using Reddit's public API
-  private async searchPostsPublic(options: RedditSearchOptions): Promise<RedditPost[]> {
+  async searchPostsPublic(options: RedditSearchOptions): Promise<RedditPost[]> {
     try {
       const { subreddit, query, sort = 'hot', limit = 25 } = options
       
-      // Use Reddit's public API - get recent posts from subreddit
-      const url = `https://www.reddit.com/r/${subreddit}/${sort}.json?limit=${limit}`
+      if (!subreddit) {
+        console.log('No subreddit specified for public API search')
+        return []
+      }
+      
+      // Use Reddit's public search API if we have a query
+      let url: string
+      if (query && query.trim()) {
+        // Use Reddit's search API
+        const searchQuery = encodeURIComponent(query)
+        url = `https://www.reddit.com/r/${subreddit}/search.json?q=${searchQuery}&sort=${sort}&limit=${limit}&restrict_sr=1`
+      } else {
+        // Fallback to getting recent posts from subreddit
+        url = `https://www.reddit.com/r/${subreddit}/${sort}.json?limit=${limit}`
+      }
       
       console.log(`Fetching real Reddit data from: ${url}`)
       
@@ -346,7 +362,6 @@ export class RedditClient {
 
       if (!response.ok) {
         console.error(`Reddit API returned ${response.status} for r/${subreddit}`)
-        // Return empty array instead of mock data
         return []
       }
 
@@ -357,7 +372,6 @@ export class RedditClient {
       return posts.map((item: any) => this.formatPostFromPublicAPI(item.data))
     } catch (error) {
       console.error('Reddit public API search error:', error)
-      // Return empty array instead of mock data
       return []
     }
   }
