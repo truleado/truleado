@@ -520,7 +520,6 @@ function SettingsContent() {
 
   const tabs = [
     { id: 'profile', name: 'Profile', icon: User },
-    { id: 'account', name: 'Account', icon: Link },
     { id: 'reddit', name: 'Reddit Account', icon: Link2 },
     { id: 'notifications', name: 'Notifications', icon: Bell },
     { id: 'billing', name: 'Billing', icon: CreditCard },
@@ -721,37 +720,6 @@ function SettingsContent() {
                   </div>
               </div>
             )}
-
-              {/* Account Tab */}
-              {activeTab === 'account' && (
-                <div className="space-y-8">
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Connected Accounts</h3>
-                    <p className="text-gray-600">Manage your connected third-party accounts and integrations.</p>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6">
-                      <div className="flex items-start space-x-3">
-                        <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <CheckCircle className="w-4 h-4 text-white" />
-                        </div>
-                        <div>
-                          <h4 className="text-lg font-semibold text-blue-900 mb-2">Lead Discovery Status</h4>
-                          <p className="text-blue-700 text-sm mb-3">
-                            Lead discovery is now fully automated and works without requiring Reddit account connections. 
-                            We automatically find leads based on your product information.
-                          </p>
-                          <div className="flex items-center space-x-2 text-sm text-blue-600">
-                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                            <span>Lead discovery is running automatically</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               {/* Reddit Account Tab */}
               {activeTab === 'reddit' && (
