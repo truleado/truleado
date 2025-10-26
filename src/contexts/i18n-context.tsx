@@ -26,21 +26,31 @@ interface I18nContextType {
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined)
 
-export function I18nProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<LanguageCode>('en')
+export function I18nProvider({ 
+  children, 
+  initialLocale 
+}: { 
+  children: ReactNode
+  initialLocale?: string
+}) {
+  const [language, setLanguageState] = useState<LanguageCode>(
+    (initialLocale as LanguageCode) || 'en'
+  )
 
   useEffect(() => {
-    // Load saved language from localStorage
-    const savedLanguage = localStorage.getItem('language')
-    if (savedLanguage && languages[savedLanguage as LanguageCode]) {
-      setLanguageState(savedLanguage as LanguageCode)
+    // Set language from URL or localStorage
+    if (typeof window !== 'undefined') {
+      const urlLocale = window.location.pathname.split('/')[1]
+      if (languages[urlLocale as LanguageCode]) {
+        setLanguageState(urlLocale as LanguageCode)
+        document.documentElement.lang = urlLocale
+      }
     }
   }, [])
 
   const setLanguage = (lang: LanguageCode) => {
     setLanguageState(lang)
     localStorage.setItem('language', lang)
-    // Update HTML lang attribute
     document.documentElement.lang = lang
   }
 

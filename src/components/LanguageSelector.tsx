@@ -1,14 +1,30 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 import { useI18n, languages } from '@/contexts/i18n-context'
 import { ChevronDown } from 'lucide-react'
 
 export function LanguageSelector() {
-  const { language, setLanguage } = useI18n()
+  const { language } = useI18n()
+  const router = useRouter()
+  const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
 
   const currentLang = languages[language]
+
+  const handleLanguageChange = (newLang: string) => {
+    // Get current path without locale
+    const pathWithoutLocale = pathname.split('/').slice(2).join('/')
+    const newPath = `/${newLang}${pathWithoutLocale ? `/${pathWithoutLocale}` : ''}${window.location.search}`
+    
+    // Save to localStorage
+    localStorage.setItem('language', newLang)
+    
+    // Navigate to new URL
+    router.push(newPath)
+    setIsOpen(false)
+  }
 
   return (
     <div className="relative">
@@ -33,10 +49,7 @@ export function LanguageSelector() {
               {Object.entries(languages).map(([code, lang]) => (
                 <button
                   key={code}
-                  onClick={() => {
-                    setLanguage(code as any)
-                    setIsOpen(false)
-                  }}
+                  onClick={() => handleLanguageChange(code)}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                     language === code
                       ? 'bg-blue-50 text-blue-700'
@@ -58,4 +71,3 @@ export function LanguageSelector() {
     </div>
   )
 }
-
