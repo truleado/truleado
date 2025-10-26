@@ -71,10 +71,22 @@ export default function BlogPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Reddit Marketing Blog
+              {locale === 'en' ? 'Reddit Marketing Blog' : 
+               locale === 'zh' ? 'Reddit 营销博客' :
+               locale === 'ja' ? 'Reddit マーケティングブログ' :
+               locale === 'de' ? 'Reddit Marketing Blog' :
+               locale === 'fr' ? 'Blog Marketing Reddit' :
+               locale === 'es' ? 'Blog de Marketing de Reddit' :
+               locale === 'ko' ? 'Reddit 마케팅 블로그' :
+               locale === 'it' ? 'Blog di Marketing Reddit' :
+               locale === 'ar' ? 'مدونة تسويق Reddit' :
+               locale === 'nl' ? 'Reddit Marketing Blog' : 'Reddit Marketing Blog'}
             </h1>
             <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
-              Learn how successful SaaS founders discover leads, build communities, and grow their businesses on Reddit
+              {locale === 'en' ? 'Learn how successful SaaS founders discover leads, build communities, and grow their businesses on Reddit' :
+               locale === 'zh' ? '了解成功的 SaaS 创始人如何发现潜在客户、建立社区并在 Reddit 上发展业务' :
+               locale === 'ja' ? '成功したSaaS創設者がリードを発見し、コミュニティを構築し、Redditでビジネスを成長させる方法を学ぶ' :
+               'Learn how successful SaaS founders discover leads, build communities, and grow their businesses on Reddit'}
             </p>
           </div>
 

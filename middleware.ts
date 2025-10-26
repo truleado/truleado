@@ -1,7 +1,28 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const locales = ['en', 'zh', 'ja', 'de', 'fr', 'es', 'ko', 'it', 'ar', 'nl']
+const defaultLocale = 'en'
+
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+  
+  // Check if pathname starts with a locale
+  const pathnameIsMissingLocale = locales.every(
+    (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`
+  )
+  
+  // If no locale in path and not an API route or static file, redirect to default locale
+  if (
+    pathnameIsMissingLocale &&
+    !pathname.startsWith('/api/') &&
+    !pathname.startsWith('/_next/')
+  ) {
+    const locale = defaultLocale
+    const newUrl = new URL(`/${locale}${pathname}`, request.url)
+    return NextResponse.redirect(newUrl)
+  }
+  
   let supabaseResponse = NextResponse.next({
     request,
   })
