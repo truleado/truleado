@@ -4,8 +4,6 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
-import { useOnboarding } from '@/contexts/onboarding-context'
-import { OnboardingModal } from '@/components/OnboardingModal'
 import { 
   Filter, 
   LayoutDashboard, 
@@ -63,7 +61,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const { user, signOut } = useAuth()
   const { showUpgradePrompt, trialTimeRemaining, handleUpgrade, isUpgrading } = useTrial()
-  const { isOnboarding } = useOnboarding()
 
   const handleSignOut = async () => {
     await signOut()
@@ -277,12 +274,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         onUpgrade={handleUpgradeClick}
         trialTimeRemaining={trialTimeRemaining}
         isLoading={isUpgrading}
-      />
-
-      {/* Onboarding Modal */}
-      <OnboardingModal
-        isOpen={isOnboarding}
-        onClose={() => {}}
       />
     </div>
   )
