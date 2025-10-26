@@ -78,62 +78,57 @@ export async function POST(request: NextRequest) {
         let allPosts: any[] = []
         let searchErrorHandled = false
         
-        // Popular subreddits to search for business/product discussions
-        const targetSubreddits = ['entrepreneur', 'startups', 'smallbusiness', 'marketing', 'business', 'sales']
-        
         for (const searchTerm of searchTerms.slice(0, 3)) { // Use 3 searches to stay within time limits
           try {
-            // Search in specific subreddits instead of global search (more reliable)
-            // We'll iterate through multiple subreddits
-            for (const subreddit of targetSubreddits.slice(0, 2)) { // Limit to 2 subreddits per search term
-              const redditUrl = `https://old.reddit.com/r/${subreddit}/search.json?q=${encodeURIComponent(searchTerm)}&sort=relevance&limit=10&t=week&restrict_sr=on`
-              console.log(`🌐 Fetching Reddit URL: ${redditUrl}`)
-              
-              // Manual timeout implementation (15 seconds per request)
-              const controller = new AbortController()
-              const timeoutId = setTimeout(() => controller.abort(), 15000)
-              
-              try {
-                const redditResponse = await fetch(redditUrl, {
-                  headers: {
-                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept': 'application/json',
-                    'Accept-Language': 'en-US,en;q=0.9',
-                    'Cache-Control': 'no-cache',
-                  },
-                  cache: 'no-store',
-                  signal: controller.signal,
-                  redirect: 'follow',
-                }).finally(() => clearTimeout(timeoutId))
-
-                console.log(`📡 Reddit response status: ${redditResponse.status} for r/${subreddit}`)
-
-                if (redditResponse.ok) {
-                  const redditData = await redditResponse.json()
-                  const posts = redditData.data?.children || []
-                  
-                  if (posts.length > 0) {
-                    allPosts = allPosts.concat(posts)
-                    console.log(`✅ Found ${posts.length} posts in r/${subreddit} for "${searchTerm}"`)
-                  }
-                }
-              } catch (subredditError) {
-                console.log(`⚠️ Failed to fetch from r/${subreddit}:`, subredditError)
-                // Continue to next subreddit instead of failing completely
-              }
-              
-              // Small delay to avoid rate limiting
-              await new Promise(resolve => setTimeout(resolve, 500))
-            }
+            // Use Reddit's global search API with .json suffix
+            const redditUrl = `https://www.reddit.com/search/.json?q=${encodeURIComponent(searchTerm)}&sort=relevance&limit=10&t=all`
+            console.log(`🌐 Fetching Reddit URL: ${redditUrl}`)
             
-            if (allPosts.length > 0) {
-              console.log(`✅ Total posts found for "${searchTerm}": ${allPosts.length}`)
+            // Manual timeout implementation (25 seconds)
+            const controller = new AbortController()
+            const timeoutId = setTimeout(() => controller.abort(), 25000)
+            
+            const redditResponse = await fetch(redditUrl, {
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+                'Accept': 'application/json',
+                'Accept-Language': 'en-US,en;q=0.9',
+              },
+              cache: 'no-store',
+              signal: controller.signal,
+              redirect: 'follow',
+            }).finally(() => clearTimeout(timeoutId))
+
+            console.log(`📡 Reddit response status: ${redditResponse.status}`)
+
+            if (!redditResponse.ok) {
+              const errorText = await redditResponse.text().catch(() => 'Could not read error body')
+              console.error(`❌ Reddit API error for "${searchTerm}":`, {
+                status: redditResponse.status,
+                statusText: redditResponse.statusText,
+                errorBody: errorText.substring(0, 500)
+              })
+              continue
+            }
+
+            const redditData = await redditResponse.json()
+            console.log(`📦 Reddit data structure:`, {
+              hasData: !!redditData.data,
+              hasChildren: !!redditData.data?.children,
+              childrenLength: redditData.data?.children?.length
+            })
+            
+            const posts = redditData.data?.children || []
+            
+            if (posts.length > 0) {
+              allPosts = allPosts.concat(posts)
+              console.log(`✅ Found ${posts.length} posts for search term: "${searchTerm}"`)
             } else {
               console.log(`⚠️ No posts found for search term: "${searchTerm}"`)
             }
             
-            // Delay between search terms
-            await new Promise(resolve => setTimeout(resolve, 300))
+            // Small delay to avoid rate limiting
+            await new Promise(resolve => setTimeout(resolve, 200))
             
           } catch (searchError: any) {
             console.error(`❌ Error searching for "${searchTerm}":`, searchError)
