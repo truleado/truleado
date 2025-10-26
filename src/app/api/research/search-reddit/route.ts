@@ -170,43 +170,33 @@ ${index + 1}. Title: "${post.title}"
    Comments: ${post.num_comments}
 `).join('\n')}
 
-STRICT CRITERIA FOR HIGH-QUALITY PITCHING OPPORTUNITIES:
-1. Posts expressing EXACT problems that this product/service solves
-2. Posts asking for recommendations in the product's category
-3. Posts showing frustration with current solutions in the same space
-4. Posts seeking help with tasks this product/service specifically handles
-5. Posts asking "what's the best [category]" where this product fits
-6. Posts complaining about competitors or similar tools
+CRITERIA FOR RELEVANT PITCHING OPPORTUNITIES (Include if the post is loosely related):
+1. Posts mentioning problems or topics related to ${keyword}
+2. Posts asking for help, recommendations, or solutions
+3. Posts discussing ${keyword} or related topics
+4. Posts showing interest in solutions to problems
 
-EXCLUDE (Be very strict):
-- Posts that are just sharing success stories
-- Posts asking for free alternatives when the product is paid
-- Posts about unrelated technical issues
-- Posts that are clearly spam or low-quality
-- Posts where the connection to the product is weak
-- Posts in inappropriate subreddits
-
-For each qualifying post, provide:
+For each relevant post, provide:
 1. Post index (0-based)
-2. Reasoning for why it's a good pitching opportunity
+2. Reasoning for why it's a pitching opportunity
 3. Sample pitch idea (2-3 sentences)
 
 Return ONLY a JSON array with this exact structure:
 [
   {
     "index": 0,
-    "reasoning": "Brief explanation of why this is a good pitching opportunity",
+    "reasoning": "Brief explanation of why this post is relevant",
     "samplePitch": "Sample pitch idea (2-3 sentences)"
   }
 ]
 
-Be VERY selective - only include posts with strong relevance and clear pitching potential.`
+Include posts that are at least somewhat relevant to ${keyword}. Be inclusive - better to include more posts than exclude them.`
 
         const geminiResult = await model.generateContent(prompt)
         const geminiResponse = await geminiResult.response
         const geminiText = geminiResponse.text()
 
-        console.log(`🤖 Gemini response for "${keyword}":`, geminiText.substring(0, 200))
+        console.log(`🤖 Gemini response for "${keyword}":`, geminiText)
 
         // Parse Gemini response for strategic analysis
         let strategicAnalysis: Array<{index: number, reasoning: string, samplePitch: string}> = []
@@ -216,55 +206,11 @@ Be VERY selective - only include posts with strong relevance and clear pitching 
           console.log(`✅ Parsed ${strategicAnalysis.length} strategic posts from AI for "${keyword}"`)
         } catch (parseError) {
           console.error('❌ Failed to parse Gemini response:', parseError)
-          // Enhanced fallback: analyze posts for strategic pitching opportunities
-          strategicAnalysis = postData
-            .map((post, index) => ({ post, index }))
-            .filter(({ post }) => {
-              const title = post.title.toLowerCase()
-              const content = post.selftext.toLowerCase()
-              const keywordLower = keyword.toLowerCase()
-              
-              // Strategic pitching opportunity indicators
-              const pitchingIndicators = [
-                // Problem expressions
-                'problem', 'issue', 'trouble', 'struggling', 'help', 'not working', 'broken', 'failed', 'failing', 'error',
-                'can\'t', 'cannot', 'unable', 'difficult', 'hard', 'frustrated', 'disappointed', 'annoyed', 'angry',
-                'why', 'how to fix', 'how to solve', 'what\'s wrong',
-                
-                // Recommendation seeking
-                'recommend', 'recommendation', 'suggest', 'suggestion', 'best', 'alternative', 'option',
-                'what should i', 'which one', 'help me choose', 'looking for',
-                
-                // Solution seeking
-                'solution', 'solve', 'fix', 'improve', 'better', 'upgrade', 'replace',
-                'need something', 'want something', 'looking for something'
-              ]
-              
-              // Check if title or content contains the keyword AND a pitching indicator
-              const hasKeyword = title.includes(keywordLower) || content.includes(keywordLower)
-              const hasPitchingIndicator = pitchingIndicators.some(indicator => 
-                title.includes(indicator) || content.includes(indicator)
-              )
-              
-              // Check for question marks (often indicates seeking help/recommendations)
-              const hasQuestion = title.includes('?')
-              
-              // Check for recommendation patterns
-              const hasRecommendationPattern = title.includes('best') || title.includes('recommend') || 
-                                             title.includes('alternative') || title.includes('option')
-              
-              return hasKeyword && (hasPitchingIndicator || hasQuestion || hasRecommendationPattern)
-            })
-            .slice(0, 5) // Limit to top 5 for fallback
-            .map(({ post, index }) => ({
-              index,
-              reasoning: `Post expresses ${keyword} related problems or seeks recommendations`,
-              samplePitch: `I noticed you're having issues with ${keyword}. Our solution ${productName || 'product'} specifically addresses these challenges by [key benefit]. Would you like to learn more about how it could help?`
-            }))
+          console.error('❌ Raw Gemini text:', geminiText)
         }
 
         // Get the strategic posts with analysis
-        let strategicPosts = strategicAnalysis
+        const strategicPosts = strategicAnalysis
           .filter(analysis => analysis.index >= 0 && analysis.index < postData.length)
           .map(analysis => ({
             ...postData[analysis.index],
@@ -272,18 +218,6 @@ Be VERY selective - only include posts with strong relevance and clear pitching 
             samplePitch: analysis.samplePitch
           }))
           .slice(0, 10) // Limit to top 10 strategic posts
-
-        // If AI returned no strategic posts, use fallback analysis
-        if (strategicPosts.length === 0 && postData.length > 0) {
-          console.log(`⚠️ AI found 0 strategic posts for "${keyword}". Using fallback analysis on top 5 posts...`)
-          strategicPosts = postData
-            .slice(0, 5) // Take top 5 posts as fallback
-            .map((post, index) => ({
-              ...post,
-              reasoning: `This post mentions ${keyword} and could be a good opportunity to offer ${productName || 'our solution'} that solves similar problems.`,
-              samplePitch: `Hi! I saw your post about ${keyword}. ${productName || 'Our solution'} might be helpful here - it's designed to [benefit]. Would you be interested in learning more?`
-            }))
-        }
 
         results.push({
           keyword,
