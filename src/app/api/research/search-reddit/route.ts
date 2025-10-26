@@ -1,14 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { createClient } from '@/lib/supabase-server'
 
 // Force Node.js runtime to avoid Edge runtime fetch limitations
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-// Reddit OAuth helper function
-async function getRedditAccessToken(): Promise<string | null> {
+// Reddit OAuth helper function - gets user token first, falls back to server token
+async function getRedditAccessToken(userId?: string): Promise<string | null> {
   try {
+    // Try to get user's Reddit token first (better rate limits and more reliable)
+    if (userId) {
+      const supabase = await createClient()
+      const { data: apiKeys } = await supabase
+        .from('api_keys')
+        .select('reddit_access_token, reddit_token_expires_at')
+        .eq('user_id', userId)
+        .single()
+
+      if (apiKeys?.reddit_access_token) {
+        // Check if token is expired
+        const isExpired = apiKeys.reddit_token_expires_at && 
+          new Date(apiKeys.reddit_token_expires_at) <= new Date()
+
+        if (!isExpired) {
+          console.log('Using user Reddit token')
+          return apiKeys.reddit_access_token
+        }
+      }
+    }
+
+    // Fall back to server token
+    console.log('Falling back to server Reddit token')
     const clientId = process.env.REDDIT_OAUTH_CLIENT_ID
     const clientSecret = process.env.REDDIT_OAUTH_CLIENT_SECRET
 
@@ -47,6 +71,10 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now()
   
   try {
+    // Get the current user
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
     console.log('🔍 Starting strategic Reddit problem post search...')
     
     const { keywords, productDescription, productName } = await request.json()
@@ -115,8 +143,8 @@ export async function POST(request: NextRequest) {
         let allPosts: any[] = []
         let searchErrorHandled = false
         
-        // Get Reddit access token once for all requests
-        const accessToken = await getRedditAccessToken()
+        // Get Reddit access token once for all requests (try user's token first)
+        const accessToken = await getRedditAccessToken(user?.id)
         
         for (const searchTerm of searchTerms.slice(0, 3)) { // Use 3 searches to stay within time limits
           try {

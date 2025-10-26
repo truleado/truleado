@@ -30,7 +30,8 @@ import {
   Download,
   Shield,
   Zap,
-  Target
+  Target,
+  Link2
 } from 'lucide-react'
 
 function SettingsContent() {
@@ -54,6 +55,10 @@ function SettingsContent() {
   const [isUpgrading, setIsUpgrading] = useState(false)
   const [isPollingUpgrade, setIsPollingUpgrade] = useState(false)
   const [paymentSuccess, setPaymentSuccess] = useState<string | null>(null)
+  const [redditConnected, setRedditConnected] = useState(false)
+  const [redditUsername, setRedditUsername] = useState<string | null>(null)
+  const [isConnecting, setIsConnecting] = useState(false)
+  const [isDisconnecting, setIsDisconnecting] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
     currentPassword: '',
@@ -71,6 +76,69 @@ function SettingsContent() {
     email: true,
     newLeads: true,
     weeklyReport: true,
+  }
+
+  // Check Reddit connection status
+  useEffect(() => {
+    const checkRedditStatus = async () => {
+      try {
+        const response = await fetch('/api/auth/reddit/status')
+        if (response.ok) {
+          const data = await response.json()
+          setRedditConnected(data.connected)
+          setRedditUsername(data.username)
+        }
+      } catch (error) {
+        console.error('Error checking Reddit status:', error)
+      }
+    }
+    
+    if (user) {
+      checkRedditStatus()
+    }
+  }, [user])
+
+  const handleConnectReddit = async () => {
+    setIsConnecting(true)
+    try {
+      const response = await fetch('/api/auth/reddit/connect')
+      if (response.ok) {
+        const data = await response.json()
+        window.location.href = data.authUrl
+      } else {
+        alert('Failed to initiate Reddit connection')
+      }
+    } catch (error) {
+      console.error('Error connecting Reddit:', error)
+      alert('Failed to connect Reddit')
+    } finally {
+      setIsConnecting(false)
+    }
+  }
+
+  const handleDisconnectReddit = async () => {
+    if (!confirm('Are you sure you want to disconnect your Reddit account?')) {
+      return
+    }
+    
+    setIsDisconnecting(true)
+    try {
+      const response = await fetch('/api/auth/reddit/disconnect', {
+        method: 'POST'
+      })
+      
+      if (response.ok) {
+        setRedditConnected(false)
+        setRedditUsername(null)
+      } else {
+        alert('Failed to disconnect Reddit')
+      }
+    } catch (error) {
+      console.error('Error disconnecting Reddit:', error)
+      alert('Failed to disconnect Reddit')
+    } finally {
+      setIsDisconnecting(false)
+    }
   }
 
   useEffect(() => {
@@ -453,6 +521,7 @@ function SettingsContent() {
   const tabs = [
     { id: 'profile', name: 'Profile', icon: User },
     { id: 'account', name: 'Account', icon: Link },
+    { id: 'reddit', name: 'Reddit Account', icon: Link2 },
     { id: 'notifications', name: 'Notifications', icon: Bell },
     { id: 'billing', name: 'Billing', icon: CreditCard },
   ]
@@ -684,6 +753,95 @@ function SettingsContent() {
                 </div>
               )}
 
+              {/* Reddit Account Tab */}
+              {activeTab === 'reddit' && (
+                <div className="space-y-8">
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Reddit Account</h3>
+                    <p className="text-gray-600">Connect your Reddit account for enhanced search capabilities and higher rate limits.</p>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-2xl p-8">
+                    {redditConnected ? (
+                      <div className="space-y-6">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center">
+                            <svg className="w-10 h-10" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <h4 className="text-xl font-semibold text-gray-900">Reddit Connected</h4>
+                            <p className="text-gray-600">Connected as u/{redditUsername}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                          <div className="flex items-start space-x-3">
+                            <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                            <div>
+                              <h5 className="text-sm font-semibold text-green-900">Benefits Active</h5>
+                              <p className="text-sm text-green-700 mt-1">
+                                You're getting enhanced search results with higher rate limits from your Reddit account.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={handleDisconnectReddit}
+                          disabled={isDisconnecting}
+                          className="inline-flex items-center px-6 py-3 bg-red-100 text-red-700 font-semibold rounded-xl hover:bg-red-200 transition-colors disabled:opacity-50"
+                        >
+                          <XCircle className="w-5 h-5 mr-2" />
+                          {isDisconnecting ? 'Disconnecting...' : 'Disconnect Reddit Account'}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center">
+                            <svg className="w-10 h-10 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <h4 className="text-xl font-semibold text-gray-900">Not Connected</h4>
+                            <p className="text-gray-600">Connect your Reddit account to enhance your experience</p>
+                          </div>
+                        </div>
+
+                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                          <h5 className="text-sm font-semibold text-blue-900 mb-2">Benefits of Connecting:</h5>
+                          <ul className="text-sm text-blue-700 space-y-1">
+                            <li className="flex items-center space-x-2">
+                              <Zap className="w-4 h-4" />
+                              <span>Higher rate limits for searching Reddit</span>
+                            </li>
+                            <li className="flex items-center space-x-2">
+                              <Shield className="w-4 h-4" />
+                              <span>More reliable search results</span>
+                            </li>
+                            <li className="flex items-center space-x-2">
+                              <Star className="w-4 h-4" />
+                              <span>Enhanced lead discovery capabilities</span>
+                            </li>
+                          </ul>
+                        </div>
+
+                        <button
+                          onClick={handleConnectReddit}
+                          disabled={isConnecting}
+                          className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-red-600 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
+                        >
+                          <Link2 className="w-5 h-5 mr-2" />
+                          {isConnecting ? 'Connecting...' : 'Connect Reddit Account'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Notifications Tab */}
               {activeTab === 'notifications' && (
