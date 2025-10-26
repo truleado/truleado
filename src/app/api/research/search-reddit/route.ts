@@ -269,11 +269,21 @@ Be VERY selective - only include posts with strong relevance and clear pitching 
       }
     }
 
-    const totalStrategicPosts = results.reduce((sum, r) => sum + r.strategicPosts, 0)
+    const totalStrategicPosts = results.reduce((sum, r) => sum + (r.strategicPosts || 0), 0)
     const totalKeywords = results.length
     const elapsedTime = Date.now() - startTime
 
     console.log(`✅ Reddit search completed in ${elapsedTime}ms - Found ${totalStrategicPosts} strategic posts across ${totalKeywords} keywords`)
+
+    // Handle case where no strategic posts were found
+    if (totalStrategicPosts === 0) {
+      console.log(`⚠️ No strategic posts found. Results:`, results.map(r => ({ 
+        keyword: r.keyword, 
+        totalPosts: r.totalPosts, 
+        strategicPosts: r.strategicPosts,
+        hasError: !!r.error
+      })))
+    }
 
     return NextResponse.json({
       success: true,

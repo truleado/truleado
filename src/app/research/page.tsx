@@ -231,6 +231,12 @@ export default function ResearchPage() {
     setRedditResults(null)
 
     try {
+      console.log('🔍 Starting Reddit search with:', { 
+        keywordsCount: keywords?.length, 
+        hasDescription: !!description,
+        productName: analysisResult.productName 
+      })
+      
       const response = await fetch('/api/research/search-reddit', {
         method: 'POST',
         headers: {
@@ -243,17 +249,27 @@ export default function ResearchPage() {
         })
       })
 
+      console.log('📡 Reddit search response status:', response.status)
+
       if (response.ok) {
         const data = await response.json()
+        console.log('✅ Reddit search results:', {
+          totalKeywords: data.totalKeywords,
+          totalStrategicPosts: data.totalStrategicPosts,
+          resultsCount: data.results?.length,
+          success: data.success
+        })
         setRedditResults(data)
       } else {
         const errorData = await response.json()
+        console.error('❌ Reddit search failed:', errorData)
         setRedditResults({
           error: errorData.error || 'Reddit search failed',
           details: errorData.details
         })
       }
     } catch (error: any) {
+      console.error('❌ Network error during Reddit search:', error)
       setRedditResults({
         error: 'Network error',
         details: error.message
@@ -541,7 +557,7 @@ export default function ResearchPage() {
                       <h3 className="text-lg font-semibold text-gray-900">Reddit Results</h3>
                     </div>
                     <p className="text-sm text-gray-600 mt-1">
-                      {redditResults.totalStrategicPosts} strategic pitching opportunities found across {redditResults.totalKeywords} keywords
+                      {redditResults.totalStrategicPosts || 0} strategic pitching opportunities found across {redditResults.totalKeywords || 0} keywords
                     </p>
                   </div>
                   
@@ -557,17 +573,30 @@ export default function ResearchPage() {
                           <p className="text-red-600 text-sm">{redditResults.details}</p>
                         )}
                       </div>
+                    ) : redditResults.totalStrategicPosts === 0 ? (
+                      <div className="text-center py-8">
+                        <div className="text-gray-400 mb-4">
+                          <MessageSquare className="h-12 w-12 mx-auto" />
+                        </div>
+                        <h4 className="text-lg font-medium text-gray-900 mb-2">No Strategic Opportunities Found</h4>
+                        <p className="text-gray-600 mb-4">
+                          We analyzed {redditResults.results?.reduce((sum: number, result: any) => sum + (result.totalPosts || 0), 0) || 0} Reddit posts across {redditResults.totalKeywords || 0} keywords but didn't find any high-quality pitching opportunities.
+                        </p>
+                        <p className="text-gray-500 text-sm">
+                          Try editing your keywords or product description to find more relevant opportunities.
+                        </p>
+                      </div>
                     ) : (
                       <div className="space-y-6">
                         {/* Summary Stats */}
                         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
                           <div className="grid grid-cols-3 gap-4 text-center">
                             <div>
-                              <div className="text-2xl font-bold text-blue-600">{redditResults.totalKeywords}</div>
+                              <div className="text-2xl font-bold text-blue-600">{redditResults.totalKeywords || 0}</div>
                               <div className="text-gray-600 text-sm">Keywords</div>
                             </div>
                             <div>
-                              <div className="text-2xl font-bold text-orange-600">{redditResults.totalStrategicPosts}</div>
+                              <div className="text-2xl font-bold text-orange-600">{redditResults.totalStrategicPosts || 0}</div>
                               <div className="text-gray-600 text-sm">Strategic Opportunities</div>
                             </div>
                             <div>
