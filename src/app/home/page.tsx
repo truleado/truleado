@@ -694,24 +694,24 @@ export default function Home() {
 
             {/* Product Links */}
             <div>
-              <h3 className="text-white font-semibold mb-6">{t('footer.product')}</h3>
+              <h3 className="text-white font-semibold mb-6">Product</h3>
               <ul className="space-y-3">
-                <li><a href="/auth/signup" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.getStarted')}</a></li>
-                <li><a href="/auth/signin" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.signin')}</a></li>
-                <li><a href="/pricing" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.pricing')}</a></li>
-                <li><a href="/dashboard" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.dashboard')}</a></li>
+                <li><a href="/auth/signup" className="text-gray-400 hover:text-white transition-colors text-sm">Get Started</a></li>
+                <li><a href="/auth/signin" className="text-gray-400 hover:text-white transition-colors text-sm">Sign In</a></li>
+                <li><a href="/pricing" className="text-gray-400 hover:text-white transition-colors text-sm">Pricing</a></li>
+                <li><a href="/dashboard" className="text-gray-400 hover:text-white transition-colors text-sm">Dashboard</a></li>
               </ul>
             </div>
 
             {/* Legal Links */}
             <div>
-              <h3 className="text-white font-semibold mb-6">{t('footer.legal')}</h3>
+              <h3 className="text-white font-semibold mb-6">Legal</h3>
               <ul className="space-y-3">
-                <li><a href="/terms" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.terms')}</a></li>
-                <li><a href="/privacy" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.privacy')}</a></li>
-                <li><a href="/refund" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.refund')}</a></li>
-                <li><a href="/cookie-policy" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.cookie')}</a></li>
-                <li><a href="/gdpr" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.gdpr')}</a></li>
+                <li><a href="/terms" className="text-gray-400 hover:text-white transition-colors text-sm">Terms of Service</a></li>
+                <li><a href="/privacy" className="text-gray-400 hover:text-white transition-colors text-sm">Privacy Policy</a></li>
+                <li><a href="/refund" className="text-gray-400 hover:text-white transition-colors text-sm">Refund Policy</a></li>
+                <li><a href="/cookie-policy" className="text-gray-400 hover:text-white transition-colors text-sm">Cookie Policy</a></li>
+                <li><a href="/gdpr" className="text-gray-400 hover:text-white transition-colors text-sm">GDPR</a></li>
               </ul>
             </div>
           </div>
@@ -721,14 +721,14 @@ export default function Home() {
             <div className="flex flex-col md:flex-row justify-between items-center">
               <div className="text-center md:text-left">
                 <p className="text-gray-400 text-sm mb-2">
-                  {t('footer.madeWith')} <span className="text-yellow-400">☕</span> {t('footer.madeWith').includes('on') ? '' : 'on'} <span className="text-blue-400">🌍</span>
+                  Made with <span className="text-yellow-400">☕</span> on <span className="text-blue-400">🌍</span>
                 </p>
                 <p className="text-gray-400 text-sm">
-                  {t('footer.copyright')}
+                  © 2025 Truleado Inc.
                 </p>
               </div>
               <div className="mt-4 md:mt-0 flex space-x-6">
-                <a href="/support" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.support')}</a>
+                <a href="/support" className="text-gray-400 hover:text-white transition-colors text-sm">Support</a>
               </div>
             </div>
           </div>
