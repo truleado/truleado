@@ -7,25 +7,54 @@ const defaultLocale = 'en'
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   
+  // Skip API routes, Next.js internals, and static files
+  if (
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/favicon.ico') ||
+    /\.(ico|png|jpg|jpeg|gif|svg|webp|woff|woff2|ttf|eot)$/.test(pathname)
+  ) {
+    let supabaseResponse = NextResponse.next({ request })
+    
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+            supabaseResponse = NextResponse.next({ request })
+            cookiesToSet.forEach(({ name, value, options }) =>
+              supabaseResponse.cookies.set(name, value, options)
+            )
+          },
+        },
+      }
+    )
+    
+    await supabase.auth.getUser()
+    
+    return supabaseResponse
+  }
+  
   // Check if pathname starts with a locale
   const pathnameIsMissingLocale = locales.every(
     (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`
   )
   
-  // If no locale in path and not an API route or static file, redirect to default locale
-  if (
-    pathnameIsMissingLocale &&
-    !pathname.startsWith('/api/') &&
-    !pathname.startsWith('/_next/')
-  ) {
-    const locale = defaultLocale
-    const newUrl = new URL(`/${locale}${pathname}`, request.url)
-    return NextResponse.redirect(newUrl)
-  }
-  
   let supabaseResponse = NextResponse.next({
     request,
   })
+  
+  // If no locale in path, redirect to default locale
+  if (pathnameIsMissingLocale) {
+    const locale = defaultLocale
+    const newUrl = new URL(`/${locale}${pathname === '/' ? '' : pathname}`, request.url)
+    return NextResponse.redirect(newUrl)
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
