@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import "../../globals.css";
+import "../globals.css";
 import { AuthProvider } from "@/contexts/auth-context";
 import { SubscriptionProvider } from "@/lib/subscription-context";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
