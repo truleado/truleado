@@ -111,26 +111,32 @@ export default function BlogPage() {
 
           {/* Blog Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {blogPosts.slice(1).map((post, index) => (
+            {[
+              { post: blogPosts[1], href: "/resources/blog/ultimate-reddit-marketing-strategy" },
+              { post: blogPosts[2], href: "/resources/blog/ai-powered-vs-manual-research" },
+              { post: blogPosts[3], href: "/resources/blog/reddit-communities-for-saas-founders" },
+              { post: blogPosts[4], href: "/resources/blog/cold-email-to-warm-conversations" },
+              { post: blogPosts[5], href: "/resources/blog/reddit-seo-optimization" }
+            ].map((item, index) => (
               <Link 
                 key={index}
-                href={index === 0 ? "/resources/blog/first-100-reddit-leads" : "#"}
+                href={item.href}
                 className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-6"
               >
-                <div className="text-6xl mb-4">{post.image}</div>
+                <div className="text-6xl mb-4">{item.post.image}</div>
                 <div className="flex items-center mb-3 text-sm text-gray-500">
                   <Calendar className="w-4 h-4 mr-2" />
-                  {post.date}
+                  {item.post.date}
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">{post.title}</h3>
-                <p className="text-gray-600 mb-4">{post.excerpt}</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{item.post.title}</h3>
+                <p className="text-gray-600 mb-4">{item.post.excerpt}</p>
                 <div className="flex items-center justify-between">
                   <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
-                    {post.category}
+                    {item.post.category}
                   </span>
                   <div className="flex items-center text-sm text-gray-500">
                     <Clock className="w-4 h-4 mr-1" />
-                    {post.readTime}
+                    {item.post.readTime}
                   </div>
                 </div>
               </Link>
