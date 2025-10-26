@@ -59,6 +59,7 @@ function SettingsContent() {
   const [redditUsername, setRedditUsername] = useState<string | null>(null)
   const [isConnecting, setIsConnecting] = useState(false)
   const [isDisconnecting, setIsDisconnecting] = useState(false)
+  const [redditConnectSuccess, setRedditConnectSuccess] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
     currentPassword: '',
@@ -87,6 +88,22 @@ function SettingsContent() {
           const data = await response.json()
           setRedditConnected(data.connected)
           setRedditUsername(data.username)
+          
+          // If we just connected, show success message
+          const success = searchParams.get('success')
+          if (success === 'connected' && data.connected) {
+            setRedditConnectSuccess(true)
+            setActiveTab('reddit')
+            
+            // Clean up URL
+            const url = new URL(window.location.href)
+            url.searchParams.delete('success')
+            url.searchParams.delete('tab')
+            window.history.replaceState({}, '', url.toString())
+            
+            // Hide success message after 5 seconds
+            setTimeout(() => setRedditConnectSuccess(false), 5000)
+          }
         }
       } catch (error) {
         console.error('Error checking Reddit status:', error)
@@ -96,7 +113,7 @@ function SettingsContent() {
     if (user) {
       checkRedditStatus()
     }
-  }, [user])
+  }, [user, searchParams])
 
   const handleConnectReddit = async () => {
     setIsConnecting(true)
@@ -582,16 +599,16 @@ function SettingsContent() {
           </div>
 
           {/* Success Message */}
-          {showSuccessMessage && (
+          {(showSuccessMessage || redditConnectSuccess) && (
             <div className="mb-6 bg-green-50 border border-green-200 rounded-2xl p-6">
               <div className="flex">
                 <div className="flex-shrink-0">
                   <CheckCircle className="h-6 w-6 text-green-500" />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-lg font-semibold text-green-800">Reddit Connected Successfully!</h3>
+                  <h3 className="text-lg font-semibold text-green-800">Reddit Connected Successfully! 🎉</h3>
                   <div className="mt-2 text-green-700">
-                    <p>Your Reddit account has been connected. You can now start finding leads on Reddit.</p>
+                    <p>Your Reddit account has been connected as u/{redditUsername}. You now have enhanced search capabilities with higher rate limits!</p>
                   </div>
                 </div>
               </div>
