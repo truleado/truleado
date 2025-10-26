@@ -5,15 +5,12 @@ import { ArrowRight, Filter, Target, Zap, Users, TrendingUp, CheckCircle, Sparkl
 import { useAuth } from "@/contexts/auth-context";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useI18n } from "@/contexts/i18n-context";
-import { LanguageSelector } from "@/components/LanguageSelector";
 import { ResourcesDropdown } from "@/components/ResourcesDropdown";
 
 export default function Home() {
   // Production-ready version with error handling
   const { user, loading } = useAuth();
   const router = useRouter();
-  const { t } = useI18n();
 
   useEffect(() => {
     try {
@@ -66,35 +63,33 @@ export default function Home() {
               </div>
             </div>
             <div className="hidden sm:flex items-center space-x-4 lg:space-x-6">
-              <LanguageSelector />
               <ResourcesDropdown />
               <Link 
                 href="/pricing" 
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
               >
-                {t('nav.pricing')}
+                Pricing
               </Link>
               <Link 
                 href="/auth/signin" 
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
               >
-                {t('nav.signin')}
+                Sign In
               </Link>
               <Link 
                 href="/auth/signup" 
                 className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 lg:px-6 py-2 lg:py-2.5 rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
               >
-                {t('nav.getStarted')}
+                Get Started
               </Link>
             </div>
             {/* Mobile menu button */}
             <div className="sm:hidden flex items-center space-x-2">
-              <LanguageSelector />
               <Link 
                 href="/auth/signup" 
                 className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg"
               >
-                {t('nav.getStarted')}
+                Get Started
               </Link>
             </div>
           </div>
@@ -108,14 +103,14 @@ export default function Home() {
           <div className="text-center">
             <div className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-blue-100 text-blue-800 text-xs sm:text-sm font-medium mb-4 sm:mb-6">
               <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-              {t('hero.badge')}
+              AI-Powered Lead Generation
             </div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 mb-3 sm:mb-4 md:mb-6 leading-tight px-2 sm:px-4">
-              {t('hero.title1')}
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent block sm:inline"> {t('hero.title2')}</span>
+              Research Websites & Find
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent block sm:inline"> Reddit Leads</span>
             </h1>
             <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-gray-600 mb-4 sm:mb-6 max-w-4xl mx-auto leading-relaxed px-2 sm:px-4">
-              {t('hero.subtitle')}
+              Analyze any website, extract keywords, and discover strategic Reddit opportunities with AI-powered insights and pitch ideas. Start your 7-day free trial today.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8 md:mb-12 px-2 sm:px-4">
@@ -123,30 +118,30 @@ export default function Home() {
                 href="/auth/signup" 
                 className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 rounded-lg sm:rounded-xl md:rounded-2xl text-sm sm:text-base md:text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 flex items-center justify-center transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
               >
-                {t('hero.cta1')}
+                Start Free Trial
                 <ArrowRight className="ml-1.5 sm:ml-2 w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
               </Link>
               <Link 
                 href="/pricing" 
                 className="border-2 border-gray-200 text-gray-700 px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 rounded-lg sm:rounded-xl md:rounded-2xl text-sm sm:text-base md:text-lg font-semibold hover:bg-gray-50 hover:border-gray-300 flex items-center justify-center transition-all duration-200"
               >
-                {t('hero.cta2')}
+                View Pricing
               </Link>
             </div>
             
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-3xl mx-auto px-2 sm:px-4">
               <div className="text-center">
-                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">{t('hero.stat1')}</div>
-                <div className="text-xs sm:text-sm md:text-base text-gray-600">{t('hero.stat1Desc')}</div>
+                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">7 Days</div>
+                <div className="text-xs sm:text-sm md:text-base text-gray-600">Free Trial</div>
               </div>
               <div className="text-center">
-                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">{t('hero.stat2')}</div>
-                <div className="text-xs sm:text-sm md:text-base text-gray-600">{t('hero.stat2Desc')}</div>
+                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">AI-Powered</div>
+                <div className="text-xs sm:text-sm md:text-base text-gray-600">Analysis</div>
               </div>
               <div className="text-center">
-                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">{t('hero.stat3')}</div>
-                <div className="text-xs sm:text-sm md:text-base text-gray-600">{t('hero.stat3Desc')}</div>
+                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">Strategic</div>
+                <div className="text-xs sm:text-sm md:text-base text-gray-600">Pitch Ideas</div>
               </div>
             </div>
           </div>
@@ -158,10 +153,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8 sm:mb-12 md:mb-16">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
-              {t('features.title')}
+              How Truleado Works
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-2">
-              {t('features.subtitle')}
+              Research any website, discover strategic Reddit opportunities, and get AI-generated pitch ideas to connect with potential customers.
             </p>
           </div>
           
@@ -171,9 +166,9 @@ export default function Home() {
               <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-200">
                 <Search className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
               </div>
-              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">{t('features.1.title')}</h3>
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">Research Websites</h3>
               <p className="text-sm sm:text-base text-gray-600 leading-relaxed px-2">
-                {t('features.1.desc')}
+                Analyze any website URL to extract product information, keywords, and understand what problems it solves.
               </p>
             </div>
             
@@ -181,9 +176,9 @@ export default function Home() {
               <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-200">
                 <Users className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
               </div>
-              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">{t('features.2.title')}</h3>
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">Find Reddit Leads</h3>
               <p className="text-sm sm:text-base text-gray-600 leading-relaxed px-2">
-                {t('features.2.desc')}
+                Discover strategic Reddit opportunities where people are discussing problems your product can solve.
               </p>
             </div>
             
@@ -191,9 +186,9 @@ export default function Home() {
               <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-200">
                 <Brain className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
               </div>
-              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">{t('features.3.title')}</h3>
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">AI Pitch Ideas</h3>
               <p className="text-sm sm:text-base text-gray-600 leading-relaxed px-2">
-                {t('features.3.desc')}
+                Get AI-generated reasoning and sample pitch ideas for each Reddit opportunity to maximize your success.
               </p>
             </div>
             
@@ -201,9 +196,9 @@ export default function Home() {
               <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-200">
                 <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
               </div>
-              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">{t('features.4.title')}</h3>
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">Track Performance</h3>
               <p className="text-sm sm:text-base text-gray-600 leading-relaxed px-2">
-                {t('features.4.desc')}
+                Save leads, track your Reddit outreach performance, and optimize your strategy with detailed analytics.
               </p>
             </div>
           </div>
@@ -216,10 +211,10 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 md:gap-16 items-center">
             <div>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
-                {t('benefits.title')}
+                Why Choose Truleado?
               </h2>
               <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">
-                {t('benefits.subtitle')}
+                Research any website, discover strategic Reddit opportunities, and get AI-powered insights to connect with potential customers.
               </p>
               <div className="space-y-4 sm:space-y-6">
                 <div className="flex items-start group">
@@ -227,8 +222,8 @@ export default function Home() {
                     <Search className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                   </div>
                   <div className="ml-3 sm:ml-4">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">{t('benefits.1.title')}</h3>
-                    <p className="text-sm sm:text-base text-gray-600">{t('benefits.1.desc')}</p>
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">Website Research</h3>
+                    <p className="text-sm sm:text-base text-gray-600">Analyze any website to extract product information and discover relevant keywords.</p>
                   </div>
                 </div>
                 
@@ -237,8 +232,8 @@ export default function Home() {
                     <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                   </div>
                   <div className="ml-3 sm:ml-4">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">{t('benefits.2.title')}</h3>
-                    <p className="text-sm sm:text-base text-gray-600">{t('benefits.2.desc')}</p>
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">AI-Powered Insights</h3>
+                    <p className="text-sm sm:text-base text-gray-600">Get strategic reasoning and sample pitch ideas for each Reddit opportunity.</p>
                   </div>
                 </div>
                 
@@ -247,8 +242,8 @@ export default function Home() {
                     <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
                   </div>
                   <div className="ml-3 sm:ml-4">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">{t('benefits.3.title')}</h3>
-                    <p className="text-sm sm:text-base text-gray-600">{t('benefits.3.desc')}</p>
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">Strategic Lead Discovery</h3>
+                    <p className="text-sm sm:text-base text-gray-600">Find high-quality Reddit opportunities where people are actively seeking solutions.</p>
                   </div>
                 </div>
                 
@@ -257,8 +252,8 @@ export default function Home() {
                     <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
                   </div>
                   <div className="ml-3 sm:ml-4">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">{t('benefits.4.title')}</h3>
-                    <p className="text-sm sm:text-base text-gray-600">{t('benefits.4.desc')}</p>
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">Performance Tracking</h3>
+                    <p className="text-sm sm:text-base text-gray-600">Save leads, track outreach performance, and optimize your Reddit strategy.</p>
                   </div>
                 </div>
               </div>
@@ -306,10 +301,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              {t('pricing.title')}
+              Simple, Transparent Pricing
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              {t('pricing.subtitle')}
+              Start with a free trial and see how Truleado can help you find your next customers.
             </p>
           </div>
           
@@ -317,8 +312,8 @@ export default function Home() {
             {/* Free Trial Card */}
             <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-gray-200 p-6 sm:p-8 hover:shadow-2xl transition-shadow duration-300">
               <div className="text-center">
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{t('pricing.trial.title')}</h3>
-                <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8">{t('pricing.trial.desc')}</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Free Trial</h3>
+                <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8">Try everything for 7 days</p>
                 
                 <div className="mb-6 sm:mb-8">
                   <div className="flex items-baseline justify-center">
@@ -332,37 +327,37 @@ export default function Home() {
                   href="/auth/signup" 
                   className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold hover:from-green-600 hover:to-green-700 flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
-                  {t('pricing.trial.cta')}
+                  Start Free Trial
                   <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
                 </Link>
               </div>
 
               <div className="mt-6 sm:mt-8 border-t border-gray-200 pt-6 sm:pt-8">
-                <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">{t('pricing.trial.included')}</h4>
+                <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">What's included:</h4>
                 <ul className="space-y-3 sm:space-y-4">
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t('pricing.trial.1')}</span>
+                    <span className="text-sm sm:text-base text-gray-700">Website research and analysis</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t('pricing.trial.2')}</span>
+                    <span className="text-sm sm:text-base text-gray-700">AI-powered keyword extraction</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t('pricing.trial.3')}</span>
+                    <span className="text-sm sm:text-base text-gray-700">Strategic Reddit lead discovery</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t('pricing.trial.4')}</span>
+                    <span className="text-sm sm:text-base text-gray-700">AI-generated pitch ideas</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t('pricing.trial.5')}</span>
+                    <span className="text-sm sm:text-base text-gray-700">Lead saving and organization</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t('pricing.trial.6')}</span>
+                    <span className="text-sm sm:text-base text-gray-700">Performance tracking</span>
                   </li>
                 </ul>
               </div>
@@ -377,8 +372,8 @@ export default function Home() {
               </div>
               
               <div className="text-center">
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{t('pricing.pro.title')}</h3>
-                <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8">{t('pricing.pro.desc')}</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Pro Plan</h3>
+                <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8">Everything you need to find quality leads</p>
                 
                 <div className="mb-6 sm:mb-8">
                   <div className="flex items-baseline justify-center">
@@ -392,37 +387,37 @@ export default function Home() {
                   href="/auth/signup" 
                   className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 flex items-center justify-center transition-all duration-200 shadow-xl hover:shadow-2xl"
                 >
-                  {t('pricing.pro.cta')}
+                  Start Free Trial
                   <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
                 </Link>
               </div>
 
               <div className="mt-6 sm:mt-8 border-t border-gray-200 pt-6 sm:pt-8">
-                <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">{t('pricing.pro.included')}</h4>
+                <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">What's included:</h4>
                 <ul className="space-y-3 sm:space-y-4">
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t('pricing.pro.1')}</span>
+                    <span className="text-sm sm:text-base text-gray-700">Unlimited website research</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t('pricing.pro.2')}</span>
+                    <span className="text-sm sm:text-base text-gray-700">Advanced AI analysis</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t('pricing.pro.3')}</span>
+                    <span className="text-sm sm:text-base text-gray-700">Unlimited Reddit lead discovery</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t('pricing.pro.4')}</span>
+                    <span className="text-sm sm:text-base text-gray-700">AI-generated pitch ideas</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t('pricing.pro.5')}</span>
+                    <span className="text-sm sm:text-base text-gray-700">Advanced lead management</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t('pricing.pro.6')}</span>
+                    <span className="text-sm sm:text-base text-gray-700">Detailed performance analytics</span>
                   </li>
                 </ul>
               </div>
@@ -434,7 +429,7 @@ export default function Home() {
               href="/pricing" 
               className="text-blue-600 hover:text-blue-700 font-semibold text-lg"
             >
-              {t('pricing.viewDetails')}
+              View detailed pricing →
             </Link>
           </div>
         </div>
@@ -634,24 +629,24 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
-              {t('cta.title')}
+              Ready to Research Websites & Find Reddit Leads?
             </h2>
             <p className="text-xl text-blue-100 max-w-3xl mx-auto mb-8">
-              {t('cta.subtitle')}
+              Join SaaS founders who are discovering strategic Reddit opportunities with AI-powered insights and pitch ideas.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 
                 href="/auth/signup" 
                 className="bg-white text-blue-600 px-8 py-4 rounded-2xl text-lg font-semibold hover:bg-gray-100 inline-flex items-center justify-center transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
               >
-                {t('cta.1')}
+                Start Your Free Trial
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
               <Link 
                 href="/pricing" 
                 className="border-2 border-white text-white px-8 py-4 rounded-2xl text-lg font-semibold hover:bg-white hover:text-blue-600 inline-flex items-center justify-center transition-all duration-200"
               >
-                {t('cta.2')}
+                View Pricing
               </Link>
             </div>
           </div>
@@ -675,7 +670,7 @@ export default function Home() {
                 <span className="ml-3 text-xl font-bold text-white">Truleado</span>
               </div>
               <p className="text-gray-400 text-sm mb-6 max-w-md leading-relaxed">
-                {t('footer.tagline')}
+                Research any website, discover strategic Reddit opportunities, and get AI-powered insights to connect with potential customers.
               </p>
               <div className="flex space-x-4">
                 <a href="https://x.com/truleado" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
