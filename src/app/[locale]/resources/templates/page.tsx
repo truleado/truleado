@@ -56,8 +56,6 @@ const templates = [
 ]
 
 export default function TemplatesPage() {
-  const { t } = useI18n()
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <PublicHeader />

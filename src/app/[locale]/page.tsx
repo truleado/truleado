@@ -5,7 +5,6 @@ import { ArrowRight, Filter, Target, Zap, Users, TrendingUp, CheckCircle, Sparkl
 import { useAuth } from "@/contexts/auth-context";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useI18n } from "@/contexts/i18n-context";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { ResourcesDropdown } from "@/components/ResourcesDropdown";
 
@@ -13,7 +12,6 @@ export default function Home() {
   // Production-ready version with error handling
   const { user, loading } = useAuth();
   const router = useRouter();
-  const { t } = useI18n();
 
   useEffect(() => {
     try {

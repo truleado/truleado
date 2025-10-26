@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { ArrowRight, Calendar, Clock } from 'lucide-react'
-import { useI18n } from '@/contexts/i18n-context'
 import { PublicHeader } from '@/components/PublicHeader'
 
 const blogPosts = [
@@ -57,8 +56,6 @@ const blogPosts = [
 ]
 
 export default function BlogPage() {
-  const { t } = useI18n()
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <PublicHeader />
