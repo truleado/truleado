@@ -15,6 +15,7 @@ export default function ResearchPage() {
   const [isSearchingReddit, setIsSearchingReddit] = useState(false)
   const [dataLoaded, setDataLoaded] = useState(false)
   const [savingPosts, setSavingPosts] = useState<Set<string>>(new Set())
+  const [showDataRestoredBanner, setShowDataRestoredBanner] = useState(false)
 
   // Load saved data from localStorage on component mount
   useEffect(() => {
@@ -24,13 +25,28 @@ export default function ResearchPage() {
       
       if (savedData) {
         const data = JSON.parse(savedData)
+        
+        // Check if data is stale (older than 24 hours)
+        const MAX_AGE = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
+        const isStale = data.timestamp && (Date.now() - data.timestamp > MAX_AGE)
+        
         console.log('📁 Parsed saved data:', {
           hasWebsiteUrl: !!data.websiteUrl,
           hasAnalysisResult: !!data.analysisResult,
           hasEditableKeywords: data.editableKeywords?.length > 0,
           hasEditableDescription: !!data.editableDescription,
-          hasRedditResults: !!data.redditResults
+          hasRedditResults: !!data.redditResults,
+          isStale,
+          age: data.timestamp ? `${Math.floor((Date.now() - data.timestamp) / 1000 / 60)} minutes` : 'unknown'
         })
+        
+        // Don't restore if data is stale
+        if (isStale) {
+          console.log('📁 Data is stale, clearing localStorage')
+          localStorage.removeItem('research-page-data')
+          setDataLoaded(true)
+          return
+        }
         
         // Only set state if we have meaningful data
         if (data.websiteUrl || data.analysisResult || data.redditResults) {
@@ -39,6 +55,7 @@ export default function ResearchPage() {
           setEditableKeywords(data.editableKeywords || [])
           setEditableDescription(data.editableDescription || '')
           setRedditResults(data.redditResults || null)
+          setShowDataRestoredBanner(true)
           console.log('📁 Loaded saved Research page data from localStorage')
         } else {
           console.log('📁 Saved data found but no meaningful content')
@@ -63,7 +80,8 @@ export default function ResearchPage() {
         analysisResult,
         editableKeywords,
         editableDescription,
-        redditResults
+        redditResults,
+        timestamp: Date.now()
       }
       localStorage.setItem('research-page-data', JSON.stringify(dataToSave))
       console.log('💾 Saved Research page data to localStorage:', {
@@ -301,13 +319,21 @@ export default function ResearchPage() {
               )}
             </div>
             <p className="text-gray-600 text-lg">Website research and Reddit lead discovery</p>
-            {dataLoaded && (analysisResult || redditResults) && (
+            {showDataRestoredBanner && (
               <div className="mt-2 bg-green-50 border border-green-200 rounded-lg p-3">
-                <div className="flex items-center">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                  <p className="text-green-800 text-sm">
-                    <strong>📁 Data Restored:</strong> Your previous analysis and Reddit search results have been loaded from your browser's storage.
-                  </p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    <p className="text-green-800 text-sm">
+                      <strong>📁 Data Restored:</strong> Your previous analysis and Reddit search results have been loaded from your browser's storage.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowDataRestoredBanner(false)}
+                    className="text-green-600 hover:text-green-700 ml-4"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             )}
