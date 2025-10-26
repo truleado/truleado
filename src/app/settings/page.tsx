@@ -741,9 +741,22 @@ function SettingsContent() {
               {/* Reddit Account Tab */}
               {activeTab === 'reddit' && (
                 <div className="space-y-8">
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Reddit Account</h3>
-                    <p className="text-gray-600">Connect your Reddit account for enhanced search capabilities and higher rate limits.</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-2">Reddit Account</h3>
+                      <p className="text-gray-600">Connect your Reddit account for enhanced search capabilities and higher rate limits.</p>
+                    </div>
+                    {redditConnected ? (
+                      <div className="flex items-center space-x-2 px-4 py-2 bg-green-100 text-green-800 rounded-xl">
+                        <CheckCircle className="w-5 h-5" />
+                        <span className="font-semibold">Connected</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-600 rounded-xl">
+                        <AlertCircle className="w-5 h-5" />
+                        <span className="font-semibold">Not Connected</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-2xl p-8">
