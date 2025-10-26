@@ -6,6 +6,43 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
+// Reddit OAuth helper function
+async function getRedditAccessToken(): Promise<string | null> {
+  try {
+    const clientId = process.env.REDDIT_OAUTH_CLIENT_ID
+    const clientSecret = process.env.REDDIT_OAUTH_CLIENT_SECRET
+
+    if (!clientId || !clientSecret) {
+      console.error('Reddit OAuth credentials not configured')
+      return null
+    }
+
+    const response = await fetch('https://www.reddit.com/api/v1/access_token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+        'User-Agent': 'Truleado/1.0'
+      },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        scope: 'read'
+      })
+    })
+
+    if (!response.ok) {
+      console.error('Failed to get Reddit access token:', response.status)
+      return null
+    }
+
+    const data = await response.json()
+    return data.access_token
+  } catch (error) {
+    console.error('Error getting Reddit access token:', error)
+    return null
+  }
+}
+
 export async function POST(request: NextRequest) {
   const startTime = Date.now()
   
@@ -78,22 +115,31 @@ export async function POST(request: NextRequest) {
         let allPosts: any[] = []
         let searchErrorHandled = false
         
+        // Get Reddit access token once for all requests
+        const accessToken = await getRedditAccessToken()
+        
         for (const searchTerm of searchTerms.slice(0, 3)) { // Use 3 searches to stay within time limits
           try {
             // Use Reddit's global search API with .json suffix
-            const redditUrl = `https://www.reddit.com/search/.json?q=${encodeURIComponent(searchTerm)}&sort=relevance&limit=10&t=all`
+            const redditUrl = `https://oauth.reddit.com/search.json?q=${encodeURIComponent(searchTerm)}&sort=relevance&limit=10&t=all`
             console.log(`🌐 Fetching Reddit URL: ${redditUrl}`)
             
             // Manual timeout implementation (25 seconds)
             const controller = new AbortController()
             const timeoutId = setTimeout(() => controller.abort(), 25000)
             
+            // Build headers with OAuth if available
+            const headers: Record<string, string> = {
+              'Accept': 'application/json',
+              'Accept-Language': 'en-US,en;q=0.9',
+            }
+            
+            if (accessToken) {
+              headers['Authorization'] = `Bearer ${accessToken}`
+            }
+            
             const redditResponse = await fetch(redditUrl, {
-              headers: {
-                'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-                'Accept': 'application/json',
-                'Accept-Language': 'en-US,en;q=0.9',
-              },
+              headers,
               cache: 'no-store',
               signal: controller.signal,
               redirect: 'follow',
