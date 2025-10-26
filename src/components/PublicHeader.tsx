@@ -1,8 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { LanguageSelector } from '@/components/LanguageSelector'
 import { ResourcesDropdown } from '@/components/ResourcesDropdown'
 
 export function PublicHeader() {
@@ -17,7 +15,6 @@ export function PublicHeader() {
             <span className="ml-2 sm:ml-3 text-lg sm:text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Truleado</span>
           </Link>
           <div className="hidden sm:flex items-center space-x-4 lg:space-x-6">
-            <LanguageSelector />
             <ResourcesDropdown />
             <Link 
               href="/pricing"
@@ -37,10 +34,6 @@ export function PublicHeader() {
             >
               Get Started
             </Link>
-          </div>
-          {/* Mobile menu button */}
-          <div className="sm:hidden flex items-center space-x-2">
-            <LanguageSelector />
           </div>
         </div>
       </div>
