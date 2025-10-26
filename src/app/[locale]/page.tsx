@@ -41,7 +41,17 @@ export default function Home() {
   }
 
   if (user) {
-    return null; // Will redirect to dashboard
+    // Don't render anything, will redirect in useEffect
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <img src="/truleadologo.png" alt="Truleado" className="w-full h-full object-contain" />
+          </div>
+          <p className="text-gray-600 font-medium">Redirecting...</p>
+        </div>
+      </div>
+    );
   }
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
