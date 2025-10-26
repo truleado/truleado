@@ -17,7 +17,7 @@ export default function First100RedditLeads() {
       <article className="py-12 sm:py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link 
-            href={`/${locale}/resources/blog`}
+            href="/home/resources/blog"
             className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-8"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
