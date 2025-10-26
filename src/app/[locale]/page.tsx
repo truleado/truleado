@@ -18,7 +18,9 @@ export default function Home() {
   useEffect(() => {
     try {
       if (!loading && user) {
-        router.push('/dashboard');
+        const params = new URLSearchParams(window.location.search);
+        const locale = window.location.pathname.split('/')[1] || 'en';
+        router.push(`/${locale}/dashboard`);
       }
     } catch (error) {
       console.error('Home page error:', error);
