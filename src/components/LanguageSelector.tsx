@@ -6,24 +6,16 @@ import { useI18n, languages } from '@/contexts/i18n-context'
 import { ChevronDown } from 'lucide-react'
 
 export function LanguageSelector() {
-  const { language } = useI18n()
-  const router = useRouter()
-  const pathname = usePathname()
+  const { language, setLanguage } = useI18n()
   const [isOpen, setIsOpen] = useState(false)
 
   const currentLang = languages[language]
 
   const handleLanguageChange = (newLang: string) => {
-    // Get current path without locale
-    const pathWithoutLocale = pathname.split('/').slice(2).join('/')
-    const newPath = `/${newLang}${pathWithoutLocale ? `/${pathWithoutLocale}` : ''}${window.location.search}`
-    
-    // Save to localStorage
-    localStorage.setItem('language', newLang)
-    
-    // Navigate to new URL
-    router.push(newPath)
+    setLanguage(newLang as any)
     setIsOpen(false)
+    // Reload the page to apply the new language
+    window.location.reload()
   }
 
   return (

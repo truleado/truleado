@@ -313,7 +313,7 @@ const translations: Record<LanguageCode, Record<string, string>> = {
     'footer.copyright': '© 2025 Truleado Inc.',
   },
   de: {
-    'nav.pricing': 'मूल्य निर्धारण',
+    'nav.pricing': 'Preise',
     'nav.signin': 'साइन इन',
     'nav.getStarted': 'शुरू करें',
     'hero.badge': 'AI-संचालित लीड जनरेशन',
