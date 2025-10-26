@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import AppLayout from '@/components/app-layout'
-import { BarChart3, MessageSquare, ExternalLink, TrendingUp, Calendar, DollarSign, CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react'
+import { BarChart3, MessageSquare, ExternalLink, TrendingUp, Calendar, DollarSign, CheckCircle, Clock, XCircle, AlertCircle, Trash2, Loader2 } from 'lucide-react'
 
 interface Lead {
   id: string
@@ -34,6 +34,7 @@ export default function TrackLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     fetchLeads()
@@ -55,6 +56,35 @@ export default function TrackLeadsPage() {
       setError(err.message || 'Network error')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDelete = async (leadId: string) => {
+    if (!confirm('Are you sure you want to delete this lead? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      setDeletingIds(prev => new Set([...prev, leadId]))
+      
+      const response = await fetch(`/api/leads?id=${leadId}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        setLeads(prev => prev.filter(lead => lead.id !== leadId))
+      } else {
+        const errorData = await response.json()
+        alert(errorData.error || 'Failed to delete lead')
+      }
+    } catch (err: any) {
+      alert(err.message || 'Network error')
+    } finally {
+      setDeletingIds(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(leadId)
+        return newSet
+      })
     }
   }
 
@@ -245,6 +275,18 @@ export default function TrackLeadsPage() {
                           <ExternalLink className="h-4 w-4 mr-2" />
                           View Post
                         </a>
+                        <button
+                          onClick={() => handleDelete(lead.id)}
+                          disabled={deletingIds.has(lead.id)}
+                          className="inline-flex items-center px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {deletingIds.has(lead.id) ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4 mr-2" />
+                          )}
+                          Delete
+                        </button>
                       </div>
                     </div>
                   </div>

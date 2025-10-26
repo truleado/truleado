@@ -52,19 +52,35 @@ export default function EarnKarmaPage() {
         }
       }
 
+      // Remove duplicates first based on URL, then sort by engagement
+      const postsMap = new Map()
+      allPosts.forEach(post => {
+        // Use URL as unique key, but if URL already exists, keep the one with higher engagement
+        if (!postsMap.has(post.url)) {
+          postsMap.set(post.url, post)
+        } else {
+          const existing = postsMap.get(post.url)
+          const existingEngagement = (existing.score || 0) + (existing.num_comments || 0)
+          const newEngagement = (post.score || 0) + (post.num_comments || 0)
+          if (newEngagement > existingEngagement) {
+            postsMap.set(post.url, post)
+          }
+        }
+      })
+
+      const uniquePosts = Array.from(postsMap.values())
+
       // Sort by engagement (score + comments) - prioritize posts with high engagement
-      allPosts.sort((a, b) => {
+      uniquePosts.sort((a, b) => {
         const engagementA = (a.score || 0) + (a.num_comments || 0)
         const engagementB = (b.score || 0) + (b.num_comments || 0)
         return engagementB - engagementA
       })
 
-      // Remove duplicates and keep top 15 with high engagement
-      const uniquePosts = Array.from(
-        new Map(allPosts.map(post => [post.url, post])).values()
-      ).slice(0, 15)
+      // Keep top 15 posts with high engagement
+      const topPosts = uniquePosts.slice(0, 15)
 
-      setRedditResults({ posts: uniquePosts })
+      setRedditResults({ posts: topPosts })
     } catch (error) {
       console.error('Error searching Reddit:', error)
       alert('Failed to search Reddit. Please try again.')
@@ -150,8 +166,8 @@ export default function EarnKarmaPage() {
 
                 return posts.length > 0 ? (
                   <div className="space-y-6">
-                    {posts.map((post: any, idx: number) => (
-                    <div key={idx} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                    {posts.map((post: any) => (
+                    <div key={post.url} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">

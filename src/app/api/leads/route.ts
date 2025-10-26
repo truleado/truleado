@@ -140,3 +140,38 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to fetch leads' }, { status: 500 })
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const leadId = searchParams.get('id')
+    
+    if (!leadId) {
+      return NextResponse.json({ error: 'Lead ID is required' }, { status: 400 })
+    }
+
+    const { error: deleteError } = await supabase
+      .from('leads')
+      .delete()
+      .eq('id', leadId)
+      .eq('user_id', user.id)
+
+    if (deleteError) {
+      console.error('Delete error:', deleteError)
+      return NextResponse.json({ error: 'Failed to delete lead' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+
+  } catch (error) {
+    console.error('Error in delete leads API:', error)
+    return NextResponse.json({ error: 'Failed to delete lead' }, { status: 500 })
+  }
+}

@@ -138,59 +138,76 @@ export default function Dashboard() {
       const leadsResponse = await fetch('/api/reddit-leads', {
         credentials: 'include',
       })
-      if (leadsResponse.ok) {
-        const leadsData = await leadsResponse.json()
-        const leads = leadsData.leads || []
-        
-        // Calculate stats from Reddit leads
-        const today = new Date()
-        const oneWeekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
-        
-        const leadsToday = leads.filter((lead: any) => {
-          const leadDate = new Date(lead.saved_at)
-          return leadDate.toDateString() === today.toDateString()
-        }).length
-        
-        const leadsThisWeek = leads.filter((lead: any) => {
-          const leadDate = new Date(lead.saved_at)
-          return leadDate >= oneWeekAgo
-        }).length
-        
-        // Calculate average quality score (if available)
-        const avgQuality = leads.length > 0 ? 
-          leads.reduce((sum: number, lead: any) => sum + (lead.quality_score || 3), 0) / leads.length : 0
-        
-        setStats({
-          totalRedditLeads: leads.length,
-          researchSessions: Math.floor(leads.length / 3) + 1, // Estimate based on leads
-          keywordsAnalyzed: new Set(leads.map((lead: any) => lead.keyword)).size,
-          leadsThisWeek,
-          leadsToday,
-          avgLeadQuality: Math.round(avgQuality * 10) / 10
-        })
-      }
-      setStatsLoading(false)
-
-      // Generate recent activity from Reddit leads
-      const activityResponse = await fetch('/api/reddit-leads', {
+      
+      // Fetch Track Leads stats
+      const trackLeadsResponse = await fetch('/api/leads', {
         credentials: 'include',
       })
-      if (activityResponse.ok) {
-        const activityData = await activityResponse.json()
-        const leads = activityData.leads || []
-        
-        // Convert leads to activity items
-        const activities: RecentActivity[] = leads.slice(0, 5).map((lead: any) => ({
-          id: lead.id,
-          type: 'lead_saved',
-          message: `Saved lead from r/${lead.subreddit}: "${lead.title.substring(0, 50)}..."`,
-          time: new Date(lead.saved_at).toLocaleDateString(),
-          icon: 'MessageSquare',
-          link: '/reddit-leads'
-        }))
-        
-        setRecentActivity(activities)
+      
+      let redditLeads: any[] = []
+      let trackLeads: any[] = []
+      
+      if (leadsResponse.ok) {
+        const leadsData = await leadsResponse.json()
+        redditLeads = leadsData.leads || []
       }
+      
+      if (trackLeadsResponse.ok) {
+        const trackData = await trackLeadsResponse.json()
+        trackLeads = trackData.leads || []
+      }
+      
+      // Combine all leads for calculations
+      const allLeads = [...redditLeads, ...trackLeads]
+      
+      // Calculate stats from all leads
+      const today = new Date()
+      const oneWeekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
+      
+      const leadsToday = allLeads.filter((lead: any) => {
+        const leadDate = new Date(lead.saved_at || lead.createdAt)
+        return leadDate.toDateString() === today.toDateString()
+      }).length
+      
+      const leadsThisWeek = allLeads.filter((lead: any) => {
+        const leadDate = new Date(lead.saved_at || lead.createdAt)
+        return leadDate >= oneWeekAgo
+      }).length
+      
+      // Calculate average quality score (if available)
+      const avgQuality = allLeads.length > 0 ? 
+        allLeads.reduce((sum: number, lead: any) => sum + (lead.quality_score || lead.relevanceScore || 3), 0) / allLeads.length : 0
+      
+      setStats({
+        totalRedditLeads: allLeads.length,
+        researchSessions: Math.floor(allLeads.length / 3) + 1, // Estimate based on leads
+        keywordsAnalyzed: new Set(allLeads.map((lead: any) => lead.keyword || lead.subreddit).filter(Boolean)).size,
+        leadsThisWeek,
+        leadsToday,
+        avgLeadQuality: Math.round(avgQuality * 10) / 10
+      })
+      setStatsLoading(false)
+
+      // Generate recent activity from combined leads
+      const recentLeads = [...redditLeads, ...trackLeads]
+        .sort((a: any, b: any) => {
+          const dateA = new Date(a.saved_at || a.createdAt).getTime()
+          const dateB = new Date(b.saved_at || b.createdAt).getTime()
+          return dateB - dateA
+        })
+        .slice(0, 5)
+      
+      // Convert leads to activity items
+      const activities: RecentActivity[] = recentLeads.map((lead: any) => ({
+        id: lead.id,
+        type: 'lead_saved',
+        message: `Saved lead from r/${lead.subreddit}: "${lead.title.substring(0, 50)}..."`,
+        time: new Date(lead.saved_at || lead.createdAt).toLocaleDateString(),
+        icon: 'MessageSquare',
+        link: '/reddit-leads'
+      }))
+      
+      setRecentActivity(activities)
       setActivityLoading(false)
 
     } catch (error) {

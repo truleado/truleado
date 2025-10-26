@@ -68,7 +68,7 @@ const navigation = [
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [redditSectionOpen, setRedditSectionOpen] = useState(true)
-  const [growOnRedditOpen, setGrowOnRedditOpen] = useState(false)
+  const [growOnRedditOpen, setGrowOnRedditOpen] = useState(true)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [redditLeadsCount, setRedditLeadsCount] = useState(0)
   const [trackLeadsCount, setTrackLeadsCount] = useState(0)
