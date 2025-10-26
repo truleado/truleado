@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
+// Force Node.js runtime to avoid Edge runtime fetch limitations
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+export const maxDuration = 60
+
 export async function POST(request: NextRequest) {
   const startTime = Date.now()
   
@@ -77,13 +82,18 @@ export async function POST(request: NextRequest) {
             const redditUrl = `https://www.reddit.com/search.json?q=${encodeURIComponent(searchTerm)}&sort=relevance&limit=10&t=all`
             console.log(`🌐 Fetching Reddit URL: ${redditUrl}`)
             
+            // Manual timeout implementation (25 seconds)
+            const controller = new AbortController()
+            const timeoutId = setTimeout(() => controller.abort(), 25000)
+            
             const redditResponse = await fetch(redditUrl, {
               headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
                 'Accept': 'application/json',
               },
-              signal: AbortSignal.timeout(30000),
-            })
+              cache: 'no-store', // Force fresh requests
+              signal: controller.signal,
+            }).finally(() => clearTimeout(timeoutId))
 
             console.log(`📡 Reddit response status: ${redditResponse.status}`)
 
@@ -112,7 +122,10 @@ export async function POST(request: NextRequest) {
             await new Promise(resolve => setTimeout(resolve, 200))
             
           } catch (searchError: any) {
-            console.error(`❌ Error searching for "${searchTerm}":`, searchError.message)
+            console.error(`❌ Error searching for "${searchTerm}":`, searchError)
+            // Store error details for debugging
+            console.error('Error type:', searchError.name, 'Error message:', searchError.message)
+            console.error('Stack trace:', searchError.stack)
             continue
           }
         }
@@ -131,7 +144,11 @@ export async function POST(request: NextRequest) {
             totalPosts: 0,
             strategicPosts: 0,
             posts: [],
-            error: 'No posts found on Reddit for this keyword'
+            error: 'No posts found on Reddit for this keyword',
+            debugInfo: {
+              searchTermsAttempted: searchTerms.slice(0, 3).length,
+              note: 'All fetch requests either returned empty results or failed'
+            }
           })
           continue
         }
@@ -252,8 +269,23 @@ Include posts that are at least somewhat relevant to ${keyword}. Be inclusive - 
         keyword: r.keyword, 
         totalPosts: r.totalPosts, 
         strategicPosts: r.strategicPosts,
-        hasError: !!r.error
+        hasError: !!r.error,
+        error: r.error
       })))
+    }
+
+    // If all keywords failed, return a more helpful error
+    const hasErrors = results.every(r => !!r.error)
+    if (hasErrors && results.length > 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'All keyword searches failed',
+        details: 'Unable to fetch data from Reddit. This may be due to network restrictions or rate limiting.',
+        debugInfo: results.map(r => ({ keyword: r.keyword, error: r.error })),
+        results,
+        totalKeywords,
+        totalStrategicPosts: 0
+      }, { status: 500 })
     }
 
     return NextResponse.json({
