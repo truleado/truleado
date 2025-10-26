@@ -79,17 +79,42 @@ export async function GET(request: NextRequest) {
     const expiresAt = new Date()
     expiresAt.setSeconds(expiresAt.getSeconds() + (tokenData.expires_in || 3600))
 
-    // Store tokens in database
-    const { error: dbError } = await supabase
+    // First, check if api_keys record exists
+    const { data: existingKey } = await supabase
       .from('api_keys')
-      .upsert({
-        user_id: user.id,
-        reddit_access_token: tokenData.access_token,
-        reddit_refresh_token: tokenData.refresh_token,
-        reddit_token_expires_at: expiresAt.toISOString(),
-        reddit_username: redditUsername,
-        updated_at: new Date().toISOString()
-      })
+      .select('id')
+      .eq('user_id', user.id)
+      .single()
+
+    // Store tokens in database
+    let dbError
+    if (existingKey) {
+      // Update existing record
+      const { error } = await supabase
+        .from('api_keys')
+        .update({
+          reddit_access_token: tokenData.access_token,
+          reddit_refresh_token: tokenData.refresh_token,
+          reddit_token_expires_at: expiresAt.toISOString(),
+          reddit_username: redditUsername,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id)
+      dbError = error
+    } else {
+      // Insert new record
+      const { error } = await supabase
+        .from('api_keys')
+        .insert({
+          user_id: user.id,
+          reddit_access_token: tokenData.access_token,
+          reddit_refresh_token: tokenData.refresh_token,
+          reddit_token_expires_at: expiresAt.toISOString(),
+          reddit_username: redditUsername,
+          updated_at: new Date().toISOString()
+        })
+      dbError = error
+    }
 
     if (dbError) {
       console.error('Database error:', dbError)
