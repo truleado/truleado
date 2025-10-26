@@ -2,10 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now()
+  
   try {
     console.log('🔍 Starting strategic Reddit problem post search...')
     
     const { keywords, productDescription, productName } = await request.json()
+    console.log('📥 Request data:', { 
+      keywordsCount: keywords?.length, 
+      hasDescription: !!productDescription,
+      hasProductName: !!productName
+    })
     
     if (!keywords || !Array.isArray(keywords) || keywords.length === 0) {
       return NextResponse.json({ 
@@ -33,9 +40,17 @@ export async function POST(request: NextRequest) {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
 
     const results = []
+    const MAX_EXECUTION_TIME = 50000 // 50 seconds to leave buffer for Vercel 60s limit
 
     for (const keyword of keywords) {
-      console.log(`Searching Reddit for keyword: ${keyword}`)
+      // Check if we're running out of time
+      const elapsed = Date.now() - startTime
+      if (elapsed > MAX_EXECUTION_TIME) {
+        console.log(`⏰ Time limit reached (${elapsed}ms). Stopping keyword processing.`)
+        break
+      }
+      
+      console.log(`🔍 Searching Reddit for keyword: ${keyword}`)
       
       try {
         // Enhanced search strategy with more targeted terms for pitching opportunities
@@ -57,9 +72,9 @@ export async function POST(request: NextRequest) {
         // Try multiple search terms to get maximum posts for analysis
         let allPosts: any[] = []
         
-        for (const searchTerm of searchTerms.slice(0, 5)) { // Use 5 searches to get more posts
+        for (const searchTerm of searchTerms.slice(0, 3)) { // Use 3 searches to stay within time limits
           try {
-            const redditResponse = await fetch(`https://www.reddit.com/search.json?q=${encodeURIComponent(searchTerm)}&sort=relevance&limit=15&t=all`, {
+            const redditResponse = await fetch(`https://www.reddit.com/search.json?q=${encodeURIComponent(searchTerm)}&sort=relevance&limit=10&t=all`, {
               headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
                 'Accept': 'application/json',
@@ -81,7 +96,7 @@ export async function POST(request: NextRequest) {
             }
             
             // Small delay to avoid rate limiting
-            await new Promise(resolve => setTimeout(resolve, 300))
+            await new Promise(resolve => setTimeout(resolve, 200))
             
           } catch (searchError) {
             console.error(`Error searching for ${searchTerm}:`, searchError)
@@ -256,6 +271,9 @@ Be VERY selective - only include posts with strong relevance and clear pitching 
 
     const totalStrategicPosts = results.reduce((sum, r) => sum + r.strategicPosts, 0)
     const totalKeywords = results.length
+    const elapsedTime = Date.now() - startTime
+
+    console.log(`✅ Reddit search completed in ${elapsedTime}ms - Found ${totalStrategicPosts} strategic posts across ${totalKeywords} keywords`)
 
     return NextResponse.json({
       success: true,
