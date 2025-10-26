@@ -74,7 +74,10 @@ export async function POST(request: NextRequest) {
         
         for (const searchTerm of searchTerms.slice(0, 3)) { // Use 3 searches to stay within time limits
           try {
-            const redditResponse = await fetch(`https://www.reddit.com/search.json?q=${encodeURIComponent(searchTerm)}&sort=relevance&limit=10&t=all`, {
+            const redditUrl = `https://www.reddit.com/search.json?q=${encodeURIComponent(searchTerm)}&sort=relevance&limit=10&t=all`
+            console.log(`🌐 Fetching Reddit URL: ${redditUrl}`)
+            
+            const redditResponse = await fetch(redditUrl, {
               headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
                 'Accept': 'application/json',
@@ -82,24 +85,34 @@ export async function POST(request: NextRequest) {
               signal: AbortSignal.timeout(30000),
             })
 
+            console.log(`📡 Reddit response status: ${redditResponse.status}`)
+
             if (!redditResponse.ok) {
-              console.error(`Reddit API error for ${searchTerm}:`, redditResponse.status)
+              console.error(`❌ Reddit API error for "${searchTerm}":`, redditResponse.status, redditResponse.statusText)
               continue
             }
 
             const redditData = await redditResponse.json()
+            console.log(`📦 Reddit data structure:`, {
+              hasData: !!redditData.data,
+              hasChildren: !!redditData.data?.children,
+              childrenLength: redditData.data?.children?.length
+            })
+            
             const posts = redditData.data?.children || []
             
             if (posts.length > 0) {
               allPosts = allPosts.concat(posts)
-              console.log(`Found ${posts.length} posts for search term: ${searchTerm}`)
+              console.log(`✅ Found ${posts.length} posts for search term: "${searchTerm}"`)
+            } else {
+              console.log(`⚠️ No posts found for search term: "${searchTerm}"`)
             }
             
             // Small delay to avoid rate limiting
             await new Promise(resolve => setTimeout(resolve, 200))
             
-          } catch (searchError) {
-            console.error(`Error searching for ${searchTerm}:`, searchError)
+          } catch (searchError: any) {
+            console.error(`❌ Error searching for "${searchTerm}":`, searchError.message)
             continue
           }
         }
@@ -109,12 +122,19 @@ export async function POST(request: NextRequest) {
           index === self.findIndex(p => p.data.id === post.data.id)
         )
 
+        console.log(`📊 Total unique posts found for "${keyword}": ${uniquePosts.length}`)
+
         if (uniquePosts.length === 0) {
-          console.log(`No posts found for keyword: ${keyword}`)
+          console.log(`⚠️ Skipping "${keyword}" - no posts to analyze`)
+          results.push({
+            keyword,
+            totalPosts: 0,
+            strategicPosts: 0,
+            posts: [],
+            error: 'No posts found on Reddit for this keyword'
+          })
           continue
         }
-
-        console.log(`Total unique posts found for "${keyword}": ${uniquePosts.length}`)
 
         // Extract post data
         const postData = uniquePosts.map((post: any) => ({
@@ -127,6 +147,8 @@ export async function POST(request: NextRequest) {
           created_utc: post.data.created_utc,
           author: post.data.author
         }))
+        
+        console.log(`📝 Extracted post data for ${postData.length} posts - sending to AI for analysis`)
 
         // Use Gemini to strategically analyze posts and provide pitch ideas
         const prompt = `You are analyzing Reddit posts to find HIGH-QUALITY pitching opportunities for a specific product/service.
