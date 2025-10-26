@@ -249,7 +249,7 @@ export default function First100RedditLeads() {
               Start with the strategy above, track your results, and iterate. And if you want to accelerate your results, consider using a tool like Truleado to automate the lead discovery process.
             </p>
             <p className="text-gray-700 mb-8">
-              Want to see how I find 50+ quality Reddit leads per week in under 2 hours? <Link href={`/${locale}/auth/signup`} className="text-blue-600 font-semibold hover:text-blue-700">Try Truleado free for 7 days</Link>.
+              Want to see how I find 50+ quality Reddit leads per week in under 2 hours? <Link href="/auth/signup" className="text-blue-600 font-semibold hover:text-blue-700">Try Truleado free for 7 days</Link>.
             </p>
 
             {/* CTA */}
@@ -259,7 +259,7 @@ export default function First100RedditLeads() {
                 Join hundreds of SaaS founders using Truleado to discover Reddit leads 10x faster
               </p>
               <Link 
-                href={`/${locale}/auth/signup`}
+                href="/auth/signup"
                 className="inline-flex items-center bg-white text-blue-600 px-8 py-4 rounded-2xl text-lg font-semibold hover:bg-gray-100 transition-all duration-200 shadow-xl"
               >
                 Start Free Trial

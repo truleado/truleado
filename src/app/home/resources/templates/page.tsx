@@ -143,7 +143,7 @@ export default function TemplatesPage() {
               Access all templates, tutorials, and exclusive guides with Truleado
             </p>
             <Link 
-              href={`/${locale}/auth/signup`}
+              href="/auth/signup"
               className="inline-flex items-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-2xl text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-xl"
             >
               Get Started Free

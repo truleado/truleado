@@ -186,7 +186,7 @@ export default function ROICalculatorPage() {
                 Join hundreds of SaaS founders using Truleado to find quality leads faster
               </p>
               <Link 
-                href={`/${locale}/auth/signup`}
+                href="/auth/signup"
                 className="inline-flex items-center bg-white text-blue-600 px-8 py-4 rounded-2xl text-lg font-semibold hover:bg-gray-100 transition-all duration-200 shadow-xl hover:shadow-2xl"
               >
                 Start Free Trial
