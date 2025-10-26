@@ -9,6 +9,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/pricing',
     '/auth/signin',
     '/auth/signup',
+    '/resources/blog',
+    '/resources/blog/first-100-reddit-leads',
+    '/resources/templates',
+    '/resources/roi-calculator',
     '/terms',
     '/privacy',
     '/cookie-policy',
@@ -34,6 +38,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     } else if (route === '/pricing' || route === '/auth/signup') {
       priority = 0.9
       changeFrequency = 'monthly'
+    } else if (route.includes('/resources')) {
+      priority = 0.7
+      changeFrequency = 'weekly'
     } else if (route.includes('/auth')) {
       priority = 0.6
       changeFrequency = 'yearly'

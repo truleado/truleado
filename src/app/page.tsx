@@ -5,6 +5,7 @@ import { ArrowRight, Filter, Target, Zap, Users, TrendingUp, CheckCircle, Sparkl
 import { useAuth } from "@/contexts/auth-context";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { ResourcesDropdown } from "@/components/ResourcesDropdown";
 
 export default function Home() {
   // Production-ready version with error handling
@@ -62,6 +63,7 @@ export default function Home() {
               </div>
             </div>
             <div className="hidden sm:flex items-center space-x-4 lg:space-x-6">
+              <ResourcesDropdown />
               <Link 
                 href="/pricing" 
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"

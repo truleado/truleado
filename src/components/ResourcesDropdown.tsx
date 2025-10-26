@@ -9,10 +9,9 @@ export function ResourcesDropdown() {
   const [isOpen, setIsOpen] = useState(false)
   
   const resources = [
-    { name: 'Blog', href: '/home/resources/blog', icon: <FileText className="w-4 h-4" />, description: 'Reddit marketing guides & tips' },
-    { name: 'Templates', href: '/home/resources/templates', icon: <BookOpen className="w-4 h-4" />, description: 'Free marketing templates' },
-    { name: 'ROI Calculator', href: '/home/resources/roi-calculator', icon: <Calculator className="w-4 h-4" />, description: 'Calculate your ROI' },
-    { name: 'Help Center', href: '/home/resources/help', icon: <HelpCircle className="w-4 h-4" />, description: 'Get help & support' },
+    { name: 'Blog', href: '/resources/blog', icon: <FileText className="w-4 h-4" />, description: 'Reddit marketing guides & tips' },
+    { name: 'Templates', href: '/resources/templates', icon: <BookOpen className="w-4 h-4" />, description: 'Free marketing templates' },
+    { name: 'ROI Calculator', href: '/resources/roi-calculator', icon: <Calculator className="w-4 h-4" />, description: 'Calculate your ROI' },
   ]
 
   return (
