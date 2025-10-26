@@ -259,7 +259,7 @@ export default function First100RedditLeads() {
                 Join hundreds of SaaS founders using Truleado to discover Reddit leads 10x faster
               </p>
               <Link 
-                href="/auth/signup" 
+                href={`/${locale}/auth/signup`}
                 className="inline-flex items-center bg-white text-blue-600 px-8 py-4 rounded-2xl text-lg font-semibold hover:bg-gray-100 transition-all duration-200 shadow-xl"
               >
                 Start Free Trial
