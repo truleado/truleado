@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/contexts/i18n-context";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { ResourcesDropdown } from "@/components/ResourcesDropdown";
 
 export default function Home() {
   // Production-ready version with error handling
@@ -56,12 +57,7 @@ export default function Home() {
             </div>
             <div className="hidden sm:flex items-center space-x-4 lg:space-x-6">
               <LanguageSelector />
-              <Link 
-                href="/resources/blog" 
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
-              >
-                Resources
-              </Link>
+              <ResourcesDropdown />
               <Link 
                 href="/pricing" 
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
