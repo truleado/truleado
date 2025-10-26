@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import Link from 'next/link'
 import { ArrowRight, Download, CheckCircle, MessageSquare, Mail, FileEdit, FileText } from 'lucide-react'
 import { PublicHeader } from '@/components/PublicHeader'

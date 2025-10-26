@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Calculator, TrendingUp, DollarSign, Clock, Users } from 'lucide-react'
