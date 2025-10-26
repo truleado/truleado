@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/auth-context";
 import { SubscriptionProvider } from "@/lib/subscription-context";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { I18nProvider } from "@/contexts/i18n-context";
 
 export const metadata: Metadata = {
   title: "Truleado - Find Your Next Customers on Reddit",
@@ -104,11 +105,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         {/* End Google Tag Manager (noscript) */}
         
         <ErrorBoundary>
-          <AuthProvider>
-            <SubscriptionProvider>
-              {children}
-            </SubscriptionProvider>
-          </AuthProvider>
+          <I18nProvider>
+            <AuthProvider>
+              <SubscriptionProvider>
+                {children}
+              </SubscriptionProvider>
+            </AuthProvider>
+          </I18nProvider>
         </ErrorBoundary>
       </body>
     </html>
