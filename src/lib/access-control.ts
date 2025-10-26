@@ -89,16 +89,15 @@ export const formatTrialTimeRemaining = (user: UserWithSubscription): string => 
     return 'Trial expired'
   }
   
-  const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24))
-  const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-  const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60))
+  // Calculate days remaining (round up to avoid showing 0 days when there's time left)
+  const days = Math.ceil(timeRemaining / (1000 * 60 * 60 * 24))
   
-  if (days > 0) {
-    return `${days}d ${hours}h remaining`
-  } else if (hours > 0) {
-    return `${hours}h ${minutes}m remaining`
+  if (days <= 0) {
+    return 'Trial expired'
+  } else if (days === 1) {
+    return '1 day remaining'
   } else {
-    return `${minutes}m remaining`
+    return `${days} days remaining`
   }
 }
 
