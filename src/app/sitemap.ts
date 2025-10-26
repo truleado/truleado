@@ -1,96 +1,67 @@
 import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://truleado.com'
+  const baseUrl = 'https://www.truleado.com'
+  const locales = ['en', 'es', 'de', 'fr', 'zh', 'ja', 'ko', 'it', 'ar', 'nl']
   
-  // Define all public routes
+  // Define all public routes without locale
   const routes = [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 1.0,
-    },
-    {
-      url: `${baseUrl}/pricing`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/auth/signin`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/auth/signup`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/resources/blog`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/resources/blog/first-100-reddit-leads`,
-      lastModified: new Date('2025-01-15'),
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/resources/templates`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/resources/roi-calculator`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/terms`,
-      lastModified: new Date(),
-      changeFrequency: 'yearly' as const,
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/privacy`,
-      lastModified: new Date(),
-      changeFrequency: 'yearly' as const,
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/cookie-policy`,
-      lastModified: new Date(),
-      changeFrequency: 'yearly' as const,
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/gdpr`,
-      lastModified: new Date(),
-      changeFrequency: 'yearly' as const,
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/refund`,
-      lastModified: new Date(),
-      changeFrequency: 'yearly' as const,
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/support`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.5,
-    },
+    '',
+    '/pricing',
+    '/auth/signin',
+    '/auth/signup',
+    '/resources/blog',
+    '/resources/blog/first-100-reddit-leads',
+    '/resources/templates',
+    '/resources/roi-calculator',
+    '/terms',
+    '/privacy',
+    '/cookie-policy',
+    '/gdpr',
+    '/refund',
+    '/support',
   ]
 
-  return routes
-}
+  // Generate sitemap entries for each route with each locale
+  const sitemapEntries: MetadataRoute.Sitemap = []
 
+  routes.forEach((route) => {
+    locales.forEach((locale) => {
+      const url = `${baseUrl}/${locale}${route === '' ? '' : route}`
+      
+      // Set priority and change frequency based on route type
+      let priority = 0.8
+      let changeFrequency: 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never' = 'monthly'
+      
+      if (route === '') {
+        // Homepage
+        priority = 1.0
+        changeFrequency = 'weekly'
+      } else if (route === '/pricing' || route === '/auth/signup') {
+        priority = 0.9
+        changeFrequency = 'monthly'
+      } else if (route.includes('/resources')) {
+        priority = 0.7
+        changeFrequency = 'weekly'
+      } else if (route.includes('/auth')) {
+        priority = 0.6
+        changeFrequency = 'yearly'
+      } else if (route.includes('/terms') || route.includes('/privacy') || route.includes('/cookie') || route.includes('/gdpr') || route.includes('/refund')) {
+        priority = 0.3
+        changeFrequency = 'yearly'
+      } else {
+        priority = 0.5
+        changeFrequency = 'monthly'
+      }
+
+      sitemapEntries.push({
+        url,
+        lastModified: new Date(),
+        changeFrequency,
+        priority,
+      })
+    })
+  })
+
+  return sitemapEntries
+}
