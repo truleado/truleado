@@ -6,14 +6,11 @@ import { LanguageSelector } from '@/components/LanguageSelector'
 import { ResourcesDropdown } from '@/components/ResourcesDropdown'
 
 export function PublicHeader() {
-  const pathname = usePathname()
-  const locale = pathname?.split('/')[1] || 'en'
-  
   return (
     <nav className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link href={`/${locale}`} className="flex items-center">
+          <Link href="/home" className="flex items-center">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center shadow-lg">
               <img src="/truleadologo.png" alt="Truleado" className="w-full h-full object-contain" />
             </div>
@@ -23,19 +20,19 @@ export function PublicHeader() {
             <LanguageSelector />
             <ResourcesDropdown />
             <Link 
-              href={`/${locale}/pricing`}
+              href="/pricing"
               className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
             >
               Pricing
             </Link>
             <Link 
-              href={`/${locale}/auth/signin`}
+              href="/auth/signin"
               className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
             >
               Sign In
             </Link>
             <Link 
-              href={`/${locale}/auth/signup`}
+              href="/auth/signup"
               className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 lg:px-6 py-2 lg:py-2.5 rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               Get Started

@@ -7,14 +7,12 @@ import { ChevronDown, FileText, Calculator, BookOpen, HelpCircle, Video } from '
 
 export function ResourcesDropdown() {
   const [isOpen, setIsOpen] = useState(false)
-  const pathname = usePathname()
-  const locale = pathname?.split('/')[1] || 'en'
   
   const resources = [
-    { name: 'Blog', href: `/${locale}/resources/blog`, icon: <FileText className="w-4 h-4" />, description: 'Reddit marketing guides & tips' },
-    { name: 'Templates', href: `/${locale}/resources/templates`, icon: <BookOpen className="w-4 h-4" />, description: 'Free marketing templates' },
-    { name: 'ROI Calculator', href: `/${locale}/resources/roi-calculator`, icon: <Calculator className="w-4 h-4" />, description: 'Calculate your ROI' },
-    { name: 'Help Center', href: `/${locale}/resources/help`, icon: <HelpCircle className="w-4 h-4" />, description: 'Get help & support' },
+    { name: 'Blog', href: '/resources/blog', icon: <FileText className="w-4 h-4" />, description: 'Reddit marketing guides & tips' },
+    { name: 'Templates', href: '/resources/templates', icon: <BookOpen className="w-4 h-4" />, description: 'Free marketing templates' },
+    { name: 'ROI Calculator', href: '/resources/roi-calculator', icon: <Calculator className="w-4 h-4" />, description: 'Calculate your ROI' },
+    { name: 'Help Center', href: '/resources/help', icon: <HelpCircle className="w-4 h-4" />, description: 'Get help & support' },
   ]
 
   return (
