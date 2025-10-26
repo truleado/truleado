@@ -206,13 +206,16 @@ Be VERY selective - only include posts with strong relevance and clear pitching 
         const geminiResponse = await geminiResult.response
         const geminiText = geminiResponse.text()
 
+        console.log(`🤖 Gemini response for "${keyword}":`, geminiText.substring(0, 200))
+
         // Parse Gemini response for strategic analysis
         let strategicAnalysis: Array<{index: number, reasoning: string, samplePitch: string}> = []
         try {
           const cleanText = geminiText.trim().replace(/^```json\s*/, '').replace(/\s*```$/, '')
           strategicAnalysis = JSON.parse(cleanText)
+          console.log(`✅ Parsed ${strategicAnalysis.length} strategic posts from AI for "${keyword}"`)
         } catch (parseError) {
-          console.error('Failed to parse Gemini response:', parseError)
+          console.error('❌ Failed to parse Gemini response:', parseError)
           // Enhanced fallback: analyze posts for strategic pitching opportunities
           strategicAnalysis = postData
             .map((post, index) => ({ post, index }))
@@ -261,7 +264,7 @@ Be VERY selective - only include posts with strong relevance and clear pitching 
         }
 
         // Get the strategic posts with analysis
-        const strategicPosts = strategicAnalysis
+        let strategicPosts = strategicAnalysis
           .filter(analysis => analysis.index >= 0 && analysis.index < postData.length)
           .map(analysis => ({
             ...postData[analysis.index],
@@ -270,6 +273,18 @@ Be VERY selective - only include posts with strong relevance and clear pitching 
           }))
           .slice(0, 10) // Limit to top 10 strategic posts
 
+        // If AI returned no strategic posts, use fallback analysis
+        if (strategicPosts.length === 0 && postData.length > 0) {
+          console.log(`⚠️ AI found 0 strategic posts for "${keyword}". Using fallback analysis on top 5 posts...`)
+          strategicPosts = postData
+            .slice(0, 5) // Take top 5 posts as fallback
+            .map((post, index) => ({
+              ...post,
+              reasoning: `This post mentions ${keyword} and could be a good opportunity to offer ${productName || 'our solution'} that solves similar problems.`,
+              samplePitch: `Hi! I saw your post about ${keyword}. ${productName || 'Our solution'} might be helpful here - it's designed to [benefit]. Would you be interested in learning more?`
+            }))
+        }
+
         results.push({
           keyword,
           totalPosts: uniquePosts.length,
@@ -277,7 +292,7 @@ Be VERY selective - only include posts with strong relevance and clear pitching 
           posts: strategicPosts
         })
 
-        console.log(`Found ${strategicPosts.length} strategic posts for "${keyword}"`)
+        console.log(`✅ Found ${strategicPosts.length} strategic posts for "${keyword}"`)
 
       } catch (error: any) {
         console.error(`Error processing keyword "${keyword}":`, error)
