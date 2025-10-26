@@ -139,3 +139,62 @@ export async function POST(request: NextRequest) {
     }, { status: 500 })
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    console.log('🗑️ Deleting Reddit lead...')
+    
+    const supabase = await createClient()
+    
+    // Get the current user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      return NextResponse.json({ 
+        error: 'Authentication required',
+        details: 'Please log in to delete Reddit leads'
+      }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { url } = body
+
+    // Validate required fields
+    if (!url) {
+      return NextResponse.json({ 
+        error: 'Missing required fields',
+        details: 'URL is required'
+      }, { status: 400 })
+    }
+
+    console.log('Deleting Reddit lead with URL:', url)
+
+    // Delete the Reddit lead
+    const { error: deleteError } = await supabase
+      .from('reddit_leads')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('url', url)
+
+    if (deleteError) {
+      console.error('Error deleting Reddit lead:', deleteError)
+      return NextResponse.json({ 
+        error: 'Failed to delete Reddit lead',
+        details: deleteError.message
+      }, { status: 500 })
+    }
+
+    console.log('Reddit lead deleted successfully')
+
+    return NextResponse.json({
+      success: true
+    })
+
+  } catch (error: any) {
+    console.error('❌ Reddit lead delete error:', error)
+    return NextResponse.json({ 
+      error: 'Failed to delete Reddit lead', 
+      details: error.message 
+    }, { status: 500 })
+  }
+}

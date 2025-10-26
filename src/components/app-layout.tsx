@@ -57,6 +57,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [redditSectionOpen, setRedditSectionOpen] = useState(true)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [redditLeadsCount, setRedditLeadsCount] = useState(0)
+  const [trackLeadsCount, setTrackLeadsCount] = useState(0)
   const pathname = usePathname()
   const router = useRouter()
   const { user, signOut } = useAuth()
@@ -74,6 +76,39 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       setShowUpgradeModal(true)
     }
   }, [user, showUpgradePrompt, showUpgradeModal])
+
+  // Fetch counts for sidebar badges
+  React.useEffect(() => {
+    const fetchCounts = async () => {
+      if (user) {
+        try {
+          // Fetch Reddit leads count
+          const redditResponse = await fetch('/api/reddit-leads')
+          if (redditResponse.ok) {
+            const redditData = await redditResponse.json()
+            const redditLeadsArray = Array.isArray(redditData) ? redditData : (redditData?.leads || [])
+            setRedditLeadsCount(redditLeadsArray.length)
+          }
+
+          // Fetch track leads count (from leads table)
+          const trackResponse = await fetch('/api/leads')
+          if (trackResponse.ok) {
+            const trackData = await trackResponse.json()
+            const trackLeadsArray = Array.isArray(trackData) ? trackData : (trackData?.leads || [])
+            setTrackLeadsCount(Array.isArray(trackLeadsArray) ? trackLeadsArray.length : 0)
+          }
+        } catch (error) {
+          console.error('Error fetching counts:', error)
+        }
+      }
+    }
+
+    fetchCounts()
+    
+    // Refresh counts every 30 seconds
+    const interval = setInterval(fetchCounts, 30000)
+    return () => clearInterval(interval)
+  }, [user])
 
 
   const handleUpgradeClick = async () => {
@@ -121,19 +156,32 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="ml-4 mt-1 space-y-1">
               {item.children.map((child: any) => {
                 const isChildActive = pathname === child.href
+                const count = child.name === 'Reddit Leads' ? redditLeadsCount : 
+                             child.name === 'Track Leads' ? trackLeadsCount : null
                 return (
                   <Link
                     key={child.name}
                     href={child.href}
-                    className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                       isChildActive
                         ? 'bg-[#e6f4ff] text-[#0c6bc7]'
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                     onClick={() => isMobile && setSidebarOpen(false)}
                   >
-                    <child.icon className="w-4 h-4" />
-                    <span>{child.name}</span>
+                    <div className="flex items-center space-x-3">
+                      <child.icon className="w-4 h-4" />
+                      <span>{child.name}</span>
+                    </div>
+                    {count !== null && count > 0 && (
+                      <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
+                        isChildActive
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-gray-200 text-gray-700'
+                      }`}>
+                        {count}
+                      </span>
+                    )}
                   </Link>
                 )
               })}

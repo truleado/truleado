@@ -15,6 +15,7 @@ export default function ResearchPage() {
   const [isSearchingReddit, setIsSearchingReddit] = useState(false)
   const [dataLoaded, setDataLoaded] = useState(false)
   const [savingPosts, setSavingPosts] = useState<Set<string>>(new Set())
+  const [savedPostIds, setSavedPostIds] = useState<Set<string>>(new Set())
   const [showDataRestoredBanner, setShowDataRestoredBanner] = useState(false)
 
   // Load saved data from localStorage on component mount
@@ -93,6 +94,29 @@ export default function ResearchPage() {
       })
     }
   }, [websiteUrl, analysisResult, editableKeywords, editableDescription, redditResults, dataLoaded])
+
+  // Load saved post IDs when reddit results change
+  useEffect(() => {
+    const loadSavedPostIds = async () => {
+      if (redditResults && redditResults.results) {
+        try {
+          const response = await fetch('/api/reddit-leads')
+          if (response.ok) {
+            const savedLeads = await response.json()
+            // Handle both array and object responses
+            const leadsArray = Array.isArray(savedLeads) ? savedLeads : (savedLeads?.leads || [])
+            const savedUrls = new Set(leadsArray.map((lead: any) => lead.url))
+            setSavedPostIds(savedUrls)
+            console.log('✅ Loaded saved post IDs:', savedUrls.size)
+          }
+        } catch (error) {
+          console.error('Error loading saved post IDs:', error)
+        }
+      }
+    }
+
+    loadSavedPostIds()
+  }, [redditResults])
 
   const handleAnalyze = async () => {
     if (!websiteUrl.trim()) {
@@ -177,48 +201,77 @@ export default function ResearchPage() {
 
   const handleSaveRedditLead = async (post: any, keyword: string) => {
     const postId = `${post.subreddit}-${post.title.substring(0, 20)}`
+    const urlId = post.url // Use URL as unique identifier
+    
+    // Check if already saved
+    const isCurrentlySaved = savedPostIds.has(urlId)
     
     try {
       setSavingPosts(prev => new Set(prev).add(postId))
       
-      const saveData = {
-        title: post.title,
-        selftext: post.selftext,
-        subreddit: post.subreddit,
-        score: post.score,
-        num_comments: post.num_comments,
-        url: post.url,
-        created_utc: post.created_utc,
-        author: post.author,
-        reasoning: post.reasoning,
-        sample_pitch: post.samplePitch,
-        keyword: keyword,
-        product_name: analysisResult?.productName || '',
-        product_description: isEditing ? editableDescription : analysisResult?.description || ''
-      }
-      
-      console.log('💾 Saving Reddit lead data:', {
-        title: saveData.title,
-        subreddit: saveData.subreddit,
-        keyword: saveData.keyword,
-        hasReasoning: !!saveData.reasoning,
-        hasSamplePitch: !!saveData.sample_pitch,
-        samplePitchPreview: saveData.sample_pitch?.substring(0, 50) + '...'
-      })
-      
-      const response = await fetch('/api/reddit-leads', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(saveData)
-      })
+      if (isCurrentlySaved) {
+        // Unsave - delete from database
+        const response = await fetch('/api/reddit-leads', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ url: post.url })
+        })
 
-      if (response.ok) {
-        alert('Reddit lead saved successfully! You can view it in the Reddit Leads page.')
+        if (response.ok) {
+          // Update local state
+          setSavedPostIds(prev => {
+            const newSet = new Set(prev)
+            newSet.delete(urlId)
+            return newSet
+          })
+        } else {
+          const errorData = await response.json()
+          alert(`Failed to unsave lead: ${errorData.error || 'Unknown error'}`)
+        }
       } else {
-        const errorData = await response.json()
-        alert(`Failed to save lead: ${errorData.error || 'Unknown error'}`)
+        // Save - add to database
+        const saveData = {
+          title: post.title,
+          selftext: post.selftext,
+          subreddit: post.subreddit,
+          score: post.score,
+          num_comments: post.num_comments,
+          url: post.url,
+          created_utc: post.created_utc,
+          author: post.author,
+          reasoning: post.reasoning,
+          sample_pitch: post.samplePitch,
+          keyword: keyword,
+          product_name: analysisResult?.productName || '',
+          product_description: isEditing ? editableDescription : analysisResult?.description || ''
+        }
+        
+        console.log('💾 Saving Reddit lead data:', {
+          title: saveData.title,
+          subreddit: saveData.subreddit,
+          keyword: saveData.keyword,
+          hasReasoning: !!saveData.reasoning,
+          hasSamplePitch: !!saveData.sample_pitch,
+          samplePitchPreview: saveData.sample_pitch?.substring(0, 50) + '...'
+        })
+        
+        const response = await fetch('/api/reddit-leads', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(saveData)
+        })
+
+        if (response.ok) {
+          // Update local state
+          setSavedPostIds(prev => new Set(prev).add(urlId))
+        } else {
+          const errorData = await response.json()
+          alert(`Failed to save lead: ${errorData.error || 'Unknown error'}`)
+        }
       }
     } catch (error: any) {
       alert(`Error saving lead: ${error.message}`)
@@ -727,12 +780,23 @@ export default function ResearchPage() {
                                         <button
                                           onClick={() => handleSaveRedditLead(post, result.keyword)}
                                           disabled={savingPosts.has(`${post.subreddit}-${post.title.substring(0, 20)}`)}
-                                          className="inline-flex items-center px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                          className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                                            savedPostIds.has(post.url)
+                                              ? 'bg-green-500 hover:bg-green-600 text-white'
+                                              : 'bg-blue-500 hover:bg-blue-600 text-white'
+                                          }`}
                                         >
                                           {savingPosts.has(`${post.subreddit}-${post.title.substring(0, 20)}`) ? (
                                             <>
                                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                              Saving...
+                                              {savedPostIds.has(post.url) ? 'Unsaving...' : 'Saving...'}
+                                            </>
+                                          ) : savedPostIds.has(post.url) ? (
+                                            <>
+                                              <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                              </svg>
+                                              Unsave Lead
                                             </>
                                           ) : (
                                             <>

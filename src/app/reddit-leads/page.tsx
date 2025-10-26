@@ -70,6 +70,36 @@ export default function RedditLeadsPage() {
     }
   }
 
+  const handleEngageLead = async (lead: RedditLead) => {
+    if (!confirm('Engage with this lead? This will move it to Track Leads and remove it from Reddit Leads.')) {
+      return
+    }
+
+    // Open the Reddit post in a new tab
+    window.open(lead.url, '_blank')
+
+    try {
+      const response = await fetch('/api/reddit-leads/engage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(lead)
+      })
+
+      if (response.ok) {
+        // Remove from reddit leads list
+        setLeads(leads.filter(l => l.id !== lead.id))
+        alert('Lead moved to Track Leads successfully!')
+      } else {
+        const errorData = await response.json()
+        alert(`Failed to engage: ${errorData.error || 'Unknown error'}`)
+      }
+    } catch (err: any) {
+      alert(`Error engaging with lead: ${err.message}`)
+    }
+  }
+
   const formatDate = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -234,15 +264,13 @@ export default function RedditLeadsPage() {
                         </div>
                       </div>
                       <div className="ml-4 flex space-x-2">
-                        <a
-                          href={lead.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center px-3 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors"
+                        <button
+                          onClick={() => handleEngageLead(lead)}
+                          className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
                         >
-                          <ExternalLink className="h-4 w-4 mr-1" />
-                          View Post
-                        </a>
+                          <MessageCircle className="h-4 w-4 mr-2" />
+                          Engage
+                        </button>
                         <button
                           onClick={() => handleDeleteLead(lead.id)}
                           className="inline-flex items-center px-3 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors"
