@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
 import { useI18n, languages } from '@/contexts/i18n-context'
 import { ChevronDown } from 'lucide-react'
 
@@ -14,8 +13,6 @@ export function LanguageSelector() {
   const handleLanguageChange = (newLang: string) => {
     setLanguage(newLang as any)
     setIsOpen(false)
-    // Reload the page to apply the new language
-    window.location.reload()
   }
 
   return (

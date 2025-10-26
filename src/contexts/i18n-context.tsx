@@ -28,30 +28,28 @@ const I18nContext = createContext<I18nContextType | undefined>(undefined)
 
 export function I18nProvider({ 
   children, 
-  initialLocale 
 }: { 
   children: ReactNode
-  initialLocale?: string
 }) {
-  const [language, setLanguageState] = useState<LanguageCode>(
-    (initialLocale as LanguageCode) || 'en'
-  )
+  const [language, setLanguageState] = useState<LanguageCode>('en')
 
   useEffect(() => {
-    // Set language from URL or localStorage
+    // Set language from localStorage
     if (typeof window !== 'undefined') {
-      const urlLocale = window.location.pathname.split('/')[1]
-      if (languages[urlLocale as LanguageCode]) {
-        setLanguageState(urlLocale as LanguageCode)
-        document.documentElement.lang = urlLocale
+      const savedLang = localStorage.getItem('language')
+      if (savedLang && languages[savedLang as LanguageCode]) {
+        setLanguageState(savedLang as LanguageCode)
+        document.documentElement.lang = savedLang
       }
     }
   }, [])
 
   const setLanguage = (lang: LanguageCode) => {
     setLanguageState(lang)
-    localStorage.setItem('language', lang)
-    document.documentElement.lang = lang
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('language', lang)
+      document.documentElement.lang = lang
+    }
   }
 
   const t = (key: string): string => {
