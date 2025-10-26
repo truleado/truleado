@@ -80,7 +80,8 @@ export async function POST(request: NextRequest) {
         
         for (const searchTerm of searchTerms.slice(0, 3)) { // Use 3 searches to stay within time limits
           try {
-            const redditUrl = `https://www.reddit.com/search.json?q=${encodeURIComponent(searchTerm)}&sort=relevance&limit=10&t=all`
+            // Use old.reddit.com which is less restrictive
+            const redditUrl = `https://old.reddit.com/search.json?q=${encodeURIComponent(searchTerm)}&sort=relevance&limit=10&t=all&restrict_sr=on`
             console.log(`🌐 Fetching Reddit URL: ${redditUrl}`)
             
             // Manual timeout implementation (25 seconds)
