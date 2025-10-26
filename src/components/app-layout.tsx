@@ -18,7 +18,10 @@ import {
   ChevronDown,
   Megaphone,
   Plane,
-  BarChart3
+  BarChart3,
+  Target,
+  TrendingUp,
+  FileText
 } from 'lucide-react'
 import { TrialBanner } from './TrialBanner'
 import { NotificationBell } from './NotificationBell'
@@ -47,7 +50,16 @@ const navigation = [
       { name: 'Research', href: '/research', icon: Plane, description: 'Website research and Reddit lead discovery' },
       { name: 'Reddit Leads', href: '/reddit-leads', icon: Users, description: 'Saved Reddit opportunities' },
       { name: 'Track Leads', href: '/track-leads', icon: BarChart3, description: 'Track and monitor lead performance' },
-      { name: 'Promote', href: '/promote', icon: Megaphone, description: 'Generate promotional posts' },
+    ]
+  },
+  { 
+    name: 'Grow on Reddit', 
+    icon: Megaphone, 
+    description: 'Growth strategies and content',
+    children: [
+      { name: 'Strategy', href: '/promote/strategy', icon: Target, description: 'Strategic planning for Reddit growth' },
+      { name: 'Earn Karma', href: '/promote/earn-karma', icon: TrendingUp, description: 'Build karma and reputation' },
+      { name: 'Create Content', href: '/promote/create-content', icon: FileText, description: 'Content creation tools' },
     ]
   },
   { name: 'Settings', href: '/settings', icon: Settings, description: 'Account & preferences' },
@@ -56,6 +68,7 @@ const navigation = [
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [redditSectionOpen, setRedditSectionOpen] = useState(true)
+  const [growOnRedditOpen, setGrowOnRedditOpen] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [redditLeadsCount, setRedditLeadsCount] = useState(0)
   const [trackLeadsCount, setTrackLeadsCount] = useState(0)
@@ -127,8 +140,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       // This is a collapsible section
       const isActive = isChildRouteActive(item.children)
       const isRedditSection = item.name === 'Reddit'
-      const isOpen = isRedditSection ? redditSectionOpen : true
-      const setSectionOpen = isRedditSection ? setRedditSectionOpen : () => {}
+      const isGrowOnRedditSection = item.name === 'Grow on Reddit'
+      const isOpen = isRedditSection ? redditSectionOpen : (isGrowOnRedditSection ? growOnRedditOpen : true)
+      const setSectionOpen = isRedditSection ? setRedditSectionOpen : (isGrowOnRedditSection ? setGrowOnRedditOpen : () => {})
       
       return (
         <div key={item.name}>
