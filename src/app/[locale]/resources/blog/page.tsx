@@ -3,6 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import { ArrowRight, Calendar, Clock } from 'lucide-react'
 import { PublicHeader } from '@/components/PublicHeader'
 
@@ -58,6 +59,9 @@ const blogPosts = [
 ]
 
 export default function BlogPage() {
+  const params = useParams()
+  const locale = params.locale as string || 'en'
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <PublicHeader />
@@ -95,7 +99,7 @@ export default function BlogPage() {
                   {blogPosts[0].excerpt}
                 </p>
                 <Link 
-                  href="/resources/blog/first-100-reddit-leads"
+                  href={`/${locale}/resources/blog/first-100-reddit-leads`}
                   className="inline-flex items-center text-blue-600 font-semibold hover:text-blue-700"
                 >
                   Read Full Article
@@ -124,7 +128,7 @@ export default function BlogPage() {
                   {post.excerpt}
                 </p>
                 <Link 
-                  href="/resources/blog/first-100-reddit-leads"
+                  href={`/${locale}/resources/blog/first-100-reddit-leads`}
                   className="text-blue-600 font-semibold hover:text-blue-700 text-sm"
                 >
                   Read More →
@@ -145,7 +149,7 @@ export default function BlogPage() {
             Join hundreds of SaaS founders using Truleado to discover high-quality leads
           </p>
           <Link 
-            href="/auth/signup" 
+            href={`/${locale}/auth/signup`}
             className="inline-flex items-center bg-white text-blue-600 px-8 py-4 rounded-2xl text-lg font-semibold hover:bg-gray-100 transition-all duration-200 shadow-xl"
           >
             Start Free Trial

@@ -3,10 +3,13 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import { ArrowLeft, Calendar, Clock, ArrowRight } from 'lucide-react'
 import { PublicHeader } from '@/components/PublicHeader'
 
 export default function First100RedditLeads() {
+  const params = useParams()
+  const locale = params.locale as string || 'en'
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <PublicHeader />
@@ -14,7 +17,7 @@ export default function First100RedditLeads() {
       <article className="py-12 sm:py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link 
-            href="/resources/blog"
+            href={`/${locale}/resources/blog`}
             className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-8"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -246,7 +249,7 @@ export default function First100RedditLeads() {
               Start with the strategy above, track your results, and iterate. And if you want to accelerate your results, consider using a tool like Truleado to automate the lead discovery process.
             </p>
             <p className="text-gray-700 mb-8">
-              Want to see how I find 50+ quality Reddit leads per week in under 2 hours? <Link href="/auth/signup" className="text-blue-600 font-semibold hover:text-blue-700">Try Truleado free for 7 days</Link>.
+              Want to see how I find 50+ quality Reddit leads per week in under 2 hours? <Link href={`/${locale}/auth/signup`} className="text-blue-600 font-semibold hover:text-blue-700">Try Truleado free for 7 days</Link>.
             </p>
 
             {/* CTA */}

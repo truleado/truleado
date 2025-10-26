@@ -4,10 +4,13 @@ export const dynamic = 'force-dynamic'
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import { ArrowRight, Calculator, TrendingUp, DollarSign, Clock, Users } from 'lucide-react'
 import { PublicHeader } from '@/components/PublicHeader'
 
 export default function ROICalculatorPage() {
+  const params = useParams()
+  const locale = params.locale as string || 'en'
   const [hours, setHours] = useState(10)
   const [rate, setRate] = useState(50)
   const [leadsFound, setLeadsFound] = useState(20)
@@ -183,7 +186,7 @@ export default function ROICalculatorPage() {
                 Join hundreds of SaaS founders using Truleado to find quality leads faster
               </p>
               <Link 
-                href="/auth/signup" 
+                href={`/${locale}/auth/signup`}
                 className="inline-flex items-center bg-white text-blue-600 px-8 py-4 rounded-2xl text-lg font-semibold hover:bg-gray-100 transition-all duration-200 shadow-xl hover:shadow-2xl"
               >
                 Start Free Trial

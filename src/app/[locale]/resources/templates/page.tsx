@@ -3,6 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import { ArrowRight, Download, CheckCircle, MessageSquare, Mail, FileEdit, FileText } from 'lucide-react'
 import { PublicHeader } from '@/components/PublicHeader'
 
@@ -58,6 +59,9 @@ const templates = [
 ]
 
 export default function TemplatesPage() {
+  const params = useParams()
+  const locale = params.locale as string || 'en'
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <PublicHeader />
@@ -139,7 +143,7 @@ export default function TemplatesPage() {
               Access all templates, tutorials, and exclusive guides with Truleado
             </p>
             <Link 
-              href="/auth/signup" 
+              href={`/${locale}/auth/signup`}
               className="inline-flex items-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-2xl text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-xl"
             >
               Get Started Free
