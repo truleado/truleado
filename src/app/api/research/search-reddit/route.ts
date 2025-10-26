@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
         
         // Try multiple search terms to get maximum posts for analysis
         let allPosts: any[] = []
+        let searchErrorHandled = false
         
         for (const searchTerm of searchTerms.slice(0, 3)) { // Use 3 searches to stay within time limits
           try {
@@ -88,17 +89,27 @@ export async function POST(request: NextRequest) {
             
             const redditResponse = await fetch(redditUrl, {
               headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
+                'User-Agent': 'Mozilla/5.0 (compatible; TruleadoBot/1.0; +https://truleado.com)',
                 'Accept': 'application/json',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Cache-Control': 'no-cache',
               },
               cache: 'no-store', // Force fresh requests
               signal: controller.signal,
+              redirect: 'follow',
             }).finally(() => clearTimeout(timeoutId))
 
             console.log(`📡 Reddit response status: ${redditResponse.status}`)
 
             if (!redditResponse.ok) {
-              console.error(`❌ Reddit API error for "${searchTerm}":`, redditResponse.status, redditResponse.statusText)
+              const errorText = await redditResponse.text().catch(() => 'Could not read error body')
+              console.error(`❌ Reddit API error for "${searchTerm}":`, {
+                status: redditResponse.status,
+                statusText: redditResponse.statusText,
+                headers: Object.fromEntries(redditResponse.headers.entries()),
+                errorBody: errorText.substring(0, 500)
+              })
               continue
             }
 
@@ -126,6 +137,20 @@ export async function POST(request: NextRequest) {
             // Store error details for debugging
             console.error('Error type:', searchError.name, 'Error message:', searchError.message)
             console.error('Stack trace:', searchError.stack)
+            
+            // Add to results with detailed error info
+            if (!searchErrorHandled) {
+              console.error('COMPLETE ERROR DETAILS:', {
+                name: searchError.name,
+                message: searchError.message,
+                code: searchError.code,
+                cause: searchError.cause,
+                stack: searchError.stack,
+                searchTerm: searchTerm,
+                url: redditUrl
+              })
+            }
+            searchErrorHandled = true
             continue
           }
         }
