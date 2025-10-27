@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useSubscription } from '@/lib/subscription-context'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/auth-context'
 
 export function useTrial() {
   const { showUpgradePrompt, trialTimeRemaining } = useSubscription()
