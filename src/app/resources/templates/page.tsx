@@ -8,20 +8,15 @@ import { PublicHeader } from '@/components/PublicHeader'
 
 const templates = [
   {
+    id: 'reddit-outreach',
     title: "Reddit Outreach Template",
-    description: "A proven template for reaching out to leads discovered on Reddit",
+    description: "4 proven templates for reaching out to leads discovered on Reddit",
     category: "Outreach",
     icon: <Mail className="w-8 h-8" />,
     downloads: "2.5K"
   },
   {
-    title: "Product Research Worksheet",
-    description: "Systematically analyze competitor products and find opportunities",
-    category: "Research",
-    icon: <FileText className="w-8 h-8" />,
-    downloads: "1.8K"
-  },
-  {
+    id: 'lead-qualification',
     title: "Lead Qualification Checklist",
     description: "Identify high-quality leads worth your time to pursue",
     category: "Sales",
@@ -29,8 +24,17 @@ const templates = [
     downloads: "3.2K"
   },
   {
+    id: 'product-research',
+    title: "Product Research Worksheet",
+    description: "Systematically map your product positioning for Reddit",
+    category: "Research",
+    icon: <FileText className="w-8 h-8" />,
+    downloads: "1.8K"
+  },
+  {
+    id: 'community-engagement',
     title: "Community Engagement Plan",
-    description: "Build trust and credibility in Reddit communities",
+    description: "30-day roadmap to build trust in Reddit communities",
     category: "Marketing",
     icon: <MessageSquare className="w-8 h-8" />,
     downloads: "1.5K"
@@ -65,16 +69,58 @@ export default function TemplatesPage() {
                   {template.icon}
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">{template.title}</h3>
-                <p className="text-gray-600 mb-4 flex-grow">{template.description}</p>
-                <div className="flex items-center justify-between">
-                  <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
-                    {template.category}
-                  </span>
-                  <span className="text-sm text-gray-500">{template.downloads} downloads</span>
+                <p className="text-gray-600 mb-4 flex-grow text-sm">{template.description}</p>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
+                      {template.category}
+                    </span>
+                    <span className="text-sm text-gray-500">{template.downloads}</span>
+                  </div>
+                  <a
+                    href={`/api/templates/download?template=${template.id}`}
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-3 rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download Free
+                  </a>
                 </div>
               </div>
             ))}
           </div>
+
+          {/* Templates Details Section */}
+          <section className="mb-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="bg-white rounded-2xl p-8 border border-gray-200">
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">Why Use These Templates?</h3>
+                <p className="text-gray-600 mb-4">
+                  These templates are based on proven strategies from SaaS founders who have successfully grown their businesses using Reddit lead generation. They help you:
+                </p>
+                <ul className="space-y-2 text-gray-600">
+                  <li>✓ Engage authentically without being spammy</li>
+                  <li>✓ Save hours of research and writing time</li>
+                  <li>✓ Avoid common mistakes that get you banned</li>
+                  <li>✓ Build genuine relationships with prospects</li>
+                  <li>✓ Qualify leads before investing time</li>
+                </ul>
+              </div>
+
+              <div className="bg-white rounded-2xl p-8 border border-gray-200">
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">How to Use These Templates</h3>
+                <p className="text-gray-600 mb-4">
+                  These are starting points, not scripts. Customize them for your specific:
+                </p>
+                <ul className="space-y-2 text-gray-600">
+                  <li>✓ Your product's unique value proposition</li>
+                  <li>✓ Your target customer's specific needs</li>
+                  <li>✓ The context of each conversation</li>
+                  <li>✓ Your authentic voice and personality</li>
+                  <li>✓ Reddit's community culture and rules</li>
+                </ul>
+              </div>
+            </div>
+          </section>
 
           {/* CTA Section */}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-12 text-center">

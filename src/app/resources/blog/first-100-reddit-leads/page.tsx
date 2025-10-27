@@ -1,10 +1,13 @@
-'use client'
-
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { ArrowRight, Calendar, Clock } from 'lucide-react'
 import { PublicHeader } from '@/components/PublicHeader'
+
+export const metadata = {
+  title: 'How to Find Your First 100 Reddit Leads in 30 Days | Truleado Blog',
+  description: 'Complete step-by-step guide to finding high-quality Reddit leads for your SaaS. Discover where to look, what to post, and how to convert opportunities into customers.',
+}
 
 export default function BlogPostPage() {
   return (
@@ -53,6 +56,9 @@ export default function BlogPostPage() {
             <p className="text-lg text-gray-700 mb-6">
               Reddit isn't just another social media platform. It's a goldmine of conversations where real people discuss their challenges, needs, and frustrations. Unlike traditional marketing channels, Reddit allows you to reach potential customers when they're actively seeking solutions.
             </p>
+            <p className="text-gray-700 mb-6">
+              According to <a href="https://www.redditinc.com/about" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">Reddit's official statistics</a>, the platform has over 50 million daily active users and 430 million monthly active users as of 2023. These users participate in 150,000+ active communities (subreddits), making it one of the most engaged platforms on the internet.
+            </p>
 
             <h2 className="text-3xl font-bold text-gray-900 mt-12 mb-6">The 30-Day Roadmap</h2>
             
@@ -93,7 +99,7 @@ export default function BlogPostPage() {
             <div className="bg-red-50 border-l-4 border-red-600 p-6 rounded-r-xl mb-8">
               <h3 className="text-xl font-bold text-gray-900 mb-3">Don't Be a Spammer</h3>
               <p className="text-gray-700">
-                Copy-pasting the same promotional message across multiple subreddits will get you banned. Focus on genuine engagement first.
+                Copy-pasting the same promotional message across multiple subreddits will get you banned. <a href="https://www.reddit.com/wiki/posting_guidelines/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">Reddit's content policy</a> strictly prohibits spam and promotional content. Focus on genuine engagement first.
               </p>
             </div>
 
@@ -107,6 +113,13 @@ export default function BlogPostPage() {
               <li>Generating personalized pitch ideas for each lead</li>
               <li>Tracking your outreach performance</li>
             </ul>
+
+            <div className="bg-blue-50 border-l-4 border-blue-600 p-6 rounded-r-xl my-8">
+              <p className="text-lg font-semibold text-gray-900 mb-2">💡 Want to learn more?</p>
+              <p className="text-gray-700 mb-4">
+                Check out our <Link href="/resources/blog/ai-powered-vs-manual-research" className="text-blue-600 hover:text-blue-700 font-semibold underline">AI vs Manual Lead Research</Link> article to see the ROI comparison, or explore our <Link href="/resources/blog/ultimate-reddit-marketing-strategy" className="text-blue-600 hover:text-blue-700 font-semibold underline">Ultimate Reddit Marketing Strategy</Link> guide.
+              </p>
+            </div>
 
             <h2 className="text-3xl font-bold text-gray-900 mt-12 mb-6">Real Results</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
@@ -145,6 +158,30 @@ export default function BlogPostPage() {
           </div>
         </div>
       </article>
+
+      {/* Related Articles */}
+      <section className="py-12 bg-white border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Related Articles</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Link href="/resources/blog/ultimate-reddit-marketing-strategy" className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-6 border border-gray-200 hover:border-blue-500">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">The Ultimate Reddit Marketing Strategy</h3>
+              <p className="text-gray-600 text-sm mb-4">Learn proven tactics to grow through Reddit engagement</p>
+              <div className="text-blue-600 font-semibold text-sm">Read Article →</div>
+            </Link>
+            <Link href="/resources/blog/reddit-communities-for-saas-founders" className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-6 border border-gray-200 hover:border-blue-500">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">10 Reddit Communities Every SaaS Founder Should Know</h3>
+              <p className="text-gray-600 text-sm mb-4">Discover where your potential customers hang out</p>
+              <div className="text-blue-600 font-semibold text-sm">Read Article →</div>
+            </Link>
+            <Link href="/resources/blog/ai-powered-vs-manual-research" className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-6 border border-gray-200 hover:border-blue-500">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">AI vs Manual Lead Research: ROI Comparison</h3>
+              <p className="text-gray-600 text-sm mb-4">See how much time and money you can save</p>
+              <div className="text-blue-600 font-semibold text-sm">Read Article →</div>
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

@@ -54,6 +54,46 @@ const blogPosts = [
     readTime: "7 min read",
     category: "Technical",
     image: "🔍"
+  },
+  {
+    title: "Reddit Marketing Automation: How to Scale Your Reddit Outreach",
+    excerpt: "Learn how to automate your Reddit marketing to never miss an opportunity without burning out.",
+    date: "January 20, 2025",
+    readTime: "10 min read",
+    category: "Automation",
+    image: "⚙️"
+  },
+  {
+    title: "Reddit Subreddit Monitoring: Never Miss a Lead Opportunity",
+    excerpt: "Discover how to effectively monitor Reddit subreddits and identify marketing opportunities at scale.",
+    date: "January 21, 2025",
+    readTime: "9 min read",
+    category: "Monitoring",
+    image: "👁️"
+  },
+  {
+    title: "Reddit Outreach Best Practices: Engage Without Seeming Spammy",
+    excerpt: "Master authentic Reddit engagement that adds value and converts without getting banned.",
+    date: "January 22, 2025",
+    readTime: "11 min read",
+    category: "Outreach",
+    image: "💬"
+  },
+  {
+    title: "Reddit Marketing ROI: Calculate Your Return on Investment",
+    excerpt: "Learn to measure, optimize, and maximize ROI for your Reddit marketing campaigns.",
+    date: "January 23, 2025",
+    readTime: "12 min read",
+    category: "ROI",
+    image: "📊"
+  },
+  {
+    title: "Reddit Lead Qualification: Identify High-Value Opportunities",
+    excerpt: "Master the framework for qualifying Reddit leads and focusing on opportunities that convert.",
+    date: "January 24, 2025",
+    readTime: "10 min read",
+    category: "Lead Generation",
+    image: "🎯"
   }
 ]
 
@@ -116,7 +156,12 @@ export default function BlogPage() {
               { post: blogPosts[2], href: "/resources/blog/ai-powered-vs-manual-research" },
               { post: blogPosts[3], href: "/resources/blog/reddit-communities-for-saas-founders" },
               { post: blogPosts[4], href: "/resources/blog/cold-email-to-warm-conversations" },
-              { post: blogPosts[5], href: "/resources/blog/reddit-seo-optimization" }
+              { post: blogPosts[5], href: "/resources/blog/reddit-seo-optimization" },
+              { post: blogPosts[6], href: "/resources/blog/reddit-marketing-automation" },
+              { post: blogPosts[7], href: "/resources/blog/reddit-subreddit-monitoring" },
+              { post: blogPosts[8], href: "/resources/blog/reddit-outreach-best-practices" },
+              { post: blogPosts[9], href: "/resources/blog/reddit-marketing-roi" },
+              { post: blogPosts[10], href: "/resources/blog/reddit-lead-qualification" }
             ].map((item, index) => (
               <Link 
                 key={index}
@@ -141,6 +186,28 @@ export default function BlogPage() {
                 </div>
               </Link>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Resources Section */}
+      <section className="py-16 bg-white border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Other Resources</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Link href="/resources/templates" className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 hover:shadow-xl transition-shadow border border-blue-200">
+              <div className="text-5xl mb-4">📝</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">Marketing Templates</h3>
+              <p className="text-gray-600 mb-4">Free templates to help you find leads and engage with prospects</p>
+              <div className="text-blue-600 font-semibold">View Templates →</div>
+            </Link>
+
+            <Link href="/resources/roi-calculator" className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-8 hover:shadow-xl transition-shadow border border-green-200">
+              <div className="text-5xl mb-4">💰</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">ROI Calculator</h3>
+              <p className="text-gray-600 mb-4">Calculate how much time and money you can save with Truleado</p>
+              <div className="text-green-600 font-semibold">Try Calculator →</div>
+            </Link>
           </div>
         </div>
       </section>

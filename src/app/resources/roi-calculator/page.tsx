@@ -115,6 +115,21 @@ export default function ROICalculatorPage() {
             </div>
           </div>
 
+          {/* Related Resources */}
+          <div className="bg-gray-50 rounded-3xl p-8 mb-8">
+            <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Learn More</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Link href="/resources/blog/ai-powered-vs-manual-research" className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+                <h4 className="text-lg font-bold text-gray-900 mb-2">AI vs Manual Lead Research</h4>
+                <p className="text-gray-600 text-sm">Detailed comparison of AI-powered and manual research methods</p>
+              </Link>
+              <Link href="/resources/blog/first-100-reddit-leads" className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+                <h4 className="text-lg font-bold text-gray-900 mb-2">How to Find Your First 100 Reddit Leads</h4>
+                <p className="text-gray-600 text-sm">Complete guide to finding and converting Reddit opportunities</p>
+              </Link>
+            </div>
+          </div>
+
           {/* CTA Section */}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-12 text-center">
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">

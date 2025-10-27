@@ -195,6 +195,30 @@ export default function RedditSEOPage() {
           </div>
         </div>
       </article>
+
+      {/* Related Articles */}
+      <section className="py-12 bg-white border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Related Articles</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Link href="/resources/blog/reddit-communities-for-saas-founders" className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-6 border border-gray-200 hover:border-blue-500">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">10 Reddit Communities Every SaaS Founder Should Know</h3>
+              <p className="text-gray-600 text-sm mb-4">Find the right communities to target</p>
+              <div className="text-blue-600 font-semibold text-sm">Read Article →</div>
+            </Link>
+            <Link href="/resources/blog/ultimate-reddit-marketing-strategy" className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-6 border border-gray-200 hover:border-blue-500">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">The Ultimate Reddit Marketing Strategy</h3>
+              <p className="text-gray-600 text-sm mb-4">Build your complete marketing strategy</p>
+              <div className="text-blue-600 font-semibold text-sm">Read Article →</div>
+            </Link>
+            <Link href="/resources/blog/cold-email-to-warm-conversations" className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-6 border border-gray-200 hover:border-blue-500">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">From Cold Email to Warm Conversations</h3>
+              <p className="text-gray-600 text-sm mb-4">Master the Reddit outreach approach</p>
+              <div className="text-blue-600 font-semibold text-sm">Read Article →</div>
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

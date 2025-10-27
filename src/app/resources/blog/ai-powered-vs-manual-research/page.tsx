@@ -137,6 +137,13 @@ export default function AIvsManualPage() {
               </div>
             </div>
 
+            <div className="bg-blue-50 border-l-4 border-blue-600 p-6 rounded-r-xl my-8">
+              <p className="text-lg font-semibold text-gray-900 mb-2">💡 Want to calculate your specific ROI?</p>
+              <p className="text-gray-700 mb-4">
+                Use our <Link href="/resources/roi-calculator" className="text-blue-600 hover:text-blue-700 font-semibold underline">interactive ROI calculator</Link> to see exactly how much time and money you could save with Truleado.
+              </p>
+            </div>
+
             <h2 className="text-3xl font-bold text-gray-900 mt-12 mb-6">Real-World ROI Example</h2>
             
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white mb-8">
@@ -196,6 +203,30 @@ export default function AIvsManualPage() {
           </div>
         </div>
       </article>
+
+      {/* Related Articles */}
+      <section className="py-12 bg-white border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Related Articles</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Link href="/resources/blog/first-100-reddit-leads" className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-6 border border-gray-200 hover:border-blue-500">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">How to Find Your First 100 Reddit Leads in 30 Days</h3>
+              <p className="text-gray-600 text-sm mb-4">A complete guide to finding leads on Reddit</p>
+              <div className="text-blue-600 font-semibold text-sm">Read Article →</div>
+            </Link>
+            <Link href="/resources/blog/ultimate-reddit-marketing-strategy" className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-6 border border-gray-200 hover:border-blue-500">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">The Ultimate Reddit Marketing Strategy</h3>
+              <p className="text-gray-600 text-sm mb-4">Learn proven tactics for Reddit marketing</p>
+              <div className="text-blue-600 font-semibold text-sm">Read Article →</div>
+            </Link>
+            <Link href="/resources/roi-calculator" className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-6 border border-gray-200 hover:border-blue-500">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">ROI Calculator</h3>
+              <p className="text-gray-600 text-sm mb-4">Calculate your savings with AI-powered tools</p>
+              <div className="text-blue-600 font-semibold text-sm">Try Calculator →</div>
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }
