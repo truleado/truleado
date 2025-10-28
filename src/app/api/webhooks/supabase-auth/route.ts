@@ -30,20 +30,39 @@ export async function POST(request: NextRequest) {
 
     // If profile doesn't exist yet, wait a moment and retry
     if (profileError && profileError.code === 'PGRST116') {
-      console.log('Profile not found yet, waiting...')
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      console.log('Profile not found yet, waiting for trigger to complete...')
       
-      const { data: retryProfile, error: retryError } = await supabase
-        .from('profiles')
-        .select('welcome_email_sent, created_at')
-        .eq('id', userId)
-        .single()
-
-      if (retryError) {
-        console.error('Error fetching user profile after retry:', retryError)
-        return NextResponse.json({ error: 'Failed to fetch user profile' }, { status: 500 })
+      // Retry up to 3 times with increasing delays
+      let retryProfile
+      let retryError
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        console.log(`Retry attempt ${attempt}/3...`)
+        await new Promise(resolve => setTimeout(resolve, 2000 * attempt)) // 2s, 4s, 6s delays
+        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('welcome_email_sent, created_at')
+          .eq('id', userId)
+          .single()
+        
+        retryProfile = data
+        retryError = error
+        
+        if (!retryError) {
+          console.log(`Profile found on attempt ${attempt}`)
+          break
+        }
+        
+        if (attempt === 3) {
+          console.error('Profile still not found after 3 retries')
+        }
       }
 
+      if (retryError) {
+        console.error('Error fetching user profile after all retries:', retryError)
+        return NextResponse.json({ error: 'Failed to fetch user profile' }, { status: 500 })
+      }
+      
       const finalProfile = retryProfile
       
       // Check if welcome email was already sent
