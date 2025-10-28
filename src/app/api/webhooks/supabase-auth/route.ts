@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { sendWelcomeEmailDirect } from '@/lib/direct-email-service'
+import { createHubSpotContact, convertUserToHubSpotContact } from '@/lib/hubspot-service'
 
 
 export async function POST(request: NextRequest) {
@@ -79,18 +80,37 @@ export async function POST(request: NextRequest) {
       }
 
       console.log('Welcome email sent successfully for user:', userId)
-      return NextResponse.json({
-        success: true,
-        message: 'Welcome email sent successfully',
-        emailId: emailResult.result?.emailId
-      })
     } else {
       console.error('Failed to send welcome email:', emailResult.error)
-      return NextResponse.json({
-        success: false,
-        error: emailResult.error || 'Failed to send welcome email'
-      }, { status: 500 })
+      // Don't fail the webhook if email fails
     }
+
+    // Push user to HubSpot (async, non-blocking)
+    try {
+      const hubspotContact = convertUserToHubSpotContact(
+        userEmail,
+        userName,
+        userId,
+        profile.created_at
+      )
+      
+      const hubspotResult = await createHubSpotContact(hubspotContact)
+      
+      if (hubspotResult.success) {
+        console.log('✅ HubSpot: User pushed successfully:', userEmail)
+      } else {
+        console.warn('⚠️  HubSpot: Failed to push user:', hubspotResult.error)
+      }
+    } catch (hubspotError) {
+      // Never let HubSpot errors break user signup
+      console.error('HubSpot integration error (non-blocking):', hubspotError)
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'User processed successfully',
+      emailId: emailResult.result?.emailId
+    })
   } catch (error) {
     console.error('Error in supabase-auth webhook:', error)
     return NextResponse.json({
