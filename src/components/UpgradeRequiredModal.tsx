@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Crown, Clock, CheckCircle, ArrowRight } from 'lucide-react'
+import { X, Crown, Clock, CheckCircle, ArrowRight, LogOut } from 'lucide-react'
+import { useAuth } from '@/contexts/auth-context'
 
 interface UpgradeRequiredModalProps {
   isOpen: boolean
@@ -19,6 +20,8 @@ export function UpgradeRequiredModal({
   isLoading = false 
 }: UpgradeRequiredModalProps) {
   const [isUpgrading, setIsUpgrading] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const { signOut } = useAuth()
 
   const handleUpgrade = async () => {
     setIsUpgrading(true)
@@ -26,6 +29,17 @@ export function UpgradeRequiredModal({
       await onUpgrade()
     } finally {
       setIsUpgrading(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+    try {
+      await signOut()
+    } catch (error) {
+      console.error('Logout error:', error)
+    } finally {
+      setIsLoggingOut(false)
     }
   }
 
@@ -121,10 +135,20 @@ export function UpgradeRequiredModal({
                 Remind Me Later
               </button>
             )}
+            {isTrialExpired && (
+              <button
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
+              </button>
+            )}
             <button
               onClick={handleUpgrade}
               disabled={isUpgrading || isLoading}
-              className={`${isTrialExpired ? 'w-full' : 'flex-1'} px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2`}
+              className={`${isTrialExpired ? 'flex-1' : 'flex-1'} px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2`}
             >
               <span>{isUpgrading ? 'Processing...' : 'Upgrade Now'}</span>
               <ArrowRight className="w-4 h-4" />
