@@ -63,16 +63,24 @@ export async function createHubSpotContact(contact: HubSpotContact): Promise<{ s
     const data = await response.json()
 
     if (!response.ok) {
+      // Log full error for debugging
+      console.error('❌ HubSpot error:', response.status, JSON.stringify(data, null, 2))
+      
       // Check if contact already exists (error code 409)
-      if (data.status === 'error' && data.message?.includes('already exists')) {
-        console.log('✅ HubSpot: Contact already exists, skipping:', contact.email)
-        return { success: true, error: 'Contact already exists' }
+      if (response.status === 409 || data.status === 'error' || (data.message && data.message.includes('already exists'))) {
+        console.log('✅ HubSpot: Contact already exists, attempting to update:', contact.email)
+        // Try to update instead of create
+        const updateResult = await updateHubSpotContact(contact.email, {
+          email: contact.email,
+          firstname: contact.firstname,
+          lastname: contact.lastname,
+        })
+        return { success: updateResult, error: updateResult ? undefined : 'Contact update failed' }
       }
 
-      console.error('❌ HubSpot error:', response.status, data)
       return { 
         success: false, 
-        error: `HubSpot API error: ${data.message || response.statusText}` 
+        error: `HubSpot API error (${response.status}): ${data.message || JSON.stringify(data)}` 
       }
     }
 
@@ -98,8 +106,40 @@ export async function updateHubSpotContact(email: string, properties: Record<str
       return false
     }
 
-    const response = await fetch(
-      `${HUBSPOT_API_BASE}/crm/v3/objects/contacts/${email}`,
+    // First, find the contact by email to get their ID
+    const searchResponse = await fetch(
+      `${HUBSPOT_API_BASE}/crm/v3/objects/contacts/search`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          filterGroups: [{
+            filters: [{
+              propertyName: 'email',
+              operator: 'EQ',
+              value: email
+            }]
+          }],
+          limit: 1
+        })
+      }
+    )
+
+    const searchData = await searchResponse.json()
+    
+    if (!searchData.results || searchData.results.length === 0) {
+      console.log('HubSpot: No contact found to update:', email)
+      return false
+    }
+
+    const contactId = searchData.results[0].id
+
+    // Update the contact using their ID
+    const updateResponse = await fetch(
+      `${HUBSPOT_API_BASE}/crm/v3/objects/contacts/${contactId}`,
       {
         method: 'PATCH',
         headers: {
@@ -112,7 +152,15 @@ export async function updateHubSpotContact(email: string, properties: Record<str
       }
     )
 
-    return response.ok
+    const updateData = await updateResponse.json()
+    
+    if (updateResponse.ok) {
+      console.log('✅ HubSpot: Contact updated successfully:', email)
+      return true
+    } else {
+      console.error('❌ HubSpot: Failed to update contact:', updateData)
+      return false
+    }
 
   } catch (error) {
     console.error('HubSpot: Failed to update contact:', error)
