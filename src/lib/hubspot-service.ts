@@ -34,6 +34,9 @@ export async function createHubSpotContact(contact: HubSpotContact): Promise<{ s
 
     console.log('📧 HubSpot: Creating contact for:', contact.email)
 
+    // Filter out custom properties that might not exist yet
+    const { truleado_user_id, truleado_signup_date, truleado_trial_status, ...standardProperties } = contact
+    
     const response = await fetch(
       `${HUBSPOT_API_BASE}/crm/v3/objects/contacts`,
       {
@@ -43,7 +46,7 @@ export async function createHubSpotContact(contact: HubSpotContact): Promise<{ s
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          properties: contact
+          properties: standardProperties
         })
       }
     )
