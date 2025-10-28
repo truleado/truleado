@@ -28,15 +28,45 @@ export async function POST(request: NextRequest) {
       .eq('id', userId)
       .single()
 
-    if (profileError) {
-      console.error('Error fetching user profile:', profileError)
-      return NextResponse.json({ error: 'Failed to fetch user profile' }, { status: 500 })
-    }
+    // If profile doesn't exist yet, wait a moment and retry
+    if (profileError && profileError.code === 'PGRST116') {
+      console.log('Profile not found yet, waiting...')
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      const { data: retryProfile, error: retryError } = await supabase
+        .from('profiles')
+        .select('welcome_email_sent, created_at')
+        .eq('id', userId)
+        .single()
 
-    // Check if welcome email was already sent
-    if (profile.welcome_email_sent) {
-      console.log('Welcome email already sent for user:', userId)
-      return NextResponse.json({ message: 'Welcome email already sent' })
+      if (retryError) {
+        console.error('Error fetching user profile after retry:', retryError)
+        return NextResponse.json({ error: 'Failed to fetch user profile' }, { status: 500 })
+      }
+
+      const finalProfile = retryProfile
+      
+      // Check if welcome email was already sent
+      if (finalProfile.welcome_email_sent) {
+        console.log('Welcome email already sent for user:', userId)
+        return NextResponse.json({ message: 'Welcome email already sent' })
+      }
+
+      // Use retry profile's created_at
+      var profileCreatedAt = finalProfile.created_at
+    } else {
+      if (profileError) {
+        console.error('Error fetching user profile:', profileError)
+        return NextResponse.json({ error: 'Failed to fetch user profile' }, { status: 500 })
+      }
+
+      // Check if welcome email was already sent
+      if (profile.welcome_email_sent) {
+        console.log('Welcome email already sent for user:', userId)
+        return NextResponse.json({ message: 'Welcome email already sent' })
+      }
+
+      var profileCreatedAt = profile.created_at
     }
 
     // Calculate trial end date (7 days from now)
@@ -91,7 +121,7 @@ export async function POST(request: NextRequest) {
         userEmail,
         userName,
         userId,
-        profile.created_at
+        profileCreatedAt || new Date().toISOString()
       )
       
       const hubspotResult = await createHubSpotContact(hubspotContact)
