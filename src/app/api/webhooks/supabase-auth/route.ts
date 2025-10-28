@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { sendWelcomeEmailDirect } from '@/lib/direct-email-service'
-import { createHubSpotContact, convertUserToHubSpotContact } from '@/lib/hubspot-service'
 
 
 export async function POST(request: NextRequest) {
@@ -132,27 +131,6 @@ export async function POST(request: NextRequest) {
     } else {
       console.error('Failed to send welcome email:', emailResult.error)
       // Don't fail the webhook if email fails
-    }
-
-    // Push user to HubSpot (async, non-blocking)
-    try {
-      const hubspotContact = convertUserToHubSpotContact(
-        userEmail,
-        userName,
-        userId,
-        profileCreatedAt || new Date().toISOString()
-      )
-      
-      const hubspotResult = await createHubSpotContact(hubspotContact)
-      
-      if (hubspotResult.success) {
-        console.log('✅ HubSpot: User pushed successfully:', userEmail)
-      } else {
-        console.warn('⚠️  HubSpot: Failed to push user:', hubspotResult.error)
-      }
-    } catch (hubspotError) {
-      // Never let HubSpot errors break user signup
-      console.error('HubSpot integration error (non-blocking):', hubspotError)
     }
 
     return NextResponse.json({
