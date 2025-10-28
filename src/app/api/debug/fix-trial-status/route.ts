@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
 
     // Calculate trial end date (1 day from now)
     const trialEndDate = new Date()
-    trialEndDate.setDate(trialEndDate.getDate() + 1)
+    trialEndDate.setDate(trialEndDate.getDate() + 7)
 
     // Set up trial for the current user
     const { data, error } = await supabase

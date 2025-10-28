@@ -39,9 +39,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Welcome email already sent' })
     }
 
-    // Calculate trial end date (1 day from now)
+    // Calculate trial end date (7 days from now)
     const trialEndDate = new Date()
-    trialEndDate.setDate(trialEndDate.getDate() + 1)
+    trialEndDate.setDate(trialEndDate.getDate() + 7)
 
     // Set up trial for the user
     const { error: trialError } = await supabase

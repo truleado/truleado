@@ -80,8 +80,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase.auth])
 
   const signIn = async (email: string, password: string) => {
+    const normalizedEmail = email.trim().toLowerCase()
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: normalizedEmail,
       password,
     })
     
@@ -89,8 +90,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signUp = async (email: string, password: string, name?: string) => {
+    const normalizedEmail = email.trim().toLowerCase()
     const { error } = await supabase.auth.signUp({
-      email,
+      email: normalizedEmail,
       password,
       options: {
         data: {
@@ -98,6 +100,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     })
+    
+    // If the user is already registered, attempt to sign them in directly
+    if (error && /already registered/i.test(error.message)) {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
+      })
+      return { error: signInError || null }
+    }
     
     return { error }
   }
