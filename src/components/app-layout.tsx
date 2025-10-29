@@ -21,7 +21,9 @@ import {
   BarChart3,
   Target,
   TrendingUp,
-  FileText
+  FileText,
+  PlayCircle,
+  HelpCircle
 } from 'lucide-react'
 import { TrialBanner } from './TrialBanner'
 import { NotificationBell } from './NotificationBell'
@@ -41,6 +43,7 @@ const RedditIcon = ({ className }: { className?: string }) => (
 )
 
 const navigation = [
+  { name: 'How to Use', href: '/how-to-use', icon: PlayCircle, description: 'Learn how to use Truleado' },
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, description: 'Overview & analytics' },
   { 
     name: 'Reddit', 
@@ -63,6 +66,7 @@ const navigation = [
     ]
   },
   { name: 'Settings', href: '/settings', icon: Settings, description: 'Account & preferences' },
+  { name: 'Help', href: '/help', icon: HelpCircle, description: 'Get help and support' },
 ]
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
