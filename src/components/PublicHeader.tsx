@@ -8,7 +8,7 @@ import { ResourcesDropdown } from '@/components/ResourcesDropdown'
 import { pricingTranslations } from '@/lib/pricing-translations'
 import type { Locale } from '@/lib/translations'
 import { locales } from '@/lib/translations'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, FileText, BookOpen, Calculator } from 'lucide-react'
 
 export function PublicHeader() {
   const pathname = usePathname()
@@ -123,30 +123,64 @@ export function PublicHeader() {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="sm:hidden fixed inset-x-0 top-16 bg-white shadow-lg border-b border-gray-200 z-40">
+        <div className="sm:hidden fixed inset-x-0 top-16 bg-white shadow-lg border-b border-gray-200 z-40 max-h-[calc(100vh-4rem)] overflow-y-auto">
           <div className="px-4 py-4 space-y-3">
             <LanguageSelector />
-            <Link 
-              href={`/${locale}/pricing`}
-              onClick={() => setMobileMenuOpen(false)}
-              className="block text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
-            >
-              {t.nav.pricing || 'Pricing'}
-            </Link>
-            <Link 
-              href="/auth/signin"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
-            >
-              {t.nav.signIn}
-            </Link>
-            <Link 
-              href="/auth/signup"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 text-center"
-            >
-              {t.nav.getStarted}
-            </Link>
+            
+            {/* Resources section */}
+            <div className="pt-2 border-t border-gray-200">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3">
+                Resources
+              </div>
+              <Link 
+                href="/resources/blog"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors rounded-lg hover:bg-gray-50"
+              >
+                <FileText className="w-4 h-4" />
+                <span>Blog</span>
+              </Link>
+              <Link 
+                href="/resources/templates"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors rounded-lg hover:bg-gray-50"
+              >
+                <BookOpen className="w-4 h-4" />
+                <span>Templates</span>
+              </Link>
+              <Link 
+                href="/resources/roi-calculator"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors rounded-lg hover:bg-gray-50"
+              >
+                <Calculator className="w-4 h-4" />
+                <span>ROI Calculator</span>
+              </Link>
+            </div>
+            
+            <div className="pt-2 border-t border-gray-200">
+              <Link 
+                href={`/${locale}/pricing`}
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors rounded-lg hover:bg-gray-50"
+              >
+                {t.nav.pricing || 'Pricing'}
+              </Link>
+              <Link 
+                href="/auth/signin"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors rounded-lg hover:bg-gray-50"
+              >
+                {t.nav.signIn}
+              </Link>
+              <Link 
+                href="/auth/signup"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 text-center mt-2"
+              >
+                {t.nav.getStarted}
+              </Link>
+            </div>
           </div>
         </div>
       )}
