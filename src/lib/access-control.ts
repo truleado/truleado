@@ -28,19 +28,9 @@ export const isSubscriptionActive = (user: UserWithSubscription): boolean => {
 export const getAccessLevel = (user: UserWithSubscription): AccessLevel => {
   if (!user) return 'none'
   
-  // Active subscription - give full access regardless of subscription_ends_at
+  // Only active subscription - give full access
   if (user.subscription_status === 'active') {
     return 'full'
-  }
-  
-  // 7-day trial period - give full access to all features
-  if (user.subscription_status === 'trial' && !isTrialExpired(user)) {
-    return 'full'
-  }
-  
-  // Expired trial or cancelled subscription - no access
-  if (user.subscription_status === 'expired' || user.subscription_status === 'cancelled') {
-    return 'none'
   }
   
   // Past due subscription - limited access
@@ -48,14 +38,15 @@ export const getAccessLevel = (user: UserWithSubscription): AccessLevel => {
     return 'limited'
   }
   
-  // Default to no access for new users (they need to start trial)
+  // All other statuses (trial, expired, cancelled, or no subscription) - no access
+  // Users must pay before using the product
   return 'none'
 }
 
 export const canAccessFeature = (user: UserWithSubscription, feature: string, currentProductCount?: number): boolean => {
   const accessLevel = getAccessLevel(user)
   
-  // Always accessible features (even without trial/subscription)
+  // Always accessible features (even without subscription) - only for billing/settings
   const alwaysAccessible = [
     'view_dashboard',
     'view_settings',
@@ -68,7 +59,7 @@ export const canAccessFeature = (user: UserWithSubscription, feature: string, cu
     return true
   }
   
-  // All other features require full access (trial or subscription)
+  // All other features require active subscription (payment required)
   return accessLevel === 'full'
 }
 
@@ -109,29 +100,13 @@ export const shouldShowUpgradePrompt = (user: UserWithSubscription): boolean => 
     return false
   }
   
-  // Don't show upgrade prompt to users who haven't started a trial yet
-  if (!user.subscription_status || user.subscription_status === 'trial') {
-    return false
-  }
-  
-  const accessLevel = getAccessLevel(user)
-  const timeRemaining = getTrialTimeRemaining(user)
-  
-  // Show upgrade prompt only if:
-  // 1. Trial has expired (no access) AND user has actually had a trial
-  // 2. Trial is expiring soon (less than 24 hours remaining)
-  return accessLevel === 'none' || timeRemaining < 24 * 60 * 60 * 1000
+  // Show upgrade prompt for all users without active subscription
+  // They need to pay before using the product
+  return true
 }
 
-// New function to check if user needs to start trial
+// Function to check if user needs to pay (no more trials)
 export const needsTrialStart = (user: UserWithSubscription): boolean => {
-  if (!user) return true
-  
-  // Never show trial start modal to users with active subscriptions
-  if (user.subscription_status === 'active') {
-    return false
-  }
-  
-  // User needs to start trial if they have no subscription status or expired trial
-  return !user.subscription_status || user.subscription_status === 'expired'
+  // Never show trial start - users must pay
+  return false
 }

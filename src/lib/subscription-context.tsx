@@ -95,12 +95,11 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       } else {
         console.error('Failed to fetch subscription status:', response.status, response.statusText)
         // For PRO users, maintain their subscription status even if API fails
-        // For new users, they'll need to start a trial
+        // For new users, they need to pay - no trial
         const fallbackUser = authUser as UserWithSubscription
         if (!fallbackUser.subscription_status) {
-          // Only set trial status if user has no subscription status at all
-          fallbackUser.subscription_status = 'trial'
-          fallbackUser.trial_ends_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+          // No trial - users must pay
+          fallbackUser.subscription_status = 'expired'
         }
         setUser(fallbackUser)
         setIsLoading(false)
@@ -108,12 +107,11 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     } catch (error) {
       console.error('Error refreshing subscription:', error)
       // For PRO users, maintain their subscription status even if API fails
-      // For new users, they'll need to start a trial
+      // For new users, they need to pay - no trial
       const fallbackUser = authUser as UserWithSubscription
       if (!fallbackUser.subscription_status) {
-        // Only set trial status if user has no subscription status at all
-        fallbackUser.subscription_status = 'trial'
-        fallbackUser.trial_ends_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        // No trial - users must pay
+        fallbackUser.subscription_status = 'expired'
       }
       setUser(fallbackUser)
       setIsLoading(false)
@@ -197,7 +195,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   const value: SubscriptionContextType = {
     user,
-    subscriptionStatus: user?.subscription_status || 'trial',
+    subscriptionStatus: user?.subscription_status || 'expired',
     accessLevel,
     trialTimeRemaining,
     showUpgradePrompt,

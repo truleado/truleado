@@ -68,11 +68,11 @@ export function AccessGuard({ feature, children, fallback }: AccessGuardProps) {
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
           <Lock className="h-6 w-6 text-gray-400" />
         </div>
-        <h3 className="mt-2 text-sm font-medium text-gray-900">Feature Restricted</h3>
+        <h3 className="mt-2 text-sm font-medium text-gray-900">Subscription Required</h3>
         <p className="mt-1 text-sm text-gray-500">
           {accessLevel === 'limited' 
-            ? 'Your trial has expired. Upgrade to continue using this feature.'
-            : 'You need an active subscription to access this feature.'
+            ? 'Your subscription is past due. Update your payment method to continue using this feature.'
+            : 'You need an active subscription to access this feature. Please subscribe to continue.'
           }
         </p>
         <div className="mt-6">

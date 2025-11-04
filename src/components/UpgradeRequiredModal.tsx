@@ -58,7 +58,7 @@ export function UpgradeRequiredModal({
                 <Crown className="w-5 h-5 text-yellow-600" />
               </div>
               <h2 className="text-xl font-bold text-gray-900">
-                {isTrialExpired ? 'Trial Expired' : 'Upgrade Required'}
+                Subscription Required
               </h2>
             </div>
             <button
@@ -82,16 +82,10 @@ export function UpgradeRequiredModal({
                 )}
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {isTrialExpired 
-                  ? 'Your 7-day trial has ended' 
-                  : 'Your trial is ending soon'
-                }
+                Subscription Required
               </h3>
               <p className="text-gray-600">
-                {isTrialExpired 
-                  ? 'Upgrade to continue using all Truleado features.'
-                  : `Your trial ends in ${trialTimeRemaining}. Upgrade now to keep your access.`
-                }
+                You need an active subscription to access all Truleado features. Subscribe now to get started.
               </p>
             </div>
 

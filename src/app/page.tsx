@@ -149,7 +149,7 @@ export default function Home() {
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent block sm:inline"> Reddit Leads</span>
             </h1>
             <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-gray-600 mb-4 sm:mb-6 max-w-4xl mx-auto leading-relaxed px-2 sm:px-4">
-              Analyze any website, extract keywords, and discover strategic Reddit opportunities with AI-powered insights and pitch ideas. Start your 7-day free trial today.
+              Analyze any website, extract keywords, and discover strategic Reddit opportunities with AI-powered insights and pitch ideas. Subscribe now to get started.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8 md:mb-12 px-2 sm:px-4">
@@ -157,7 +157,7 @@ export default function Home() {
                 href="/auth/signup" 
                 className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 rounded-lg sm:rounded-xl md:rounded-2xl text-sm sm:text-base md:text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 flex items-center justify-center transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
               >
-                Start Free Trial
+                Get Started
                 <ArrowRight className="ml-1.5 sm:ml-2 w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
               </Link>
               <Link 

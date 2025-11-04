@@ -144,8 +144,8 @@ export default function Home({ params }: Props) {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-3xl mx-auto px-2 sm:px-4">
               <div className="text-center">
-                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">7 Days</div>
-                <div className="text-xs sm:text-sm md:text-base text-gray-600">{t.stats.freeTrial}</div>
+                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">Unlimited</div>
+                <div className="text-xs sm:text-sm md:text-base text-gray-600">Access</div>
               </div>
               <div className="text-center">
                 <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">AI-Powered</div>
@@ -321,55 +321,54 @@ export default function Home({ params }: Props) {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto">
-            {/* Free Trial Card */}
+            {/* Subscription Card - No Free Trial */}
             <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-gray-200 p-6 sm:p-8 hover:shadow-2xl transition-shadow duration-300">
               <div className="text-center">
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{t.pricing.freeTrial.title}</h3>
-                <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8">{t.pricing.freeTrial.subtitle}</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Subscribe Now</h3>
+                <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8">Get full access to all features with an active subscription</p>
                 
                 <div className="mb-6 sm:mb-8">
                   <div className="flex items-baseline justify-center">
-                    <span className="text-4xl sm:text-5xl font-bold text-gray-900">{t.pricing.freeTrial.price}</span>
-                    <span className="text-lg sm:text-xl text-gray-500 ml-2">{t.pricing.freeTrial.period}</span>
+                    <span className="text-4xl sm:text-5xl font-bold text-gray-900">Starting at</span>
                   </div>
-                  <p className="mt-2 text-xs sm:text-sm text-gray-600">{t.pricing.freeTrial.noCreditCard}</p>
+                  <p className="mt-2 text-xs sm:text-sm text-gray-600">See pricing page for details</p>
                 </div>
 
                 <Link 
-                  href="/auth/signup" 
-                  className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold hover:from-green-600 hover:to-green-700 flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl"
+                  href={`/${locale}/pricing`}
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
-                  Start Free Trial
+                  View Pricing
                   <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
                 </Link>
               </div>
 
               <div className="mt-6 sm:mt-8 border-t border-gray-200 pt-6 sm:pt-8">
-                <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">{t.pricing.freeTrial.includedTitle}</h4>
+                <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">What's Included</h4>
                 <ul className="space-y-3 sm:space-y-4">
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t.pricing.freeTrial.item1}</span>
+                    <span className="text-sm sm:text-base text-gray-700">Unlimited Reddit lead discovery</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t.pricing.freeTrial.item2}</span>
+                    <span className="text-sm sm:text-base text-gray-700">AI-powered content generation</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t.pricing.freeTrial.item3}</span>
+                    <span className="text-sm sm:text-base text-gray-700">Advanced analytics & insights</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t.pricing.freeTrial.item4}</span>
+                    <span className="text-sm sm:text-base text-gray-700">Product management tools</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t.pricing.freeTrial.item5}</span>
+                    <span className="text-sm sm:text-base text-gray-700">Export & data management</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t.pricing.freeTrial.item6}</span>
+                    <span className="text-sm sm:text-base text-gray-700">Priority support</span>
                   </li>
                 </ul>
               </div>
@@ -396,10 +395,10 @@ export default function Home({ params }: Props) {
                 </div>
 
                 <Link 
-                  href="/auth/signup" 
+                  href={`/${locale}/pricing`}
                   className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 flex items-center justify-center transition-all duration-200 shadow-xl hover:shadow-2xl"
                 >
-                  Start Free Trial
+                  Subscribe Now
                   <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
                 </Link>
               </div>
