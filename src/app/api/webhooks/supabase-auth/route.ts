@@ -87,27 +87,21 @@ export async function POST(request: NextRequest) {
       var profileCreatedAt = profile.created_at
     }
 
-    // Calculate trial end date (7 days from now)
-    const trialEndDate = new Date()
-    trialEndDate.setDate(trialEndDate.getDate() + 7)
-
-    // Set up trial for the user
-    const { error: trialError } = await supabase
+    // Set subscription status to expired - users must pay before using product
+    // No free trials available
+    const { error: subscriptionError } = await supabase
       .from('profiles')
       .update({
-        subscription_status: 'trial',
-        trial_ends_at: trialEndDate.toISOString(),
-        trial_count: 1,
-        last_trial_at: new Date().toISOString()
+        subscription_status: 'expired'
       })
       .eq('id', userId)
 
-    if (trialError) {
-      console.error('Error setting up trial for user:', trialError)
-      return NextResponse.json({ error: 'Failed to set up trial' }, { status: 500 })
+    if (subscriptionError) {
+      console.error('Error setting subscription status for user:', subscriptionError)
+      // Don't fail the webhook if this fails - profile was created by trigger
     }
 
-    console.log('Trial set up for user:', userId, 'trial ends at:', trialEndDate.toISOString())
+    console.log('New user registered:', userId, '- Subscription status set to expired (payment required)')
 
     // Send welcome email using the new service
     const emailResult = await sendWelcomeEmailDirect(userEmail, userName || 'User')
