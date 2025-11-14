@@ -95,13 +95,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
       
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Attempting sign in with:', {
+        email: normalizedEmail,
+        supabaseUrl: supabaseUrl?.substring(0, 30) + '...',
+        hasKey: !!supabaseAnonKey
+      })
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password,
       })
       
       if (error) {
-        console.error('Sign in error:', error)
+        console.error('Sign in error details:', {
+          message: error.message,
+          status: error.status,
+          name: error.name
+        })
+      } else {
+        console.log('Sign in successful:', data.user?.id)
       }
       
       return { error }
