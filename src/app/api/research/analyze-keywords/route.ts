@@ -169,7 +169,7 @@ Return ONLY a valid JSON object with this exact structure:
         description: string
         keywords: string[]
       }>(prompt, {
-        model: 'openai/gpt-4o-mini',
+        model: 'google/gemini-2.5-pro-exp-03-25',
         temperature: 0.7,
         max_tokens: 1000
       })

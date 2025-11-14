@@ -263,7 +263,7 @@ Create content that will genuinely help the r/${subreddit} community and encoura
       title: string
       body: string
     }>(prompt, {
-      model: 'openai/gpt-4o-mini',
+      model: 'google/gemini-2.5-pro-exp-03-25',
       temperature: 0.8,
       max_tokens: 2048
     })
@@ -343,7 +343,7 @@ Return ONLY a JSON array of 5-8 subreddit names (without "r/" prefix):
 
   try {
     const subreddits = await callOpenRouterJSON<string[]>(prompt, {
-      model: 'openai/gpt-4o-mini',
+      model: 'google/gemini-2.5-pro-exp-03-25',
       temperature: 0.7,
       max_tokens: 512
     })

@@ -39,7 +39,7 @@ export async function callOpenRouter(
   }
 
   const {
-    model = 'openai/gpt-4o-mini', // Default to cost-effective model
+    model = 'google/gemini-2.5-pro-exp-03-25', // Default model
     temperature = 0.7,
     max_tokens = 4096,
     response_format

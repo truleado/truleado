@@ -215,7 +215,7 @@ Base everything on the actual website content provided. If the website is about 
       painPoints: string[]
       idealCustomerProfile: string
     }>(prompt, {
-      model: 'openai/gpt-4o-mini',
+        model: 'google/gemini-2.5-pro-exp-03-25',
       temperature: 0.7,
       max_tokens: 2000
     })
