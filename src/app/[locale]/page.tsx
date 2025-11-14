@@ -3,18 +3,18 @@
 import Link from "next/link";
 import { ArrowRight, Filter, Target, Zap, Users, TrendingUp, CheckCircle, Sparkles, BarChart3, Clock, Shield, Globe, Star, Brain, Search, Bell, Mail, Megaphone, Instagram, DollarSign, TrendingDown, Globe2, Award, CheckCircle2, PlayCircle } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
-import { useEffect, use } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { PublicHeader } from "@/components/PublicHeader";
 import type { Locale } from "@/lib/translations";
 import { translations, getTranslation } from "@/lib/full-homepage-translations";
 
 type Props = {
-  params: Promise<{ locale: Locale }>
+  params: { locale: Locale }
 }
 
 export default function Home({ params }: Props) {
-  const { locale } = use(params)
+  const { locale } = params
   
   // Get translations for current locale
   const t = translations[locale] || translations['en']

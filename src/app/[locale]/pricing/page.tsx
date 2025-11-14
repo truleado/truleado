@@ -3,17 +3,17 @@
 import Link from "next/link";
 import { Check, ArrowRight, Filter, Zap, Target, Users, Brain, Clock, Shield, Star, Sparkles, Megaphone } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
-import { useEffect, use } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { pricingTranslations } from "@/lib/pricing-translations";
 import { PublicHeader } from "@/components/PublicHeader";
 
 type Props = {
-  params: Promise<{ locale: string }>;
+  params: { locale: string };
 };
 
 export default function Pricing({ params }: Props) {
-  const { locale } = use(params);
+  const { locale } = params;
   const { user, loading } = useAuth();
   const router = useRouter();
   const t = pricingTranslations[locale as keyof typeof pricingTranslations] || pricingTranslations.en;
