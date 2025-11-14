@@ -124,7 +124,7 @@ Respond ONLY in valid JSON format like this:
       posts: Array<{ title: string; description: string }>
       suggestedSubreddits: string[]
     }>(prompt, {
-        model: 'google/gemini-2.5-pro-exp',
+        model: 'google/gemini-2.0-flash-exp:free',
       temperature: 0.8,
       max_tokens: 2000
     })

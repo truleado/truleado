@@ -114,7 +114,7 @@ Suggest 5-8 most relevant subreddits, ordered by relevance score (highest first)
 
   try {
     const suggestedSubreddits = await callOpenRouterJSON<SuggestedSubreddit[]>(prompt, {
-        model: 'google/gemini-2.5-pro-exp',
+        model: 'google/gemini-2.0-flash-exp:free',
       temperature: 0.7,
       max_tokens: 1024
     })

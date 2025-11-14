@@ -83,7 +83,7 @@ Return ONLY a valid JSON object with this exact structure:
 
     try {
       const searchStrategy = await callOpenRouterJSON<SearchStrategy>(prompt, {
-        model: 'google/gemini-2.5-pro-exp',
+        model: 'google/gemini-2.0-flash-exp:free',
         temperature: 0.3,
         max_tokens: 1000
       })

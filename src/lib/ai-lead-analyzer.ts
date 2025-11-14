@@ -64,7 +64,7 @@ export class AILeadAnalyzer {
         qualityScore: number
         confidence: number
       }>(prompt, {
-        model: 'google/gemini-2.5-pro-exp',
+        model: 'google/gemini-2.0-flash-exp:free',
         temperature: 0.7,
         max_tokens: 1000
       })

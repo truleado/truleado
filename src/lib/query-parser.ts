@@ -110,7 +110,7 @@ Query: "I need leads for my email marketing software"
 Focus on finding people who are ACTIVELY discussing problems and seeking solutions, not just mentioning keywords. The search terms should be what people actually say when they're frustrated or looking for help.`
 
     const parsed = await callOpenRouterJSON<ParsedQuery>(prompt, {
-        model: 'google/gemini-2.5-pro-exp',
+        model: 'google/gemini-2.0-flash-exp:free',
       temperature: 0.7,
       max_tokens: 1024
     })

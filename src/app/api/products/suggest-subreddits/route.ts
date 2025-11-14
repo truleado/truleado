@@ -129,7 +129,7 @@ ${productSummary}`
 
   try {
     const subreddits = await callOpenRouterJSON<string[]>(prompt, {
-        model: 'google/gemini-2.5-pro-exp',
+        model: 'google/gemini-2.0-flash-exp:free',
       temperature: 0.3,
       max_tokens: 1000
     })

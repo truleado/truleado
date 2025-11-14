@@ -39,7 +39,7 @@ export async function callOpenRouter(
   }
 
   const {
-    model = 'google/gemini-2.5-pro-exp', // Default model
+    model = 'google/gemini-2.0-flash-exp:free', // Default model
     temperature = 0.7,
     max_tokens = 4096,
     response_format

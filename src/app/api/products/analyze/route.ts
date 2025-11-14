@@ -215,7 +215,7 @@ Base everything on the actual website content provided. If the website is about 
       painPoints: string[]
       idealCustomerProfile: string
     }>(prompt, {
-        model: 'google/gemini-2.5-pro-exp',
+        model: 'google/gemini-2.0-flash-exp:free',
       temperature: 0.7,
       max_tokens: 2000
     })

@@ -88,12 +88,18 @@ export async function POST(request: NextRequest) {
       var profileCreatedAt = profile.created_at
     }
 
-    // Set subscription status to expired - users must pay before using product
-    // No free trials available
+    // Set subscription status to trial with 7-day trial period
+    // The database trigger should already set this, but we ensure it's correct
+    const trialEndsAt = new Date()
+    trialEndsAt.setDate(trialEndsAt.getDate() + 7) // 7 days from now
+    
     const { error: subscriptionError } = await supabase
       .from('profiles')
       .update({
-        subscription_status: 'expired'
+        subscription_status: 'trial',
+        trial_ends_at: trialEndsAt.toISOString(),
+        trial_count: 1,
+        last_trial_at: new Date().toISOString()
       })
       .eq('id', userId)
 
@@ -102,7 +108,7 @@ export async function POST(request: NextRequest) {
       // Don't fail the webhook if this fails - profile was created by trigger
     }
 
-    console.log('New user registered:', userId, '- Subscription status set to expired (payment required)')
+    console.log('New user registered:', userId, '- 7-day free trial started')
 
     // Send welcome email using the new service
     const emailResult = await sendWelcomeEmailDirect(userEmail, userName || 'User')
