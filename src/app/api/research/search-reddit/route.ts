@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
-import { callOpenRouterJSON } from '@/lib/openrouter-client'
 
 // Force Node.js runtime to avoid Edge runtime fetch limitations
 export const runtime = 'nodejs'
@@ -247,7 +246,7 @@ export async function POST(request: NextRequest) {
           continue
         }
 
-        // Extract post data
+        // Extract post data (without AI analysis to save API costs)
         const postData = uniquePosts.map((post: any) => ({
           title: post.data.title,
           selftext: post.data.selftext || '',
@@ -256,120 +255,24 @@ export async function POST(request: NextRequest) {
           num_comments: post.data.num_comments,
           url: `https://reddit.com${post.data.permalink}`,
           created_utc: post.data.created_utc,
-          author: post.data.author
+          author: post.data.author,
+          // Analysis will be done on-demand when user clicks "Pitch" button
+          reasoning: null,
+          samplePitch: null
         }))
         
-        console.log(`📝 Extracted post data for ${postData.length} posts - sending to AI for analysis`)
+        console.log(`📝 Extracted post data for ${postData.length} posts (AI analysis will be done on-demand)`)
 
-        // Use Gemini to strategically analyze posts and provide pitch ideas
-        const prompt = `You are analyzing Reddit posts to find HIGH-QUALITY pitching opportunities for a specific product/service.
-
-PRODUCT/SERVICE CONTEXT:
-- Product Name: ${productName || 'Unknown Product'}
-- Description: ${productDescription}
-
-KEYWORD BEING SEARCHED: "${keyword}"
-
-OBJECTIVE: Find ONLY the most relevant posts where someone could strategically pitch this product/service with high success probability.
-
-ANALYZE THESE REDDIT POSTS:
-${postData.map((post, index) => `
-${index + 1}. Title: "${post.title}"
-   Content: "${post.selftext.substring(0, 300)}..."
-   Subreddit: r/${post.subreddit}
-   Score: ${post.score}
-   Comments: ${post.num_comments}
-`).join('\n')}
-
-CRITERIA FOR RELEVANT PITCHING OPPORTUNITIES (Include if the post is loosely related):
-1. Posts mentioning problems or topics related to ${keyword}
-2. Posts asking for help, recommendations, or solutions
-3. Posts discussing ${keyword} or related topics
-4. Posts showing interest in solutions to problems
-
-For each relevant post, provide:
-1. Post index (0-based)
-2. Reasoning for why it's a pitching opportunity
-3. Sample pitch idea (2-3 sentences)
-
-Return ONLY a valid JSON object with this exact structure:
-{
-  "posts": [
-    {
-      "index": 0,
-      "reasoning": "Brief explanation of why this post is relevant",
-      "samplePitch": "Sample pitch idea (2-3 sentences)"
-    }
-  ]
-}
-
-Include posts that are at least somewhat relevant to ${keyword}. Be inclusive - better to include more posts than exclude them.`
-
-        const strategicAnalysisResponse = await callOpenRouterJSON<any>(prompt, {
-          model: 'openai/gpt-4o-mini',
-          temperature: 0.7,
-          max_tokens: 2000
-        })
-
-        console.log(`🤖 OpenRouter response for "${keyword}":`, strategicAnalysisResponse)
-
-        // Handle different response formats - expect object with posts array
-        let strategicAnalysis: Array<{index: number, reasoning: string, samplePitch: string}> = []
-        
-        if (Array.isArray(strategicAnalysisResponse)) {
-          // Direct array response (fallback)
-          strategicAnalysis = strategicAnalysisResponse
-        } else if (strategicAnalysisResponse && typeof strategicAnalysisResponse === 'object') {
-          // Check if response is wrapped in an object (expected format: { posts: [...] })
-          if (Array.isArray(strategicAnalysisResponse.posts)) {
-            strategicAnalysis = strategicAnalysisResponse.posts
-          } else if (Array.isArray(strategicAnalysisResponse.data)) {
-            strategicAnalysis = strategicAnalysisResponse.data
-          } else if (Array.isArray(strategicAnalysisResponse.results)) {
-            strategicAnalysis = strategicAnalysisResponse.results
-          } else {
-            // Try to find any array property
-            const arrayKey = Object.keys(strategicAnalysisResponse).find(key => 
-              Array.isArray(strategicAnalysisResponse[key])
-            )
-            if (arrayKey) {
-              strategicAnalysis = strategicAnalysisResponse[arrayKey]
-            } else {
-              console.warn(`⚠️ OpenRouter response is not an array or wrapped array for "${keyword}":`, strategicAnalysisResponse)
-              strategicAnalysis = []
-            }
-          }
-        } else {
-          console.warn(`⚠️ Invalid OpenRouter response format for "${keyword}":`, strategicAnalysisResponse)
-          strategicAnalysis = []
-        }
-
-        console.log(`✅ Parsed ${strategicAnalysis.length} strategic posts from AI for "${keyword}"`)
-
-        // Validate and get the strategic posts with analysis
-        const strategicPosts = strategicAnalysis
-          .filter(analysis => 
-            analysis && 
-            typeof analysis === 'object' &&
-            typeof analysis.index === 'number' &&
-            analysis.index >= 0 && 
-            analysis.index < postData.length
-          )
-          .map(analysis => ({
-            ...postData[analysis.index],
-            reasoning: analysis.reasoning || '',
-            samplePitch: analysis.samplePitch || ''
-          }))
-          .slice(0, 10) // Limit to top 10 strategic posts
-
+        // Return all posts without AI analysis to save API costs
+        // Users will click "Pitch" button to analyze individual posts
         results.push({
           keyword,
           totalPosts: uniquePosts.length,
-          strategicPosts: strategicPosts.length,
-          posts: strategicPosts
+          strategicPosts: postData.length, // All posts are potential opportunities
+          posts: postData.slice(0, 50) // Limit to top 50 posts per keyword
         })
 
-        console.log(`✅ Found ${strategicPosts.length} strategic posts for "${keyword}"`)
+        console.log(`✅ Found ${postData.length} posts for "${keyword}" (ready for on-demand analysis)`)
 
       } catch (error: any) {
         console.error(`Error processing keyword "${keyword}":`, error)
@@ -383,14 +286,14 @@ Include posts that are at least somewhat relevant to ${keyword}. Be inclusive - 
       }
     }
 
-    const totalStrategicPosts = results.reduce((sum, r) => sum + (r.strategicPosts || 0), 0)
+    const totalPosts = results.reduce((sum, r) => sum + (r.totalPosts || 0), 0)
     const totalKeywords = results.length
     const elapsedTime = Date.now() - startTime
 
-    console.log(`✅ Reddit search completed in ${elapsedTime}ms - Found ${totalStrategicPosts} strategic posts across ${totalKeywords} keywords`)
+    console.log(`✅ Reddit search completed in ${elapsedTime}ms - Found ${totalPosts} posts across ${totalKeywords} keywords (ready for on-demand analysis)`)
 
-    // Handle case where no strategic posts were found
-    if (totalStrategicPosts === 0) {
+    // Handle case where no posts were found
+    if (totalPosts === 0) {
       console.log(`⚠️ No strategic posts found. Results:`, results.map(r => ({ 
         keyword: r.keyword, 
         totalPosts: r.totalPosts, 

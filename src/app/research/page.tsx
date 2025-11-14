@@ -17,6 +17,8 @@ export default function ResearchPage() {
   const [savingPosts, setSavingPosts] = useState<Set<string>>(new Set())
   const [savedPostIds, setSavedPostIds] = useState<Set<string>>(new Set())
   const [showDataRestoredBanner, setShowDataRestoredBanner] = useState(false)
+  const [analyzingPosts, setAnalyzingPosts] = useState<Set<string>>(new Set())
+  const [postAnalyses, setPostAnalyses] = useState<Map<string, {reasoning: string, samplePitch: string}>>(new Map())
 
   // Load saved data from localStorage on component mount
   useEffect(() => {
@@ -198,6 +200,80 @@ export default function ResearchPage() {
     }
   }
 
+
+  const handleAnalyzePost = async (post: any, keyword: string) => {
+    const postId = post.url
+    const productName = analysisResult?.productName || 'this product'
+    const productDescription = isEditing ? editableDescription : analysisResult?.description || ''
+    
+    if (!productDescription) {
+      alert('Product description is required for analysis')
+      return
+    }
+
+    try {
+      setAnalyzingPosts(prev => new Set(prev).add(postId))
+      
+      const response = await fetch('/api/research/analyze-post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          post,
+          productName,
+          productDescription,
+          keyword
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to analyze post')
+      }
+
+      const data = await response.json()
+      
+      // Store the analysis result
+      setPostAnalyses(prev => {
+        const newMap = new Map(prev)
+        newMap.set(postId, {
+          reasoning: data.analysis.reasoning,
+          samplePitch: data.analysis.samplePitch
+        })
+        return newMap
+      })
+
+      // Update the post in redditResults to include analysis
+      setRedditResults((prev: any) => {
+        if (!prev || !prev.results) return prev
+        
+        const updatedResults = prev.results.map((result: any) => {
+          if (result.keyword === keyword) {
+            return {
+              ...result,
+              posts: result.posts.map((p: any) => 
+                p.url === postId 
+                  ? { ...p, reasoning: data.analysis.reasoning, samplePitch: data.analysis.samplePitch }
+                  : p
+              )
+            }
+          }
+          return result
+        })
+        
+        return { ...prev, results: updatedResults }
+      })
+    } catch (error: any) {
+      alert(`Error analyzing post: ${error.message}`)
+    } finally {
+      setAnalyzingPosts(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(postId)
+        return newSet
+      })
+    }
+  }
 
   const handleSaveRedditLead = async (post: any, keyword: string) => {
     const postId = `${post.subreddit}-${post.title.substring(0, 20)}`
@@ -697,120 +773,119 @@ export default function ResearchPage() {
                                 <h4 className="text-lg font-semibold text-gray-900">🔍 "{result.keyword}"</h4>
                               </div>
                               <p className="text-gray-600 text-sm mt-1">
-                                {result.strategicPosts || 0} strategic opportunities found • {result.totalPosts} total posts analyzed
+                                {result.posts?.length || 0} posts found • Click "Pitch" to analyze each lead
                               </p>
                             </div>
                             
-                            {/* Posts in Rows */}
+                            {/* Posts in Card Grid Layout */}
                             {result.posts && result.posts.length > 0 ? (
-                              <div className="divide-y divide-gray-200">
-                                {result.posts.map((post: any, postIndex: number) => (
-                                  <div key={postIndex} className="p-6 hover:bg-gray-50 transition-colors">
-                                    <div className="flex items-start justify-between">
-                                      <div className="flex-1 min-w-0">
-                                        {/* Post Title */}
-                                        <h5 className="text-lg font-semibold text-gray-900 mb-2 leading-tight">
-                                          {post.title}
-                                        </h5>
-                                        
-                                        {/* Post Meta */}
-                                        <div className="flex items-center text-sm text-gray-500 gap-4 mb-3">
-                                          <span className="bg-gray-100 px-2 py-1 rounded-full text-xs">r/{post.subreddit}</span>
-                                          <span className="flex items-center text-green-600">
-                                            <span className="font-medium">{post.score}</span>
-                                            <span className="ml-1">↑</span>
-                                          </span>
-                                          <span className="flex items-center text-blue-600">
-                                            <span className="font-medium">{post.num_comments}</span>
-                                            <span className="ml-1">💬</span>
-                                          </span>
-                                        </div>
-                                        
-                                        {/* Post Content */}
-                                        {post.selftext && (
-                                          <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-orange-300 mb-3">
-                                            <p className="text-gray-700 text-sm leading-relaxed">
-                                              {post.selftext.length > 300 
-                                                ? `${post.selftext.substring(0, 300)}...` 
-                                                : post.selftext
-                                              }
-                                            </p>
-                                            {post.selftext.length > 300 && (
-                                              <p className="text-orange-600 text-xs mt-2 font-medium">
-                                                Click "View Post" to read the full content
-                                              </p>
-                                            )}
-                                          </div>
-                                        )}
-                                        
-                                        {/* Strategic Analysis */}
-                                        {post.reasoning && (
-                                          <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-300 mb-3">
-                                            <div className="flex items-start mb-2">
-                                              <div className="w-2 h-2 bg-blue-500 rounded-full mr-2 mt-2"></div>
-                                              <h6 className="text-blue-900 font-semibold text-sm">Why This Is A Good Opportunity:</h6>
-                                            </div>
-                                            <p className="text-blue-800 text-sm leading-relaxed">{post.reasoning}</p>
-                                          </div>
-                                        )}
-                                        
-                                        {/* Sample Pitch */}
-                                        {post.samplePitch && (
-                                          <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-300 mb-3">
-                                            <div className="flex items-start mb-2">
-                                              <div className="w-2 h-2 bg-green-500 rounded-full mr-2 mt-2"></div>
-                                              <h6 className="text-green-900 font-semibold text-sm">Sample Pitch Idea:</h6>
-                                            </div>
-                                            <p className="text-green-800 text-sm leading-relaxed italic">"{post.samplePitch}"</p>
-                                          </div>
-                                        )}
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+                                {result.posts.map((post: any, postIndex: number) => {
+                                  const hasAnalysis = post.reasoning && post.samplePitch
+                                  const isAnalyzing = analyzingPosts.has(post.url)
+                                  const productName = analysisResult?.productName || 'this product'
+                                  
+                                  return (
+                                    <div key={postIndex} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col">
+                                      {/* Post Title */}
+                                      <h5 className="text-base font-semibold text-gray-900 mb-3 line-clamp-2 leading-tight flex-shrink-0">
+                                        {post.title}
+                                      </h5>
+                                      
+                                      {/* Post Meta */}
+                                      <div className="flex items-center text-xs text-gray-500 gap-3 mb-4 flex-shrink-0">
+                                        <span className="bg-gray-100 px-2 py-1 rounded-full">r/{post.subreddit}</span>
+                                        <span className="flex items-center text-green-600">
+                                          <span className="font-medium">{post.score}</span>
+                                          <span className="ml-1">↑</span>
+                                        </span>
+                                        <span className="flex items-center text-blue-600">
+                                          <span className="font-medium">{post.num_comments}</span>
+                                          <span className="ml-1">💬</span>
+                                        </span>
                                       </div>
                                       
-                                      {/* Action Buttons */}
-                                      <div className="ml-6 flex-shrink-0 flex space-x-2">
-                                        <a
-                                          href={post.url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="inline-flex items-center px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors"
-                                        >
-                                          <MessageSquare className="h-4 w-4 mr-2" />
-                                          View Post
-                                        </a>
-                                        <button
-                                          onClick={() => handleSaveRedditLead(post, result.keyword)}
-                                          disabled={savingPosts.has(`${post.subreddit}-${post.title.substring(0, 20)}`)}
-                                          className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
-                                            savedPostIds.has(post.url)
-                                              ? 'bg-green-500 hover:bg-green-600 text-white'
-                                              : 'bg-blue-500 hover:bg-blue-600 text-white'
-                                          }`}
-                                        >
-                                          {savingPosts.has(`${post.subreddit}-${post.title.substring(0, 20)}`) ? (
-                                            <>
-                                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                              {savedPostIds.has(post.url) ? 'Unsaving...' : 'Saving...'}
-                                            </>
-                                          ) : savedPostIds.has(post.url) ? (
-                                            <>
-                                              <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                              </svg>
-                                              Unsave Lead
-                                            </>
-                                          ) : (
-                                            <>
-                                              <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                                              </svg>
-                                              Save Lead
-                                            </>
+                                      {/* Analysis Results (shown after analysis) */}
+                                      {hasAnalysis && (
+                                        <div className="flex-1 space-y-3 mb-4">
+                                          {/* Strategic Analysis */}
+                                          {post.reasoning && (
+                                            <div className="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-300">
+                                              <div className="flex items-start mb-1">
+                                                <div className="w-2 h-2 bg-blue-500 rounded-full mr-2 mt-1.5 flex-shrink-0"></div>
+                                                <h6 className="text-blue-900 font-semibold text-xs">Why This Is A Good Opportunity:</h6>
+                                              </div>
+                                              <p className="text-blue-800 text-xs leading-relaxed mt-1">{post.reasoning}</p>
+                                            </div>
                                           )}
-                                        </button>
+                                          
+                                          {/* Sample Pitch */}
+                                          {post.samplePitch && (
+                                            <div className="bg-green-50 p-3 rounded-lg border-l-4 border-green-300">
+                                              <div className="flex items-start mb-1">
+                                                <div className="w-2 h-2 bg-green-500 rounded-full mr-2 mt-1.5 flex-shrink-0"></div>
+                                                <h6 className="text-green-900 font-semibold text-xs">Sample Pitch Idea:</h6>
+                                              </div>
+                                              <p className="text-green-800 text-xs leading-relaxed italic mt-1">"{post.samplePitch}"</p>
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
+                                      
+                                      {/* Action Buttons */}
+                                      <div className="flex flex-col gap-2 mt-auto">
+                                        {!hasAnalysis && (
+                                          <button
+                                            onClick={() => handleAnalyzePost(post, result.keyword)}
+                                            disabled={isAnalyzing}
+                                            className="w-full inline-flex items-center justify-center px-4 py-2.5 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                          >
+                                            {isAnalyzing ? (
+                                              <>
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                                Analyzing...
+                                              </>
+                                            ) : (
+                                              <>
+                                                <Plane className="h-4 w-4 mr-2" />
+                                                Pitch {productName} to this lead
+                                              </>
+                                            )}
+                                          </button>
+                                        )}
+                                        
+                                        <div className="flex gap-2">
+                                          <a
+                                            href={post.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                                          >
+                                            <MessageSquare className="h-4 w-4 mr-1.5" />
+                                            View
+                                          </a>
+                                          <button
+                                            onClick={() => handleSaveRedditLead(post, result.keyword)}
+                                            disabled={savingPosts.has(`${post.subreddit}-${post.title.substring(0, 20)}`)}
+                                            className={`flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                                              savedPostIds.has(post.url)
+                                                ? 'bg-green-500 hover:bg-green-600 text-white'
+                                                : 'bg-blue-500 hover:bg-blue-600 text-white'
+                                            }`}
+                                          >
+                                            {savingPosts.has(`${post.subreddit}-${post.title.substring(0, 20)}`) ? (
+                                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                            ) : savedPostIds.has(post.url) ? (
+                                              'Saved'
+                                            ) : (
+                                              'Save'
+                                            )}
+                                          </button>
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                ))}
+                                  )
+                                })}
                               </div>
                             ) : (
                               <div className="p-8 text-center text-gray-500">
