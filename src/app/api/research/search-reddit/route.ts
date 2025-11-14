@@ -292,33 +292,73 @@ For each relevant post, provide:
 2. Reasoning for why it's a pitching opportunity
 3. Sample pitch idea (2-3 sentences)
 
-Return ONLY a JSON array with this exact structure:
-[
-  {
-    "index": 0,
-    "reasoning": "Brief explanation of why this post is relevant",
-    "samplePitch": "Sample pitch idea (2-3 sentences)"
-  }
-]
+Return ONLY a valid JSON object with this exact structure:
+{
+  "posts": [
+    {
+      "index": 0,
+      "reasoning": "Brief explanation of why this post is relevant",
+      "samplePitch": "Sample pitch idea (2-3 sentences)"
+    }
+  ]
+}
 
 Include posts that are at least somewhat relevant to ${keyword}. Be inclusive - better to include more posts than exclude them.`
 
-        const strategicAnalysis = await callOpenRouterJSON<Array<{index: number, reasoning: string, samplePitch: string}>>(prompt, {
+        const strategicAnalysisResponse = await callOpenRouterJSON<any>(prompt, {
           model: 'openai/gpt-4o-mini',
           temperature: 0.7,
           max_tokens: 2000
         })
 
-        console.log(`🤖 OpenRouter response for "${keyword}":`, strategicAnalysis)
+        console.log(`🤖 OpenRouter response for "${keyword}":`, strategicAnalysisResponse)
+
+        // Handle different response formats - expect object with posts array
+        let strategicAnalysis: Array<{index: number, reasoning: string, samplePitch: string}> = []
+        
+        if (Array.isArray(strategicAnalysisResponse)) {
+          // Direct array response (fallback)
+          strategicAnalysis = strategicAnalysisResponse
+        } else if (strategicAnalysisResponse && typeof strategicAnalysisResponse === 'object') {
+          // Check if response is wrapped in an object (expected format: { posts: [...] })
+          if (Array.isArray(strategicAnalysisResponse.posts)) {
+            strategicAnalysis = strategicAnalysisResponse.posts
+          } else if (Array.isArray(strategicAnalysisResponse.data)) {
+            strategicAnalysis = strategicAnalysisResponse.data
+          } else if (Array.isArray(strategicAnalysisResponse.results)) {
+            strategicAnalysis = strategicAnalysisResponse.results
+          } else {
+            // Try to find any array property
+            const arrayKey = Object.keys(strategicAnalysisResponse).find(key => 
+              Array.isArray(strategicAnalysisResponse[key])
+            )
+            if (arrayKey) {
+              strategicAnalysis = strategicAnalysisResponse[arrayKey]
+            } else {
+              console.warn(`⚠️ OpenRouter response is not an array or wrapped array for "${keyword}":`, strategicAnalysisResponse)
+              strategicAnalysis = []
+            }
+          }
+        } else {
+          console.warn(`⚠️ Invalid OpenRouter response format for "${keyword}":`, strategicAnalysisResponse)
+          strategicAnalysis = []
+        }
+
         console.log(`✅ Parsed ${strategicAnalysis.length} strategic posts from AI for "${keyword}"`)
 
-        // Get the strategic posts with analysis
+        // Validate and get the strategic posts with analysis
         const strategicPosts = strategicAnalysis
-          .filter(analysis => analysis.index >= 0 && analysis.index < postData.length)
+          .filter(analysis => 
+            analysis && 
+            typeof analysis === 'object' &&
+            typeof analysis.index === 'number' &&
+            analysis.index >= 0 && 
+            analysis.index < postData.length
+          )
           .map(analysis => ({
             ...postData[analysis.index],
-            reasoning: analysis.reasoning,
-            samplePitch: analysis.samplePitch
+            reasoning: analysis.reasoning || '',
+            samplePitch: analysis.samplePitch || ''
           }))
           .slice(0, 10) // Limit to top 10 strategic posts
 
