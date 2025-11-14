@@ -198,7 +198,7 @@ Return ONLY a valid JSON object with this exact structure:
     console.error('❌ Website analysis error:', error)
     return NextResponse.json({ 
       error: 'Analysis failed', 
-      details: error.message 
+      details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }
 }
