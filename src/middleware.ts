@@ -11,10 +11,11 @@ export async function middleware(request: NextRequest) {
     })
 
     // Guard against missing environment variables and handle Supabase auth
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
 
-    if (supabaseUrl && supabaseAnonKey) {
+    // Validate env vars are not just empty strings
+    if (supabaseUrl && supabaseAnonKey && supabaseUrl.length > 0 && supabaseAnonKey.length > 0) {
       try {
         const supabase = createServerClient(
           supabaseUrl,
