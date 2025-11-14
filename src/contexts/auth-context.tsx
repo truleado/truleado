@@ -95,11 +95,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
       
-      console.log('Attempting sign in with:', {
+      console.log('🔐 Attempting sign in:', {
         email: normalizedEmail,
         supabaseUrl: supabaseUrl?.substring(0, 30) + '...',
-        hasKey: !!supabaseAnonKey
+        hasKey: !!supabaseAnonKey,
+        urlValid: supabaseUrl?.startsWith('https://') && supabaseUrl?.includes('.supabase.co')
       })
+      
+      // Test Supabase connectivity first
+      try {
+        const testResponse = await fetch(`${supabaseUrl}/rest/v1/`, {
+          method: 'HEAD',
+          headers: {
+            'apikey': supabaseAnonKey,
+            'Authorization': `Bearer ${supabaseAnonKey}`
+          }
+        })
+        console.log('🌐 Supabase connectivity test:', {
+          status: testResponse.status,
+          ok: testResponse.ok,
+          url: `${supabaseUrl}/rest/v1/`
+        })
+      } catch (fetchError) {
+        console.error('❌ Supabase connectivity test failed:', fetchError)
+        return { 
+          error: { 
+            message: `Cannot connect to Supabase: ${fetchError instanceof Error ? fetchError.message : 'Network error'}. Check your Supabase URL and network connection.` 
+          } 
+        }
+      }
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
