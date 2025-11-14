@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { callOpenRouterJSON } from '@/lib/openrouter-client'
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,10 +33,9 @@ async function analyzeRealWebsite(url: string) {
     // First try to fetch website content
     const content = await fetchWebsiteContent(url)
     
-  // If we have AI API keys, use AI analysis
-  const geminiApiKey = process.env.GOOGLE_GEMINI_API_KEY
-  const openaiApiKey = process.env.OPENAI_API_KEY
-  if ((geminiApiKey || openaiApiKey) && content) {
+  // If we have AI API key, use AI analysis
+  const openrouterApiKey = process.env.OPENROUTER_API_KEY
+  if (openrouterApiKey && content) {
     return await analyzeWithAI(content, url)
   }
     
@@ -163,41 +163,24 @@ function extractTextFromHTML(html: string): string {
 }
 
 async function analyzeWithAI(content: string, url: string): Promise<any> {
-  // Try Gemini first (cheaper), then fallback to OpenAI, then intelligent fallback
-  const geminiApiKey = process.env.GOOGLE_GEMINI_API_KEY
-  const openaiApiKey = process.env.OPENAI_API_KEY
+  const openrouterApiKey = process.env.OPENROUTER_API_KEY
   
-  if (geminiApiKey) {
+  if (openrouterApiKey) {
     try {
-      return await analyzeWithGemini(content, url)
+      return await analyzeWithOpenRouter(content, url)
     } catch (error) {
-      console.error('Gemini analysis failed, trying OpenAI:', error)
-      // Continue to OpenAI fallback
-    }
-  }
-  
-  if (openaiApiKey) {
-    try {
-      return await analyzeWithOpenAI(content, url)
-    } catch (error) {
-      console.error('OpenAI analysis failed, using intelligent fallback:', error)
+      console.error('OpenRouter analysis failed, using intelligent fallback:', error)
       // Continue to intelligent fallback
     }
   }
   
-  // If both AI APIs fail or are not available, use intelligent analysis
-  console.log('AI APIs unavailable, using intelligent analysis fallback')
+  // If AI API fails or is not available, use intelligent analysis
+  console.log('AI API unavailable, using intelligent analysis fallback')
   const name = extractNameFromUrl(url)
   return getIntelligentAnalysis(name, url.toLowerCase(), content)
 }
 
-async function analyzeWithGemini(content: string, url: string): Promise<any> {
-  const geminiApiKey = process.env.GOOGLE_GEMINI_API_KEY
-  
-  if (!geminiApiKey) {
-    throw new Error('Google Gemini API key not configured')
-  }
-
+async function analyzeWithOpenRouter(content: string, url: string): Promise<any> {
   const name = extractNameFromUrl(url)
   
   const prompt = `You are a product analyst specializing in Reddit lead discovery. Analyze this website and extract information to help identify prospects on Reddit who would be interested in this product.
@@ -224,184 +207,28 @@ CRITICAL REQUIREMENTS:
 Base everything on the actual website content provided. If the website is about project management, don't make it about payments. Extract what the product ACTUALLY does.`
 
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 4096,
-        }
-      }),
+    const analysis = await callOpenRouterJSON<{
+      name: string
+      description: string
+      features: string[]
+      benefits: string[]
+      painPoints: string[]
+      idealCustomerProfile: string
+    }>(prompt, {
+      model: 'openai/gpt-4o-mini',
+      temperature: 0.7,
+      max_tokens: 2000
     })
-
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => 'Unknown error')
-      console.error(`Gemini API error ${response.status}:`, errorText)
-      
-      if (response.status === 429) {
-        throw new Error('Gemini API rate limit exceeded. Please try again in a moment.')
-      } else if (response.status === 400) {
-        throw new Error('Gemini API request invalid. Please check your API key.')
-      } else {
-        throw new Error(`Gemini API error: ${response.status} - ${errorText}`)
-      }
-    }
-
-    const data = await response.json()
-    console.log('Gemini API response:', JSON.stringify(data, null, 2))
-    
-    const analysisText = data.candidates?.[0]?.content?.parts?.[0]?.text
-    const finishReason = data.candidates?.[0]?.finishReason
-
-    if (!analysisText) {
-      console.error('Gemini response structure:', data)
-      throw new Error('No analysis returned from Gemini')
-    }
-    
-    if (finishReason === 'MAX_TOKENS') {
-      console.warn('Gemini response was truncated due to token limit')
-      throw new Error('Gemini response truncated - trying OpenAI fallback')
-    }
-    
-    console.log('Gemini analysis text:', analysisText)
-
-    // Parse JSON response
-    let cleanText = analysisText.trim()
-    
-    // Remove markdown code blocks if present
-    if (cleanText.startsWith('```json')) {
-      cleanText = cleanText.replace(/^```json\s*/, '').replace(/\s*```$/, '')
-    } else if (cleanText.startsWith('```')) {
-      cleanText = cleanText.replace(/^```\s*/, '').replace(/\s*```$/, '')
-    }
-    
-    const analysis = JSON.parse(cleanText)
     
     // Validate the response structure
     if (!analysis.name || !analysis.description || !analysis.features || !analysis.benefits || !analysis.painPoints || !analysis.idealCustomerProfile) {
-      throw new Error('Invalid analysis structure from Gemini')
+      throw new Error('Invalid analysis structure from OpenRouter')
     }
     
     return analysis
     
   } catch (error) {
-    console.error('Gemini analysis error:', error)
-    // Return a more helpful error for rate limits
-    if (error instanceof Error && error.message.includes('rate limit')) {
-      throw error // Re-throw rate limit errors so user sees them
-    }
-    // Re-throw other errors to be handled by the caller
-    throw error
-  }
-}
-
-async function analyzeWithOpenAI(content: string, url: string): Promise<any> {
-  const openaiApiKey = process.env.OPENAI_API_KEY
-  
-  if (!openaiApiKey) {
-    throw new Error('OpenAI API key not configured')
-  }
-  
-  const name = extractNameFromUrl(url)
-  
-  const prompt = `You are a product analyst specializing in Reddit lead discovery. Analyze this website and extract information to help identify prospects on Reddit who would be interested in this product.
-
-Website: ${url}
-Content: ${content}
-
-Provide a JSON response with this exact structure:
-{
-  "name": "Extract the actual product name from the website",
-  "description": "1-2 sentence description of what this product actually does based on the website content",
-  "features": ["Short feature 1", "Short feature 2", "Short feature 3", "Short feature 4", "Short feature 5"],
-  "benefits": ["Quantified benefit with % or number", "Quantified benefit with % or number", "Quantified benefit with % or number"],
-  "painPoints": ["Specific pain point this solves", "Specific pain point this solves", "Specific pain point this solves"],
-  "idealCustomerProfile": "Specific description of who uses this product (job titles, company types, industries)"
-}
-
-CRITICAL REQUIREMENTS:
-- Features: Keep each feature to 2-4 words maximum (e.g., "Real-time collaboration", "Automated workflows")
-- Benefits: MUST include numbers/percentages (e.g., "Reduce costs by 40%", "Save 10+ hours weekly")
-- Pain Points: Exactly 3 main problems this product solves (be specific, not generic)
-- Customer Profile: Focus on job titles, company sizes, and industries that would discuss this on Reddit
-
-Base everything on the actual website content provided. If the website is about project management, don't make it about payments. Extract what the product ACTUALLY does.`
-
-  try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert product analyst who creates detailed, impactful product analyses for lead generation. Always respond with valid JSON.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000,
-      }),
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => 'Unknown error')
-      console.error(`OpenAI API error ${response.status}:`, errorText)
-      
-      if (response.status === 429) {
-        throw new Error('OpenAI API rate limit exceeded. Please try again in a moment.')
-      } else if (response.status === 401) {
-        throw new Error('OpenAI API key is invalid or expired.')
-      } else {
-        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`)
-      }
-    }
-
-    const data = await response.json()
-    const analysisText = data.choices[0]?.message?.content
-
-    if (!analysisText) {
-      throw new Error('No analysis returned from OpenAI')
-    }
-
-    // Parse JSON response
-    let cleanText = analysisText.trim()
-    
-    // Remove markdown code blocks if present
-    if (cleanText.startsWith('```json')) {
-      cleanText = cleanText.replace(/^```json\s*/, '').replace(/\s*```$/, '')
-    } else if (cleanText.startsWith('```')) {
-      cleanText = cleanText.replace(/^```\s*/, '').replace(/\s*```$/, '')
-    }
-    
-    const analysis = JSON.parse(cleanText)
-    
-    // Validate the response structure
-    if (!analysis.name || !analysis.description || !analysis.features || !analysis.benefits || !analysis.painPoints || !analysis.idealCustomerProfile) {
-      throw new Error('Invalid analysis structure from OpenAI')
-    }
-    
-    return analysis
-    
-  } catch (error) {
-    console.error('OpenAI analysis error:', error)
+    console.error('OpenRouter analysis error:', error)
     // Return a more helpful error for rate limits
     if (error instanceof Error && error.message.includes('rate limit')) {
       throw error // Re-throw rate limit errors so user sees them

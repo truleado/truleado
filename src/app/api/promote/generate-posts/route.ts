@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { createClient as createClientSide } from '@supabase/supabase-js'
+import { callOpenRouterJSON } from '@/lib/openrouter-client'
 
 interface GeneratePostsRequest {
   productId: string
@@ -200,10 +201,10 @@ async function generatePostForSubreddit(
 ): Promise<GeneratedPost> {
   console.log(`generatePostForSubreddit called for r/${subreddit}, variation ${variation}`)
   
-  const geminiApiKey = process.env.GOOGLE_GEMINI_API_KEY
-  if (!geminiApiKey) {
-    console.error('Gemini API key not configured')
-    throw new Error('Gemini API key not configured')
+  const openrouterApiKey = process.env.OPENROUTER_API_KEY
+  if (!openrouterApiKey) {
+    console.error('OpenRouter API key not configured')
+    throw new Error('OpenRouter API key not configured')
   }
 
   console.log(`Generating high-quality post for r/${subreddit} with variation ${variation}`)
@@ -258,70 +259,21 @@ Return ONLY a JSON object with this exact structure:
 Create content that will genuinely help the r/${subreddit} community and encourage meaningful engagement.`
 
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.8,
-          topK: 40,
-          topP: 0.9,
-          maxOutputTokens: 2048,
-        }
-      }),
-      signal: AbortSignal.timeout(30000) // 30 second timeout
+    const result = await callOpenRouterJSON<{
+      title: string
+      body: string
+    }>(prompt, {
+      model: 'openai/gpt-4o-mini',
+      temperature: 0.8,
+      max_tokens: 2048
     })
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error(`Gemini API error: ${response.status} - ${errorText}`)
-      
-      if (response.status === 429) {
-        throw new Error('RATE_LIMIT_EXCEEDED')
-      }
-      throw new Error(`Gemini API error: ${response.status}`)
-    }
+    // OpenRouter already returns parsed JSON
+    const postData = result
 
-    const data = await response.json()
-    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text
-
-    if (!responseText) {
-      throw new Error('No response from Gemini API')
-    }
-
-    // Parse the JSON response (handle markdown code blocks)
-    let postData
-    try {
-      // Extract JSON from markdown code blocks if present
-      let jsonText = responseText
-      if (jsonText.includes('```json')) {
-        const jsonMatch = jsonText.match(/```json\s*([\s\S]*?)\s*```/)
-        if (jsonMatch) {
-          jsonText = jsonMatch[1]
-        }
-      } else if (jsonText.includes('```')) {
-        const jsonMatch = jsonText.match(/```\s*([\s\S]*?)\s*```/)
-        if (jsonMatch) {
-          jsonText = jsonMatch[1]
-        }
-      }
-      
-      postData = JSON.parse(jsonText)
-    } catch (parseError) {
-      console.error('Failed to parse post generation JSON:', responseText)
-      throw new Error('Invalid JSON response from AI')
-    }
-    
-    if (!postData.title || !postData.body) {
+    if (!postData || !postData.title || !postData.body) {
       console.error('Invalid post data structure:', postData)
-      throw new Error('Invalid response format from AI')
+      throw new Error('Invalid response format from OpenRouter API')
     }
 
     return {
@@ -344,8 +296,8 @@ async function determineRelevantSubreddits(
   painPoints: string[],
   idealCustomerProfile: string
 ): Promise<string[]> {
-  const geminiApiKey = process.env.GOOGLE_GEMINI_API_KEY
-  if (!geminiApiKey) {
+  const openrouterApiKey = process.env.OPENROUTER_API_KEY
+  if (!openrouterApiKey) {
     // Fallback to default subreddits if no API key
     return ['entrepreneur', 'startups', 'saas', 'marketing']
   }
@@ -390,61 +342,11 @@ Return ONLY a JSON array of 5-8 subreddit names (without "r/" prefix):
 ["subreddit1", "subreddit2", "subreddit3", "subreddit4", "subreddit5"]`
 
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 512,
-        }
-      }),
-      signal: AbortSignal.timeout(15000) // 15 second timeout for subreddit suggestions
+    const subreddits = await callOpenRouterJSON<string[]>(prompt, {
+      model: 'openai/gpt-4o-mini',
+      temperature: 0.7,
+      max_tokens: 512
     })
-
-    if (!response.ok) {
-      console.error(`Gemini API error for subreddit detection: ${response.status}`)
-      return ['entrepreneur', 'startups', 'saas', 'marketing'] // Fallback
-    }
-
-    const data = await response.json()
-    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text
-
-    if (!responseText) {
-      return ['entrepreneur', 'startups', 'saas', 'marketing'] // Fallback
-    }
-
-    // Parse the JSON response (handle markdown code blocks)
-    let subreddits
-    try {
-      // Extract JSON from markdown code blocks if present
-      let jsonText = responseText
-      if (jsonText.includes('```json')) {
-        const jsonMatch = jsonText.match(/```json\s*([\s\S]*?)\s*```/)
-        if (jsonMatch) {
-          jsonText = jsonMatch[1]
-        }
-      } else if (jsonText.includes('```')) {
-        const jsonMatch = jsonText.match(/```\s*([\s\S]*?)\s*```/)
-        if (jsonMatch) {
-          jsonText = jsonMatch[1]
-        }
-      }
-      
-      subreddits = JSON.parse(jsonText)
-    } catch (parseError) {
-      console.error('Failed to parse subreddit suggestions JSON:', responseText)
-      return ['entrepreneur', 'startups', 'saas', 'marketing'] // Fallback
-    }
     
     if (!Array.isArray(subreddits) || subreddits.length === 0) {
       console.error('Invalid subreddit suggestions format:', subreddits)
@@ -461,9 +363,6 @@ Return ONLY a JSON array of 5-8 subreddit names (without "r/" prefix):
     return validSubreddits.length > 0 ? validSubreddits : ['entrepreneur', 'startups', 'saas', 'marketing']
   } catch (error) {
     console.error('Error determining relevant subreddits:', error)
-    if (error instanceof Error && error.name === 'TimeoutError') {
-      console.error('Gemini API timeout for subreddit detection - using fallback')
-    }
     return ['entrepreneur', 'startups', 'saas', 'marketing'] // Fallback
   }
 }

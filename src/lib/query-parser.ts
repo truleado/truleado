@@ -11,27 +11,29 @@ interface ParsedQuery {
   industryContext: string
 }
 
+import { callOpenRouterJSON } from './openrouter-client'
+
 export class QueryParser {
-  private geminiApiKey: string
+  private openrouterApiKey: string
 
   constructor() {
-    this.geminiApiKey = process.env.GOOGLE_GEMINI_API_KEY || ''
+    this.openrouterApiKey = process.env.OPENROUTER_API_KEY || ''
   }
 
   async parseQuery(query: string): Promise<ParsedQuery> {
-    if (!this.geminiApiKey) {
+    if (!this.openrouterApiKey) {
       return this.getFallbackParse(query)
     }
 
     try {
-      return await this.parseWithGemini(query)
+      return await this.parseWithOpenRouter(query)
     } catch (error) {
-      console.error('Gemini query parsing failed:', error)
+      console.error('OpenRouter query parsing failed:', error)
       return this.getFallbackParse(query)
     }
   }
 
-  private async parseWithGemini(query: string): Promise<ParsedQuery> {
+  private async parseWithOpenRouter(query: string): Promise<ParsedQuery> {
     const prompt = `You are an expert at analyzing user queries for lead discovery on Reddit. Your job is to deeply understand what the user wants and create highly targeted search parameters that will find people actively discussing problems and seeking solutions.
 
 User Query: "${query}"
@@ -107,52 +109,11 @@ Query: "I need leads for my email marketing software"
 
 Focus on finding people who are ACTIVELY discussing problems and seeking solutions, not just mentioning keywords. The search terms should be what people actually say when they're frustrated or looking for help.`
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${this.geminiApiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.9,
-          maxOutputTokens: 1024,
-        }
-      })
+    const parsed = await callOpenRouterJSON<ParsedQuery>(prompt, {
+      model: 'openai/gpt-4o-mini',
+      temperature: 0.7,
+      max_tokens: 1024
     })
-
-    if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status}`)
-    }
-
-    const data = await response.json()
-    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text
-
-    if (!responseText) {
-      throw new Error('No response from Gemini API')
-    }
-
-    // Extract JSON from markdown code blocks if present
-    let jsonText = responseText
-    if (jsonText.includes('```json')) {
-      const jsonMatch = jsonText.match(/```json\s*([\s\S]*?)\s*```/)
-      if (jsonMatch) {
-        jsonText = jsonMatch[1]
-      }
-    } else if (jsonText.includes('```')) {
-      const jsonMatch = jsonText.match(/```\s*([\s\S]*?)\s*```/)
-      if (jsonMatch) {
-        jsonText = jsonMatch[1]
-      }
-    }
-
-    const parsed = JSON.parse(jsonText)
     
     return {
       productType: parsed.productType || 'general software',

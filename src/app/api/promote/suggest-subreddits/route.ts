@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { callOpenRouterJSON } from '@/lib/openrouter-client'
 
 interface SuggestSubredditsRequest {
   productName: string
@@ -58,9 +59,9 @@ export async function POST(request: NextRequest) {
 }
 
 async function suggestSubredditsWithAI(productData: SuggestSubredditsRequest): Promise<SuggestedSubreddit[]> {
-  const geminiApiKey = process.env.GEMINI_API_KEY
-  if (!geminiApiKey) {
-    throw new Error('Gemini API key not configured')
+  const openrouterApiKey = process.env.OPENROUTER_API_KEY
+  if (!openrouterApiKey) {
+    throw new Error('OpenRouter API key not configured')
   }
 
   const prompt = `Analyze this product and suggest the most relevant Reddit subreddits for promotion:
@@ -112,39 +113,11 @@ Return ONLY a JSON array with this exact structure:
 Suggest 5-8 most relevant subreddits, ordered by relevance score (highest first).`
 
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 1024,
-        }
-      })
+    const suggestedSubreddits = await callOpenRouterJSON<SuggestedSubreddit[]>(prompt, {
+      model: 'openai/gpt-4o-mini',
+      temperature: 0.7,
+      max_tokens: 1024
     })
-
-    if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status}`)
-    }
-
-    const data = await response.json()
-    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text
-
-    if (!responseText) {
-      throw new Error('No response from Gemini API')
-    }
-
-    // Parse the JSON response
-    const suggestedSubreddits = JSON.parse(responseText)
     
     // Validate the response structure
     if (!Array.isArray(suggestedSubreddits)) {
@@ -159,7 +132,7 @@ Suggest 5-8 most relevant subreddits, ordered by relevance score (highest first)
     }))
 
   } catch (error) {
-    console.error('Error calling Gemini API for subreddit suggestions:', error)
+    console.error('Error calling OpenRouter API for subreddit suggestions:', error)
     
     // Fallback to basic suggestions based on keywords
     return getFallbackSubredditSuggestions(productData)

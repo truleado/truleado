@@ -1,9 +1,5 @@
-import OpenAI from 'openai'
 import { ErrorHandler } from './error-handler'
-
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-}) : null
+import { callOpenRouterJSON } from './openrouter-client'
 
 export interface LeadAnalysis {
   reasons: string[]
@@ -36,28 +32,15 @@ export class AILeadAnalyzer {
   
   async analyzeLead(lead: LeadData, product: ProductData): Promise<LeadAnalysis> {
     try {
-      // Try Gemini first (cheaper), then fallback to OpenAI
-      const geminiApiKey = process.env.GOOGLE_GEMINI_API_KEY
-      const openaiApiKey = process.env.OPENAI_API_KEY
+      const openrouterApiKey = process.env.OPENROUTER_API_KEY
       
-      if (geminiApiKey) {
+      if (openrouterApiKey) {
         try {
-          console.log('Analyzing lead with Gemini...')
-          return await this.analyzeWithGemini(lead, product)
+          console.log('Analyzing lead with OpenRouter...')
+          return await this.analyzeWithOpenRouter(lead, product)
         } catch (error) {
-          ErrorHandler.handleAiError(error, 'Gemini')
-          console.error('Gemini lead analysis failed, trying OpenAI:', error)
-          // Continue to OpenAI fallback
-        }
-      }
-      
-      if (openaiApiKey && openai) {
-        try {
-          console.log('Analyzing lead with OpenAI...')
-          return await this.analyzeWithOpenAI(lead, product)
-        } catch (error) {
-          ErrorHandler.handleAiError(error, 'OpenAI')
-          console.error('OpenAI lead analysis failed:', error)
+          ErrorHandler.handleAiError(error, 'OpenRouter')
+          console.error('OpenRouter lead analysis failed:', error)
           // Continue to fallback analysis
         }
       }
@@ -71,108 +54,24 @@ export class AILeadAnalyzer {
     }
   }
 
-  private async analyzeWithGemini(lead: LeadData, product: ProductData): Promise<LeadAnalysis> {
-    const geminiApiKey = process.env.GOOGLE_GEMINI_API_KEY
-    
-    if (!geminiApiKey) {
-      throw new Error('Google Gemini API key not configured')
-    }
-
+  private async analyzeWithOpenRouter(lead: LeadData, product: ProductData): Promise<LeadAnalysis> {
     const prompt = this.buildAnalysisPrompt(lead, product)
     
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1024,
-          }
-        }),
+      const analysis = await callOpenRouterJSON<{
+        reasons: string[] | string
+        sampleReply: string
+        qualityScore: number
+        confidence: number
+      }>(prompt, {
+        model: 'openai/gpt-4o-mini',
+        temperature: 0.7,
+        max_tokens: 1000
       })
-
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => 'Unknown error')
-        console.error(`Gemini API error ${response.status}:`, errorText)
-        
-        if (response.status === 429) {
-          throw new Error('Gemini API rate limit exceeded. Please try again in a moment.')
-        } else if (response.status === 400) {
-          throw new Error('Gemini API request invalid. Please check your API key.')
-        } else {
-          throw new Error(`Gemini API error: ${response.status} - ${errorText}`)
-        }
-      }
-
-      const data = await response.json()
-      const analysisText = data.candidates?.[0]?.content?.parts?.[0]?.text
-      const finishReason = data.candidates?.[0]?.finishReason
-
-      if (!analysisText) {
-        console.error('Gemini response structure:', data)
-        console.log('No analysis from Gemini, using fallback analysis')
-        return this.getFallbackAnalysis(lead, product)
-      }
-      
-      if (finishReason === 'MAX_TOKENS') {
-        console.warn('Gemini response was truncated due to token limit, using partial response')
-        // Try to extract what we can from the truncated response
-        if (analysisText && analysisText.length > 50) {
-          try {
-            return this.parsePartialGeminiResponse(analysisText)
-          } catch (parseError) {
-            console.log('Failed to parse partial response, using fallback analysis')
-            return this.getFallbackAnalysis(lead, product)
-          }
-        }
-        console.log('Truncated response too short, using fallback analysis')
-        return this.getFallbackAnalysis(lead, product)
-      }
-
-      // Parse JSON response
-      let cleanText = analysisText.trim()
-      
-      // Remove markdown code blocks if present
-      if (cleanText.startsWith('```json')) {
-        cleanText = cleanText.replace(/^```json\s*/, '').replace(/\s*```$/, '')
-      } else if (cleanText.startsWith('```')) {
-        cleanText = cleanText.replace(/^```\s*/, '').replace(/\s*```$/, '')
-      }
-      
-      // Clean control characters and fix common JSON issues
-      cleanText = cleanText
-        .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
-        .replace(/\n/g, '\\n') // Escape newlines
-        .replace(/\r/g, '\\r') // Escape carriage returns
-        .replace(/\t/g, '\\t') // Escape tabs
-        .replace(/"/g, '"') // Fix smart quotes
-        .replace(/"/g, '"') // Fix smart quotes
-        .replace(/'/g, "'") // Fix smart apostrophes
-        .replace(/'/g, "'") // Fix smart apostrophes
-      
-      let analysis
-      try {
-        analysis = JSON.parse(cleanText)
-      } catch (parseError) {
-        console.error('JSON parse error:', parseError)
-        console.error('Raw text:', cleanText)
-        console.log('Using fallback analysis due to JSON parsing error')
-        return this.getFallbackAnalysis(lead, product)
-      }
       
       // Validate the response structure
       if (!analysis.reasons || !analysis.sampleReply || !analysis.qualityScore || !analysis.confidence) {
-        throw new Error('Invalid analysis structure from Gemini')
+        throw new Error('Invalid analysis structure from OpenRouter')
       }
       
       return {
@@ -183,36 +82,9 @@ export class AILeadAnalyzer {
       }
       
     } catch (error) {
-      ErrorHandler.handleAiError(error, 'Gemini')
+      ErrorHandler.handleAiError(error, 'OpenRouter')
       throw error
     }
-  }
-
-  private async analyzeWithOpenAI(lead: LeadData, product: ProductData): Promise<LeadAnalysis> {
-    if (!openai) {
-      throw new Error('OpenAI not configured')
-    }
-
-    const prompt = this.buildAnalysisPrompt(lead, product)
-    
-    const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: "You are an expert sales and marketing analyst specializing in Reddit lead qualification. Analyze Reddit posts and comments to identify high-quality sales opportunities."
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 1000
-    })
-
-    const analysis = this.parseAIResponse(response.choices[0].message.content || '')
-    return analysis
   }
 
   private buildAnalysisPrompt(lead: LeadData, product: ProductData): string {
@@ -411,7 +283,7 @@ Find pain points, buying intent, urgency. Return JSON:
     )
   }
 
-  // Parse partial Gemini response when truncated
+  // Parse partial response when truncated (kept for compatibility)
   private parsePartialGeminiResponse(partialText: string): LeadAnalysis {
     console.log('Parsing partial Gemini response:', partialText.substring(0, 200) + '...')
     

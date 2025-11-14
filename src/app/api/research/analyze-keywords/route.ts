@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import * as cheerio from 'cheerio'
+import { callOpenRouterJSON } from '@/lib/openrouter-client'
 
 // Helper function to extract content from HTML
 function extractContentFromHTML(html: string): string {
@@ -135,21 +135,17 @@ export async function POST(request: NextRequest) {
 
     console.log(`Extracted ${websiteContent.length} characters of content`)
 
-    // Check if Gemini API key is available
-    const apiKey = process.env.GOOGLE_GEMINI_API_KEY
+    // Check if OpenRouter API key is available
+    const apiKey = process.env.OPENROUTER_API_KEY
     console.log('API Key status:', apiKey ? 'Present' : 'Missing')
     console.log('API Key length:', apiKey ? apiKey.length : 0)
     
     if (!apiKey) {
       return NextResponse.json({ 
-        error: 'Google Gemini API key not configured',
-        details: 'To use this feature, you need to set up a Google Gemini API key. Please add GOOGLE_GEMINI_API_KEY to your environment variables. You can get a free API key from https://makersuite.google.com/app/apikey'
+        error: 'OpenRouter API key not configured',
+        details: 'To use this feature, you need to set up an OpenRouter API key. Please add OPENROUTER_API_KEY to your environment variables. You can get an API key from https://openrouter.ai'
       }, { status: 500 })
     }
-
-    // Initialize Gemini AI with correct model
-    const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
 
     // Create enhanced prompt for Gemini to extract product name, description, and keywords
     const prompt = `Analyze the following website content and identify:
@@ -168,36 +164,17 @@ Return ONLY a valid JSON object with this exact structure:
 }`
 
     try {
-      const result = await model.generateContent(prompt)
-      const response = await result.response
-      const text = response.text()
+      const analysisData = await callOpenRouterJSON<{
+        productName: string
+        description: string
+        keywords: string[]
+      }>(prompt, {
+        model: 'openai/gpt-4o-mini',
+        temperature: 0.7,
+        max_tokens: 1000
+      })
       
-      console.log('Gemini response:', text)
-
-      // Parse JSON response
-      let analysisData
-      try {
-        // Clean the response text
-        let cleanText = text.trim()
-        
-        // Remove markdown code blocks if present
-        if (cleanText.startsWith('```json')) {
-          cleanText = cleanText.replace(/^```json\s*/, '').replace(/\s*```$/, '')
-        } else if (cleanText.startsWith('```')) {
-          cleanText = cleanText.replace(/^```\s*/, '').replace(/\s*```$/, '')
-        }
-
-        analysisData = JSON.parse(cleanText)
-      } catch (parseError) {
-        console.error('JSON parse error:', parseError)
-        console.error('Raw response:', text)
-        
-        return NextResponse.json({
-          error: 'AI response parsing failed',
-          details: 'The AI returned invalid JSON format',
-          website: normalizedUrl
-        }, { status: 500 })
-      }
+      console.log('OpenRouter response:', analysisData)
 
       console.log('Analysis complete:', analysisData)
 
@@ -207,12 +184,12 @@ Return ONLY a valid JSON object with this exact structure:
         keywords: analysisData.keywords || []
       })
 
-    } catch (geminiError: any) {
-      console.error('Gemini API error:', geminiError)
+    } catch (openrouterError: any) {
+      console.error('OpenRouter API error:', openrouterError)
       
       return NextResponse.json({
         error: 'AI analysis failed',
-        details: geminiError.message || 'Failed to analyze website with AI',
+        details: openrouterError.message || 'Failed to analyze website with AI',
         website: normalizedUrl
       }, { status: 500 })
     }

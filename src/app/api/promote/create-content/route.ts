@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
+import { callOpenRouterJSON } from '@/lib/openrouter-client'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -13,9 +14,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 })
     }
 
-    const apiKey = process.env.GOOGLE_GEMINI_API_KEY
+    const apiKey = process.env.OPENROUTER_API_KEY
     if (!apiKey) {
-      return NextResponse.json({ error: 'Google Gemini API key not configured' }, { status: 500 })
+      return NextResponse.json({ error: 'OpenRouter API key not configured' }, { status: 500 })
     }
 
     // Fetch the URL content
@@ -78,15 +79,7 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: `You are a Reddit content creator working for a brand. Analyze this website content and create 3 Reddit posts that are authentic, helpful, and written from the brand's/organizer's personal perspective. Each post should feel 100% human-written.
+    const prompt = `You are a Reddit content creator working for a brand. Analyze this website content and create 3 Reddit posts that are authentic, helpful, and written from the brand's/organizer's personal perspective. Each post should feel 100% human-written.
 
 Website Title: ${title}
 Website Content: ${textContent.substring(0, 8000)}${contentTypeInstruction}
@@ -126,36 +119,15 @@ Respond ONLY in valid JSON format like this:
   ],
   "suggestedSubreddits": ["subreddit1", "subreddit2", "subreddit3", "subreddit4", "subreddit5", "subreddit6"]
 }`
-          }]
-        }]
-      })
+
+    const jsonResponse = await callOpenRouterJSON<{
+      posts: Array<{ title: string; description: string }>
+      suggestedSubreddits: string[]
+    }>(prompt, {
+      model: 'openai/gpt-4o-mini',
+      temperature: 0.8,
+      max_tokens: 2000
     })
-
-    if (!geminiResponse.ok) {
-      throw new Error(`Gemini API error: ${geminiResponse.status}`)
-    }
-
-    const geminiData = await geminiResponse.json()
-    const responseText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text
-
-    if (!responseText) {
-      throw new Error('No response from Gemini')
-    }
-
-    // Parse the JSON response
-    let jsonResponse
-    try {
-      // Extract JSON from markdown code blocks if present
-      const jsonMatch = responseText.match(/```json\s*([\s\S]*?)\s*```/) || responseText.match(/```\s*([\s\S]*?)\s*```/)
-      if (jsonMatch) {
-        jsonResponse = JSON.parse(jsonMatch[1])
-      } else {
-        jsonResponse = JSON.parse(responseText)
-      }
-    } catch (parseError) {
-      console.error('Failed to parse Gemini response:', responseText)
-      throw new Error('Failed to parse AI response')
-    }
 
     return NextResponse.json({
       success: true,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import { createClient } from '@/lib/supabase-server'
+import { callOpenRouterJSON } from '@/lib/openrouter-client'
 
 // Force Node.js runtime to avoid Edge runtime fetch limitations
 export const runtime = 'nodejs'
@@ -98,16 +98,13 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    const apiKey = process.env.GOOGLE_GEMINI_API_KEY
+    const apiKey = process.env.OPENROUTER_API_KEY
     if (!apiKey) {
       return NextResponse.json({ 
-        error: 'Google Gemini API key not configured',
-        details: 'Please set up your Google Gemini API key to use this feature'
+        error: 'OpenRouter API key not configured',
+        details: 'Please set up your OpenRouter API key to use this feature'
       }, { status: 500 })
     }
-
-    const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
 
     const results = []
     const MAX_EXECUTION_TIME = 50000 // 50 seconds to leave buffer for Vercel 60s limit
@@ -306,22 +303,14 @@ Return ONLY a JSON array with this exact structure:
 
 Include posts that are at least somewhat relevant to ${keyword}. Be inclusive - better to include more posts than exclude them.`
 
-        const geminiResult = await model.generateContent(prompt)
-        const geminiResponse = await geminiResult.response
-        const geminiText = geminiResponse.text()
+        const strategicAnalysis = await callOpenRouterJSON<Array<{index: number, reasoning: string, samplePitch: string}>>(prompt, {
+          model: 'openai/gpt-4o-mini',
+          temperature: 0.7,
+          max_tokens: 2000
+        })
 
-        console.log(`🤖 Gemini response for "${keyword}":`, geminiText)
-
-        // Parse Gemini response for strategic analysis
-        let strategicAnalysis: Array<{index: number, reasoning: string, samplePitch: string}> = []
-        try {
-          const cleanText = geminiText.trim().replace(/^```json\s*/, '').replace(/\s*```$/, '')
-          strategicAnalysis = JSON.parse(cleanText)
-          console.log(`✅ Parsed ${strategicAnalysis.length} strategic posts from AI for "${keyword}"`)
-        } catch (parseError) {
-          console.error('❌ Failed to parse Gemini response:', parseError)
-          console.error('❌ Raw Gemini text:', geminiText)
-        }
+        console.log(`🤖 OpenRouter response for "${keyword}":`, strategicAnalysis)
+        console.log(`✅ Parsed ${strategicAnalysis.length} strategic posts from AI for "${keyword}"`)
 
         // Get the strategic posts with analysis
         const strategicPosts = strategicAnalysis
