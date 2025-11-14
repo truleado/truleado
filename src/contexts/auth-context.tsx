@@ -80,13 +80,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase.auth])
 
   const signIn = async (email: string, password: string) => {
-    const normalizedEmail = email.trim().toLowerCase()
-    const { error } = await supabase.auth.signInWithPassword({
-      email: normalizedEmail,
-      password,
-    })
-    
-    return { error }
+    try {
+      const normalizedEmail = email.trim().toLowerCase()
+      
+      // Check if Supabase is properly configured
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
+      
+      if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'https://placeholder.supabase.co') {
+        return { 
+          error: { 
+            message: 'Supabase is not configured. Please check your environment variables.' 
+          } 
+        }
+      }
+      
+      const { error } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
+      })
+      
+      if (error) {
+        console.error('Sign in error:', error)
+      }
+      
+      return { error }
+    } catch (err) {
+      console.error('Sign in exception:', err)
+      return { 
+        error: { 
+          message: err instanceof Error ? err.message : 'Failed to sign in. Please check your connection and try again.' 
+        } 
+      }
+    }
   }
 
   const signUp = async (email: string, password: string, name?: string) => {
