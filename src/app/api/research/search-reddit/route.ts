@@ -287,6 +287,7 @@ export async function POST(request: NextRequest) {
     }
 
     const totalPosts = results.reduce((sum, r) => sum + (r.totalPosts || 0), 0)
+    const totalStrategicPosts = results.reduce((sum, r) => sum + (r.posts?.length || 0), 0)
     const totalKeywords = results.length
     const elapsedTime = Date.now() - startTime
 
