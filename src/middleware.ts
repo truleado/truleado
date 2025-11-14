@@ -77,6 +77,8 @@ export async function middleware(request: NextRequest) {
         pathname.startsWith('/favicon') ||
         pathname.startsWith('/robots.txt') ||
         pathname.startsWith('/sitemap') ||
+        pathname.startsWith('/auth') ||
+        pathname.startsWith('/billing') ||
         pathname.includes('.') ||
         pathname === '/dashboard' ||
         pathname === '/research' ||
