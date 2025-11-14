@@ -8,11 +8,18 @@ const resolvedBaseUrl = resolvedEnvironment === 'production'
   ? 'https://api.paddle.com'
   : 'https://api.sandbox.paddle.com'
 
+// Helper function to clean environment variable values (remove quotes and whitespace)
+function cleanEnvVar(value: string): string {
+  if (!value) return ''
+  // Remove surrounding quotes (single or double) and trim whitespace
+  return value.trim().replace(/^["']|["']$/g, '').trim()
+}
+
 export const paddleConfig = {
-  apiKey: (process.env.PADDLE_API_KEY || '').trim(),
-  clientToken: (process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN || '').trim(),
-  webhookSecret: (process.env.PADDLE_WEBHOOK_SECRET || '').trim(),
-  priceId: (process.env.NEXT_PUBLIC_PADDLE_PRICE_ID || process.env.PADDLE_PRICE_ID || '').trim(),
+  apiKey: cleanEnvVar(process.env.PADDLE_API_KEY || ''),
+  clientToken: cleanEnvVar(process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN || ''),
+  webhookSecret: cleanEnvVar(process.env.PADDLE_WEBHOOK_SECRET || ''),
+  priceId: cleanEnvVar(process.env.NEXT_PUBLIC_PADDLE_PRICE_ID || process.env.PADDLE_PRICE_ID || ''),
   environment: resolvedEnvironment,
   baseUrl: resolvedBaseUrl
 }

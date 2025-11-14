@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import Link from "next/link";
 import { Filter, ArrowLeft, Mail, MessageCircle, HelpCircle, Clock } from "lucide-react";
 
