@@ -53,7 +53,7 @@ If the post is NOT relevant, set "isRelevant" to false and still provide brief r
         reasoning: string
         samplePitch: string
       }>(prompt, {
-        model: 'google/gemini-2.5-pro-exp-03-25',
+        model: 'google/gemini-2.5-pro-exp',
         temperature: 0.7,
         max_tokens: 500
       })
