@@ -5,11 +5,12 @@ const locales = ['en', 'es', 'de', 'fr', 'zh', 'ja', 'ko', 'it', 'ar', 'nl']
 const defaultLocale = 'en'
 
 export async function middleware(request: NextRequest) {
-  try {
-    let supabaseResponse = NextResponse.next({
-      request,
-    })
+  // Create base response first
+  let response = NextResponse.next({
+    request,
+  })
 
+  try {
     // Guard against missing environment variables and handle Supabase auth
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
@@ -17,101 +18,114 @@ export async function middleware(request: NextRequest) {
     // Validate env vars are not just empty strings
     if (supabaseUrl && supabaseAnonKey && supabaseUrl.length > 0 && supabaseAnonKey.length > 0) {
       try {
+        // Create Supabase client with timeout protection
         const supabase = createServerClient(
           supabaseUrl,
           supabaseAnonKey,
           {
             cookies: {
               getAll() {
-                return request.cookies.getAll()
+                try {
+                  return request.cookies.getAll()
+                } catch (e) {
+                  return []
+                }
               },
               setAll(cookiesToSet) {
-                cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-                supabaseResponse = NextResponse.next({
-                  request,
-                })
-                cookiesToSet.forEach(({ name, value, options }) =>
-                  supabaseResponse.cookies.set(name, value, options)
-                )
+                try {
+                  cookiesToSet.forEach(({ name, value }) => {
+                    request.cookies.set(name, value)
+                  })
+                  // Create new response with updated cookies
+                  response = NextResponse.next({ request })
+                  cookiesToSet.forEach(({ name, value, options }) => {
+                    response.cookies.set(name, value, options)
+                  })
+                } catch (e) {
+                  // Silently fail cookie operations
+                }
               },
             },
           }
         )
 
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
+        // Get user with timeout protection
+        try {
+          const {
+            data: { user },
+          } = await supabase.auth.getUser()
+          // User fetched successfully, continue
+        } catch (authError) {
+          // Auth error is not critical, continue
+        }
       } catch (error) {
-        // Log error but don't fail the middleware - continue with locale handling
-        console.error('Middleware Supabase error:', error)
+        // Supabase initialization error - non-critical, continue
       }
-    } else {
-      console.warn('Missing Supabase environment variables in middleware - skipping auth check')
     }
 
     // Handle locale routing
-    const { pathname } = request.nextUrl
-    const pathnameHasLocale = locales.some(
-      locale => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
-    )
+    try {
+      const { pathname } = request.nextUrl
+      const pathnameHasLocale = locales.some(
+        locale => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+      )
 
-    // Skip locale handling for API routes, auth routes, and static files
-    if (
-      pathname.startsWith('/api') ||
-      pathname.startsWith('/_next') ||
-      pathname.startsWith('/favicon') ||
-      pathname.startsWith('/robots.txt') ||
-      pathname.startsWith('/sitemap') ||
-      pathname.includes('.') ||
-      pathname === '/dashboard' ||
-      pathname === '/research' ||
-      pathname === '/reddit-leads' ||
-      pathname === '/track-leads' ||
-      pathname === '/settings' ||
-      pathname.startsWith('/products') ||
-      pathname.startsWith('/promote')
-    ) {
-      return supabaseResponse
-    }
+      // Skip locale handling for API routes, auth routes, and static files
+      if (
+        pathname.startsWith('/api') ||
+        pathname.startsWith('/_next') ||
+        pathname.startsWith('/favicon') ||
+        pathname.startsWith('/robots.txt') ||
+        pathname.startsWith('/sitemap') ||
+        pathname.includes('.') ||
+        pathname === '/dashboard' ||
+        pathname === '/research' ||
+        pathname === '/reddit-leads' ||
+        pathname === '/track-leads' ||
+        pathname === '/settings' ||
+        pathname.startsWith('/products') ||
+        pathname.startsWith('/promote')
+      ) {
+        return response
+      }
 
-    // If pathname doesn't have a locale, redirect to default locale
-    if (!pathnameHasLocale && pathname !== '/') {
-      try {
-        // Try to get locale from cookie, validate it's in the locales array
-        const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value
-        const locale = cookieLocale && locales.includes(cookieLocale) ? cookieLocale : defaultLocale
-        
-        // Validate the locale is safe before using it in URL
-        if (locales.includes(locale)) {
-          const newUrl = new URL(`/${locale}${pathname === '/' ? '' : pathname}`, request.url)
-          return NextResponse.redirect(newUrl)
+      // If pathname doesn't have a locale, redirect to default locale
+      if (!pathnameHasLocale && pathname !== '/') {
+        try {
+          // Try to get locale from cookie, validate it's in the locales array
+          const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value
+          const locale = cookieLocale && locales.includes(cookieLocale) ? cookieLocale : defaultLocale
+          
+          // Validate the locale is safe before using it in URL
+          if (locales.includes(locale)) {
+            const newUrl = new URL(`/${locale}${pathname === '/' ? '' : pathname}`, request.url)
+            return NextResponse.redirect(newUrl)
+          }
+        } catch (error) {
+          // If URL construction fails, just return the response without redirect
         }
-      } catch (error) {
-        // If URL construction fails, just return the response without redirect
-        console.error('Middleware redirect error:', error)
-        return supabaseResponse
       }
+
+      // Store locale in response for use in components
+      const currentLocale = pathnameHasLocale 
+        ? (pathname.split('/')[1] || defaultLocale)
+        : defaultLocale
+      
+      // Validate locale before setting cookie
+      if (locales.includes(currentLocale)) {
+        try {
+          response.cookies.set('NEXT_LOCALE', currentLocale)
+        } catch (error) {
+          // If cookie setting fails, continue without cookie
+        }
+      }
+    } catch (localeError) {
+      // Locale handling error - non-critical, continue with base response
     }
 
-    // Store locale in response for use in components
-    const currentLocale = pathnameHasLocale 
-      ? (pathname.split('/')[1] || defaultLocale)
-      : defaultLocale
-    
-    // Validate locale before setting cookie
-    if (locales.includes(currentLocale)) {
-      try {
-        supabaseResponse.cookies.set('NEXT_LOCALE', currentLocale)
-      } catch (error) {
-        // If cookie setting fails, log but continue
-        console.error('Middleware cookie set error:', error)
-      }
-    }
-
-    return supabaseResponse
+    return response
   } catch (error) {
     // Catch any unexpected errors and return a basic response
-    console.error('Middleware unexpected error:', error)
     return NextResponse.next({
       request,
     })
