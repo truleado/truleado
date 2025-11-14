@@ -9,30 +9,43 @@ export async function middleware(request: NextRequest) {
     request,
   })
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
+  // Guard against missing environment variables and handle Supabase auth
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  if (supabaseUrl && supabaseAnonKey) {
+    try {
+      const supabase = createServerClient(
+        supabaseUrl,
+        supabaseAnonKey,
+        {
+          cookies: {
+            getAll() {
+              return request.cookies.getAll()
+            },
+            setAll(cookiesToSet) {
+              cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+              supabaseResponse = NextResponse.next({
+                request,
+              })
+              cookiesToSet.forEach(({ name, value, options }) =>
+                supabaseResponse.cookies.set(name, value, options)
+              )
+            },
+          },
+        }
+      )
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+    } catch (error) {
+      // Log error but don't fail the middleware - continue with locale handling
+      console.error('Middleware Supabase error:', error)
+    }
+  } else {
+    console.warn('Missing Supabase environment variables in middleware - skipping auth check')
+  }
 
   // Handle locale routing
   const { pathname } = request.nextUrl
