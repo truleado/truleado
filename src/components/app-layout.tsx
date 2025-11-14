@@ -83,7 +83,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const handleSignOut = async () => {
     await signOut()
-    router.push('/')
+    // signOut already redirects to homepage
   }
 
 

@@ -36,8 +36,16 @@ export function UpgradeRequiredModal({
     setIsLoggingOut(true)
     try {
       await signOut()
+      // signOut already redirects to homepage, but ensure redirect happens
+      if (typeof window !== 'undefined') {
+        window.location.href = '/'
+      }
     } catch (error) {
       console.error('Logout error:', error)
+      // Even on error, redirect to homepage
+      if (typeof window !== 'undefined') {
+        window.location.href = '/'
+      }
     } finally {
       setIsLoggingOut(false)
     }
