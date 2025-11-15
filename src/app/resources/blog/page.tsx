@@ -94,6 +94,46 @@ const blogPosts = [
     readTime: "10 min read",
     category: "Lead Generation",
     image: "🎯"
+  },
+  {
+    title: "How to Build Reddit Karma Fast: A Complete Guide for SaaS Founders",
+    excerpt: "Learn proven strategies to build Reddit karma quickly, establish credibility, and grow your SaaS business through authentic engagement.",
+    date: "January 25, 2025",
+    readTime: "12 min read",
+    category: "Karma & Growth",
+    image: "⭐"
+  },
+  {
+    title: "Reddit Marketing 101: How to Promote Your SaaS Without Getting Banned",
+    excerpt: "Learn the dos and don'ts of Reddit marketing for SaaS. Discover how to promote your product authentically while building trust.",
+    date: "January 26, 2025",
+    readTime: "14 min read",
+    category: "Marketing",
+    image: "📚"
+  },
+  {
+    title: "The Ultimate Guide to Reddit Karma: Build Credibility and Trust",
+    excerpt: "Master Reddit karma building with proven strategies. Learn how to establish credibility, build trust, and grow your SaaS presence.",
+    date: "January 27, 2025",
+    readTime: "15 min read",
+    category: "Karma & Growth",
+    image: "🏆"
+  },
+  {
+    title: "Reddit Marketing Secrets: How Top SaaS Founders Get Customers",
+    excerpt: "Discover the insider secrets successful SaaS founders use to get customers on Reddit. Learn proven strategies that actually work.",
+    date: "January 28, 2025",
+    readTime: "13 min read",
+    category: "Marketing",
+    image: "🔐"
+  },
+  {
+    title: "From Zero to Hero: Building Reddit Karma and Growing Your SaaS",
+    excerpt: "A complete roadmap from Reddit newbie to karma hero. Learn how to build karma, establish credibility, and grow your SaaS business.",
+    date: "January 29, 2025",
+    readTime: "16 min read",
+    category: "Karma & Growth",
+    image: "🚀"
   }
 ]
 
@@ -161,7 +201,12 @@ export default function BlogPage() {
               { post: blogPosts[7], href: "/resources/blog/reddit-subreddit-monitoring" },
               { post: blogPosts[8], href: "/resources/blog/reddit-outreach-best-practices" },
               { post: blogPosts[9], href: "/resources/blog/reddit-marketing-roi" },
-              { post: blogPosts[10], href: "/resources/blog/reddit-lead-qualification" }
+              { post: blogPosts[10], href: "/resources/blog/reddit-lead-qualification" },
+              { post: blogPosts[11], href: "/resources/blog/how-to-build-reddit-karma-fast" },
+              { post: blogPosts[12], href: "/resources/blog/reddit-marketing-101-promote-saas" },
+              { post: blogPosts[13], href: "/resources/blog/ultimate-reddit-karma-guide" },
+              { post: blogPosts[14], href: "/resources/blog/reddit-marketing-secrets-saas-founders" },
+              { post: blogPosts[15], href: "/resources/blog/zero-to-hero-reddit-karma-saas" }
             ].map((item, index) => (
               <Link 
                 key={index}
