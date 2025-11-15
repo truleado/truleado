@@ -70,7 +70,7 @@ export async function middleware(request: NextRequest) {
         locale => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
       )
 
-      // Skip locale handling for API routes, auth routes, and static files
+      // Skip locale handling for API routes, auth routes, static files, and non-localized pages
       if (
         pathname.startsWith('/api') ||
         pathname.startsWith('/_next') ||
@@ -80,6 +80,16 @@ export async function middleware(request: NextRequest) {
         pathname.startsWith('/auth') ||
         pathname.startsWith('/billing') ||
         pathname.startsWith('/admin') ||
+        pathname.startsWith('/resources') ||
+        pathname.startsWith('/pricing') ||
+        pathname.startsWith('/help') ||
+        pathname.startsWith('/support') ||
+        pathname.startsWith('/refund') ||
+        pathname.startsWith('/how-to-use') ||
+        pathname.startsWith('/terms') ||
+        pathname.startsWith('/privacy') ||
+        pathname.startsWith('/cookie-policy') ||
+        pathname.startsWith('/gdpr') ||
         pathname.includes('.') ||
         pathname === '/dashboard' ||
         pathname === '/research' ||
