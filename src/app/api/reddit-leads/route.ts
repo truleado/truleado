@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   try {
     console.log('🔍 Fetching Reddit leads...')
     
-    const supabase = await createClient()
+    const supabase = await createClient(request)
     
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
   try {
     console.log('💾 Saving Reddit lead...')
     
-    const supabase = await createClient()
+    const supabase = await createClient(request)
     
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -145,7 +145,7 @@ export async function DELETE(request: NextRequest) {
   try {
     console.log('🗑️ Deleting Reddit lead...')
     
-    const supabase = await createClient()
+    const supabase = await createClient(request)
     
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()

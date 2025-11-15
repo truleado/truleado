@@ -43,13 +43,15 @@ export default function TrackLeadsPage() {
   const fetchLeads = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/leads')
+      const response = await fetch('/api/leads', {
+        credentials: 'include'
+      })
       
       if (response.ok) {
         const data = await response.json()
         setLeads(data.leads || [])
       } else {
-        const errorData = await response.json()
+        const errorData = await response.json().catch(() => ({ error: 'Failed to fetch leads' }))
         setError(errorData.error || 'Failed to fetch leads')
       }
     } catch (err: any) {
@@ -69,6 +71,7 @@ export default function TrackLeadsPage() {
       
       const response = await fetch(`/api/leads?id=${leadId}`, {
         method: 'DELETE',
+        credentials: 'include'
       })
 
       if (response.ok) {

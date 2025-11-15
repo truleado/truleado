@@ -34,13 +34,15 @@ export default function RedditLeadsPage() {
   const fetchRedditLeads = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/reddit-leads')
+      const response = await fetch('/api/reddit-leads', {
+        credentials: 'include'
+      })
       
       if (response.ok) {
         const data = await response.json()
         setLeads(data.leads || [])
       } else {
-        const errorData = await response.json()
+        const errorData = await response.json().catch(() => ({ error: 'Failed to fetch Reddit leads' }))
         setError(errorData.error || 'Failed to fetch Reddit leads')
       }
     } catch (err: any) {
@@ -57,7 +59,8 @@ export default function RedditLeadsPage() {
 
     try {
       const response = await fetch(`/api/reddit-leads/${leadId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        credentials: 'include'
       })
 
       if (response.ok) {
@@ -84,6 +87,7 @@ export default function RedditLeadsPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(lead)
       })
 

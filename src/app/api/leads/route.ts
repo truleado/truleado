@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     console.log('Leads API called')
     
     // Get authenticated user first
-    const supabase = await createClient()
+    const supabase = await createClient(request)
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     console.log('Leads API auth check:', { 
@@ -144,7 +144,7 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient(request)
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {

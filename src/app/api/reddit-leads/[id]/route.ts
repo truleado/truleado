@@ -9,7 +9,7 @@ export async function DELETE(
   try {
     console.log('🗑️ Deleting Reddit lead:', params.id)
     
-    const supabase = await createClient()
+    const supabase = await createClient(request)
     
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()

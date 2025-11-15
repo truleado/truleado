@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   try {
     console.log('🎯 Engaging with Reddit lead...')
     
-    const supabase = await createClient()
+    const supabase = await createClient(request)
     
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()

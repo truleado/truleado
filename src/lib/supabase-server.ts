@@ -1,15 +1,36 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { NextRequest, NextResponse } from 'next/server'
 
-export async function createClient() {
-  const cookieStore = await cookies()
+export async function createClient(request?: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
+  // For API routes, use request cookies directly
+  // For server components, use cookies() from next/headers
+  if (request) {
+    // API route - use request cookies
+    return createServerClient(supabaseUrl || '', supabaseAnonKey || '', {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          // Cookies will be set on the response in the API route
+          // This is handled by the middleware or response
+        },
+      },
+    })
+  }
+
+  // Server component - use cookies() from next/headers
+  const cookieStore = await cookies()
+  
   console.log('Supabase server client created:', { 
     hasUrl: !!supabaseUrl, 
     hasKey: !!supabaseAnonKey,
-    cookieCount: cookieStore.getAll().length
+    cookieCount: cookieStore.getAll().length,
+    fromRequest: false
   })
 
   if (!supabaseUrl || !supabaseAnonKey) {
