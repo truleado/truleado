@@ -18,45 +18,78 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(20)
 
-    // Get recent subscriptions
+    // Get recent subscriptions with user emails
     const { data: recentSubscriptions } = await supabase
       .from('subscriptions')
       .select(`
         id,
+        user_id,
         status,
         razorpay_plan_id,
-        created_at,
-        profiles!inner(email)
+        created_at
       `)
       .order('created_at', { ascending: false })
       .limit(20)
 
-    // Get recent products
+    // Get user emails for subscriptions
+    const subscriptionUserIds = recentSubscriptions?.map(s => s.user_id).filter(Boolean) || []
+    let subscriptionUsers: any[] = []
+    if (subscriptionUserIds.length > 0) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .in('id', subscriptionUserIds)
+      subscriptionUsers = data || []
+    }
+
+    // Get recent products with user emails
     const { data: recentProducts } = await supabase
       .from('products')
       .select(`
         id,
+        user_id,
         name,
-        created_at,
-        profiles!inner(email)
+        created_at
       `)
       .order('created_at', { ascending: false })
       .limit(20)
 
-    // Get recent leads
+    // Get user emails for products
+    const productUserIds = recentProducts?.map(p => p.user_id).filter(Boolean) || []
+    let productUsers: any[] = []
+    if (productUserIds.length > 0) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .in('id', productUserIds)
+      productUsers = data || []
+    }
+
+    // Get recent leads with user emails
     const { data: recentLeads } = await supabase
       .from('leads')
       .select(`
         id,
+        user_id,
         title,
         subreddit,
         author,
         status,
-        created_at,
-        profiles!inner(email)
+        created_at
       `)
       .order('created_at', { ascending: false })
       .limit(20)
+
+    // Get user emails for leads
+    const leadUserIds = recentLeads?.map(l => l.user_id).filter(Boolean) || []
+    let leadUsers: any[] = []
+    if (leadUserIds.length > 0) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .in('id', leadUserIds)
+      leadUsers = data || []
+    }
 
 
     // Combine all activities
@@ -75,10 +108,11 @@ export async function GET(request: NextRequest) {
 
     // Add subscriptions
     recentSubscriptions?.forEach(sub => {
+      const user = subscriptionUsers.find(u => u.id === sub.user_id)
       activities.push({
         id: `sub-${sub.id}`,
         type: 'subscription',
-        user_email: sub.profiles.email,
+        user_email: user?.email || 'Unknown',
         description: `Subscribed to ${sub.razorpay_plan_id || 'pro'} plan`,
         created_at: sub.created_at
       })
@@ -86,10 +120,11 @@ export async function GET(request: NextRequest) {
 
     // Add products
     recentProducts?.forEach(product => {
+      const user = productUsers.find(u => u.id === product.user_id)
       activities.push({
         id: `product-${product.id}`,
         type: 'product_added',
-        user_email: product.profiles.email,
+        user_email: user?.email || 'Unknown',
         description: `Added product: ${product.name}`,
         created_at: product.created_at
       })
@@ -97,10 +132,11 @@ export async function GET(request: NextRequest) {
 
     // Add leads
     recentLeads?.forEach(lead => {
+      const user = leadUsers.find(u => u.id === lead.user_id)
       activities.push({
         id: `lead-${lead.id}`,
         type: 'lead_generated',
-        user_email: lead.profiles.email,
+        user_email: user?.email || 'Unknown',
         description: `Generated lead: ${lead.title} (r/${lead.subreddit} by u/${lead.author})`,
         created_at: lead.created_at
       })
