@@ -15,15 +15,17 @@ export function TrialBanner() {
   }, [trialTimeRemaining])
 
   // Refresh subscription periodically to update countdown (every 30 seconds)
+  // Also refresh more frequently if we're in upgrading state to detect payment completion
   useEffect(() => {
     if (user?.subscription_status === 'trial') {
+      const refreshInterval = isUpgrading ? 2000 : 30000 // More frequent refresh when upgrading
       const interval = setInterval(() => {
         refreshSubscription()
-      }, 30000) // Update every 30 seconds
+      }, refreshInterval)
 
       return () => clearInterval(interval)
     }
-  }, [user?.subscription_status, refreshSubscription])
+  }, [user?.subscription_status, refreshSubscription, isUpgrading])
 
   // Poll for subscription update after payment (check every 2 seconds for 60 seconds)
   useEffect(() => {
@@ -57,10 +59,11 @@ export function TrialBanner() {
   // Show banner for trial users (permanent until trial expires or user upgrades)
   const isTrialUser = user?.subscription_status === 'trial'
   const isTrialExpired = currentTrialTime === 'Trial expired' || currentTrialTime === 'Loading...'
+  const hasActiveSubscription = user?.subscription_status === 'active' || user?.subscription_status === 'pending'
   
   // Don't show if user has active subscription - this is the key check
   // Also check for 'pending' status which might be set during payment processing
-  if (user?.subscription_status === 'active' || user?.subscription_status === 'pending') {
+  if (hasActiveSubscription) {
     return null
   }
   
@@ -68,6 +71,15 @@ export function TrialBanner() {
   if (!isTrialUser && !showUpgradePrompt) {
     return null
   }
+  
+  // Additional check: if subscription status just changed to active, hide immediately
+  // This ensures the banner disappears as soon as the subscription context updates
+  useEffect(() => {
+    if (hasActiveSubscription) {
+      // Force a refresh to ensure we have the latest status
+      refreshSubscription()
+    }
+  }, [hasActiveSubscription, refreshSubscription])
 
   return (
     <div className="relative bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200 border-l-4 p-3 sm:p-4">
