@@ -197,6 +197,17 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     }
   }, [isDummyEnv, authUser, authLoading])
 
+  // More frequent refresh for trial users to detect payment completion faster
+  useEffect(() => {
+    if (!isDummyEnv && authUser && !authLoading && user?.subscription_status === 'trial') {
+      const interval = setInterval(() => {
+        refreshSubscription()
+      }, 10000) // Refresh every 10 seconds for trial users to detect payment quickly
+
+      return () => clearInterval(interval)
+    }
+  }, [isDummyEnv, authUser, authLoading, user?.subscription_status, refreshSubscription])
+
   const value: SubscriptionContextType = {
     user,
     subscriptionStatus: user?.subscription_status || 'expired',

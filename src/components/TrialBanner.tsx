@@ -25,18 +25,18 @@ export function TrialBanner() {
     }
   }, [user?.subscription_status, refreshSubscription])
 
-  // Poll for subscription update after payment (check every 2 seconds for 30 seconds)
+  // Poll for subscription update after payment (check every 2 seconds for 60 seconds)
   useEffect(() => {
-    if (isUpgrading && user?.subscription_status === 'trial') {
+    if (isUpgrading) {
       let pollCount = 0
-      const maxPolls = 15 // 15 polls * 2 seconds = 30 seconds
+      const maxPolls = 30 // 30 polls * 2 seconds = 60 seconds
       
       const checkInterval = setInterval(async () => {
         pollCount++
         await refreshSubscription()
         
-        // Check subscription status after refresh
-        // We'll check via the subscription context which will update
+        // Stop polling if subscription is now active
+        // The user object will be updated by refreshSubscription, triggering a re-render
         if (pollCount >= maxPolls) {
           clearInterval(checkInterval)
           setIsUpgrading(false)
@@ -46,8 +46,10 @@ export function TrialBanner() {
       return () => {
         clearInterval(checkInterval)
       }
-    } else if (isUpgrading && user?.subscription_status === 'active') {
-      // User has active subscription, stop upgrading state
+    }
+    
+    // If user becomes active while upgrading, stop immediately
+    if (isUpgrading && user?.subscription_status === 'active') {
       setIsUpgrading(false)
     }
   }, [isUpgrading, user?.subscription_status, refreshSubscription])
@@ -109,9 +111,27 @@ export function TrialBanner() {
                           
                           // Handle checkout completion
                           if (event?.name === 'checkout.completed' || event?.event === 'checkout.completed') {
-                            console.log('Checkout completed, waiting for webhook to update subscription...')
-                            // Keep isUpgrading true - the polling effect will detect when subscription becomes active
-                            // Don't set isUpgrading to false here - let the polling effect handle it
+                            console.log('Checkout completed, immediately refreshing subscription...')
+                            // Immediately refresh subscription to check for status update
+                            await refreshSubscription()
+                            
+                            // Start aggressive polling - check every 2 seconds
+                            // The polling effect will also run, but this ensures immediate check
+                            let immediatePollCount = 0
+                            const immediatePollInterval = setInterval(async () => {
+                              immediatePollCount++
+                              await refreshSubscription()
+                              
+                              // Stop after 30 seconds of immediate polling
+                              if (immediatePollCount >= 15) {
+                                clearInterval(immediatePollInterval)
+                              }
+                            }, 2000)
+                            
+                            // Also set timeout to clear interval
+                            setTimeout(() => {
+                              clearInterval(immediatePollInterval)
+                            }, 30000)
                           }
                         } catch (e) {
                           console.error('Checkout event handling failed', e)
