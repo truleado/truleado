@@ -177,8 +177,11 @@ export async function POST(request: NextRequest) {
           console.error('Failed to send upgrade email for subscription:', emailError)
         }
 
-        // Try to find and update user by customer ID
-        try {
+        // Try to find and update user - try multiple methods
+        let profileToUpdate = null
+        
+        // Method 1: Find by customer ID
+        if (subscription.customer_id) {
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -186,20 +189,45 @@ export async function POST(request: NextRequest) {
             .single()
 
           if (profile && !profileError) {
+            profileToUpdate = profile
+          }
+        }
+        
+        // Method 2: If not found, try by email
+        if (!profileToUpdate && subscription.customer_email) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('email', subscription.customer_email.toLowerCase())
+            .single()
+
+          if (profile && !profileError) {
+            profileToUpdate = profile
+            console.log('Found user by email for subscription:', subscription.customer_email)
+          }
+        }
+        
+        // Update subscription if we found a user
+        if (profileToUpdate) {
+          try {
             // Update user with subscription ID
-            await updateUserSubscription(profile.id, {
+            await updateUserSubscription(profileToUpdate.id, {
               subscription_status: 'active',
+              paddle_customer_id: subscription.customer_id || profileToUpdate.paddle_customer_id,
               paddle_subscription_id: subscription.id,
               subscription_ends_at: subscription.next_billed_at 
                 ? new Date(subscription.next_billed_at).toISOString()
-                : undefined
+                : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
             })
-            console.log('Subscription created for user:', profile.id)
-          } else {
-            console.log('No user found for customer ID:', subscription.customer_id)
+            console.log('✅ Subscription created for user:', profileToUpdate.id, profileToUpdate.email)
+          } catch (dbError) {
+            console.error('❌ Failed to update user subscription:', dbError)
           }
-        } catch (dbError) {
-          console.error('Failed to update user subscription:', dbError)
+        } else {
+          console.warn('⚠️ No user found for subscription:', {
+            customerId: subscription.customer_id,
+            customerEmail: subscription.customer_email
+          })
         }
 
         break
