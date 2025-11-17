@@ -90,10 +90,13 @@ export function UpgradeRequiredModal({
                 )}
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Subscription Required
+                {isTrialExpired ? 'Your Free Trial Has Ended' : 'Upgrade to Continue'}
               </h3>
               <p className="text-gray-600">
-                You need an active subscription to access all Truleado features. Subscribe now to get started.
+                {isTrialExpired 
+                  ? 'Your 7-day free trial has ended. Upgrade now to continue using all Truleado features.'
+                  : `Your free trial ends ${trialTimeRemaining}. Upgrade now to continue enjoying all features.`
+                }
               </p>
             </div>
 

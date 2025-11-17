@@ -25,9 +25,7 @@ import {
   Target,
   Zap,
   ExternalLink,
-  Clock,
   CreditCard,
-  Star,
   Brain,
   Globe,
   Bell,
@@ -340,33 +338,6 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Trial Status */}
-          {subscriptionStatus === 'trial' && currentTrialTime && currentTrialTime !== 'Trial expired' && (
-            <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
-                    <Clock className="h-6 w-6 text-blue-600" />
-                  </div>
-                </div>
-                <div className="ml-4 flex-1">
-                  <h3 className="text-lg font-semibold text-blue-800">Free Trial Active</h3>
-                  <p className="text-base text-blue-700">
-                    <span className="font-bold text-lg text-blue-900">{currentTrialTime}</span> remaining. Upgrade to Pro to continue after trial ends.
-                  </p>
-                </div>
-                <div className="ml-auto">
-                  <button
-                    onClick={() => window.location.href = '/pricing'}
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    <Star className="w-4 h-4 mr-2" />
-                    Upgrade Now
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">

@@ -2,83 +2,102 @@
 
 import React, { useEffect } from 'react'
 import { useSubscription } from '@/lib/subscription-context'
-import { X, Clock, AlertTriangle } from 'lucide-react'
+import { Clock } from 'lucide-react'
 
 export function TrialBanner() {
-  const { user, trialTimeRemaining, showUpgradePrompt, accessLevel, refreshSubscription } = useSubscription()
-  const [isVisible, setIsVisible] = React.useState(true)
+  const { user, trialTimeRemaining, showUpgradePrompt, refreshSubscription } = useSubscription()
   const [isUpgrading, setIsUpgrading] = React.useState(false)
   const [currentTrialTime, setCurrentTrialTime] = React.useState(trialTimeRemaining)
-
-  // Auto-hide banner if user has active subscription
-  useEffect(() => {
-    if (user?.subscription_status === 'active') {
-      setIsVisible(false)
-    }
-  }, [user?.subscription_status])
-
-  // Auto-hide banner if payment success flag is set
-  useEffect(() => {
-    const checkPaymentSuccess = () => {
-      try {
-        if (typeof window !== 'undefined' && localStorage.getItem('payment_success') === 'true') {
-          setIsVisible(false)
-          localStorage.removeItem('payment_success')
-        }
-      } catch {}
-    }
-    checkPaymentSuccess()
-    const interval = setInterval(checkPaymentSuccess, 1000)
-    return () => clearInterval(interval)
-  }, [])
-
-  // Real-time trial countdown
-  useEffect(() => {
-    if (user?.subscription_status === 'trial' && trialTimeRemaining && trialTimeRemaining !== 'Trial expired') {
-      setCurrentTrialTime(trialTimeRemaining)
-      
-      const interval = setInterval(() => {
-        refreshSubscription() // This will update the trial time
-      }, 1000) // Update every second
-
-      return () => clearInterval(interval)
-    }
-  }, [user?.subscription_status, trialTimeRemaining, refreshSubscription])
 
   // Update current trial time when trialTimeRemaining changes
   useEffect(() => {
     setCurrentTrialTime(trialTimeRemaining)
   }, [trialTimeRemaining])
 
-  if (!isVisible || !showUpgradePrompt) {
+  // Refresh subscription periodically to update countdown (every 30 seconds)
+  useEffect(() => {
+    if (user?.subscription_status === 'trial') {
+      const interval = setInterval(() => {
+        refreshSubscription()
+      }, 30000) // Update every 30 seconds
+
+      return () => clearInterval(interval)
+    }
+  }, [user?.subscription_status, refreshSubscription])
+
+  // Poll for subscription update after payment (check every 2 seconds for 30 seconds)
+  useEffect(() => {
+    if (isUpgrading && user?.subscription_status === 'trial') {
+      let pollCount = 0
+      const maxPolls = 15 // 15 polls * 2 seconds = 30 seconds
+      
+      const checkInterval = setInterval(async () => {
+        pollCount++
+        await refreshSubscription()
+        
+        // Check subscription status after refresh
+        // We'll check via the subscription context which will update
+        if (pollCount >= maxPolls) {
+          clearInterval(checkInterval)
+          setIsUpgrading(false)
+        }
+      }, 2000)
+
+      return () => {
+        clearInterval(checkInterval)
+      }
+    } else if (isUpgrading && user?.subscription_status === 'active') {
+      // User has active subscription, stop upgrading state
+      setIsUpgrading(false)
+    }
+  }, [isUpgrading, user?.subscription_status, refreshSubscription])
+
+  // Show banner for trial users (permanent until trial expires or user upgrades)
+  const isTrialUser = user?.subscription_status === 'trial'
+  const isTrialExpired = currentTrialTime === 'Trial expired' || currentTrialTime === 'Loading...'
+  
+  // Don't show if user has active subscription
+  if (user?.subscription_status === 'active') {
+    return null
+  }
+  
+  // Always show for trial users or users who need to upgrade
+  if (!isTrialUser && !showUpgradePrompt) {
     return null
   }
 
-  // Show payment required message instead of trial banner
   return (
-    <div className="relative bg-blue-50 border-blue-200 border-l-4 p-3 sm:p-4">
+    <div className="relative bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200 border-l-4 p-3 sm:p-4">
       <div className="flex items-start">
         <div className="flex-shrink-0">
-          <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
+          <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
         </div>
         <div className="ml-2 sm:ml-3 flex-1">
-          <h3 className="text-xs sm:text-sm font-medium text-blue-800">
-            Subscription Required
+          <h3 className="text-xs sm:text-sm font-medium text-orange-900">
+            {isTrialExpired ? 'Your Free Trial Has Ended' : '7 Days Free Trial'}
           </h3>
-          <div className="mt-1 text-xs sm:text-sm text-blue-700">
-            <p>
-              You need an active subscription to access all features. Subscribe now to get started.
-            </p>
+          <div className="mt-1 text-xs sm:text-sm text-orange-800">
+            {isTrialExpired ? (
+              <p>Upgrade now to continue using all Truleado features.</p>
+            ) : (
+              <p>
+                You have <span className="font-semibold">{currentTrialTime}</span> left in your free trial. 
+                Upgrade anytime to keep your access.
+              </p>
+            )}
           </div>
-          <div className="mt-3 flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <div className="mt-3">
             <button
               onClick={async () => {
                 if (isUpgrading) return
                 setIsUpgrading(true)
                 try {
-                  // Try client-side Paddle checkout first
-                  const pubRes = await fetch('/api/billing/public-config')
+                  // Fetch Paddle configuration
+                  const pubRes = await fetch('/api/billing/public-config', {
+                    credentials: 'include'
+                  })
                   const pub = await pubRes.json()
+                  
                   if (pub?.clientToken && pub?.priceId) {
                     const { initializePaddle } = await import('@paddle/paddle-js')
                     const paddle = await initializePaddle({
@@ -86,63 +105,61 @@ export function TrialBanner() {
                       token: pub.clientToken,
                       eventCallback: async (event: any) => {
                         try {
-                          if (event?.name === 'checkout.completed') {
-                            // Mark success and refresh subscription immediately
-                            try { localStorage.setItem('payment_success', 'true') } catch {}
-                            await fetch('/api/debug/manual-subscription-update', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ userId: user?.id, subscriptionStatus: 'active' })
-                            })
-                            // Hide banner immediately
-                            setIsVisible(false)
+                          console.log('Paddle event received:', event)
+                          
+                          // Handle checkout completion
+                          if (event?.name === 'checkout.completed' || event?.event === 'checkout.completed') {
+                            console.log('Checkout completed, waiting for webhook to update subscription...')
+                            // Keep isUpgrading true - the polling effect will detect when subscription becomes active
+                            // Don't set isUpgrading to false here - let the polling effect handle it
                           }
                         } catch (e) {
                           console.error('Checkout event handling failed', e)
                         }
                       }
                     })
+                    
                     if (!paddle || !paddle.Checkout) {
                       throw new Error('Paddle initialization failed')
                     }
+                    
+                    // Open Paddle checkout overlay
                     await paddle.Checkout.open({
                       items: [{ priceId: pub.priceId, quantity: 1 }],
-                      settings: { displayMode: 'overlay' },
+                      settings: { 
+                        displayMode: 'overlay',
+                        theme: 'light',
+                        locale: 'en'
+                      },
                       customer: user?.email ? { email: user.email } : undefined,
-                      customData: user ? { user_id: user.id, user_email: user.email } : undefined
+                      customData: user ? { 
+                        user_id: user.id, 
+                        user_email: user.email 
+                      } : undefined
                     })
+                    
+                    // Don't set isUpgrading to false here - let the polling effect handle it
+                    // The checkout overlay is now open, and when payment completes,
+                    // the webhook will update the subscription, and polling will detect it
                   } else {
-                    // Fallback to settings page
+                    // Fallback to settings page if Paddle config is missing
+                    console.error('Paddle configuration missing:', pub)
+                    setIsUpgrading(false)
                     window.location.href = '/settings?tab=billing'
                   }
                 } catch (e) {
                   console.error('Upgrade failed:', e)
-                  // Fallback to settings page
-                  window.location.href = '/settings?tab=billing'
-                } finally {
                   setIsUpgrading(false)
+                  // Fallback to settings page on error
+                  window.location.href = '/settings?tab=billing'
                 }
               }}
               disabled={isUpgrading}
-              className="px-3 py-2 rounded-md text-xs sm:text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 py-2 rounded-md text-xs sm:text-sm font-semibold bg-gradient-to-r from-orange-600 to-amber-600 text-white hover:from-orange-700 hover:to-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
             >
-              {isUpgrading ? 'Processing...' : 'Subscribe Now'}
-            </button>
-            <button
-              onClick={() => setIsVisible(false)}
-              className="px-3 py-2 rounded-md text-xs sm:text-sm font-medium bg-blue-100 text-blue-800 hover:bg-blue-200"
-            >
-              Dismiss
+              {isUpgrading ? 'Opening...' : 'Upgrade Now'}
             </button>
           </div>
-        </div>
-        <div className="ml-auto pl-2">
-          <button
-            onClick={() => setIsVisible(false)}
-            className="inline-flex rounded-md p-1 text-blue-500 hover:bg-blue-100"
-          >
-            <X className="h-4 w-4" />
-          </button>
         </div>
       </div>
     </div>

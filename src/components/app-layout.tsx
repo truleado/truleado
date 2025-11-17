@@ -27,8 +27,6 @@ import {
 } from 'lucide-react'
 import { TrialBanner } from './TrialBanner'
 import { NotificationBell } from './NotificationBell'
-import { UpgradeRequiredModal } from './UpgradeRequiredModal'
-import { useTrial } from '@/hooks/use-trial'
 
 // Custom Reddit Icon Component
 const RedditIcon = ({ className }: { className?: string }) => (
@@ -73,13 +71,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [redditSectionOpen, setRedditSectionOpen] = useState(true)
   const [growOnRedditOpen, setGrowOnRedditOpen] = useState(true)
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [redditLeadsCount, setRedditLeadsCount] = useState(0)
   const [trackLeadsCount, setTrackLeadsCount] = useState(0)
   const pathname = usePathname()
   const router = useRouter()
   const { user, signOut } = useAuth()
-  const { showUpgradePrompt, trialTimeRemaining, handleUpgrade, isUpgrading } = useTrial()
 
   const handleSignOut = async () => {
     await signOut()
@@ -87,12 +83,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
 
-  // Show upgrade modal if trial is expiring or expired
-  React.useEffect(() => {
-    if (user && showUpgradePrompt && !showUpgradeModal) {
-      setShowUpgradeModal(true)
-    }
-  }, [user, showUpgradePrompt, showUpgradeModal])
 
   // Fetch counts for sidebar badges
   React.useEffect(() => {
@@ -127,11 +117,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval)
   }, [user])
 
-
-  const handleUpgradeClick = async () => {
-    await handleUpgrade()
-    setShowUpgradeModal(false)
-  }
 
   // Helper function to check if any child route is active
   const isChildRouteActive = (children: any[]) => {
@@ -333,14 +318,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </div>
 
 
-      {/* Upgrade Required Modal */}
-      <UpgradeRequiredModal
-        isOpen={showUpgradeModal}
-        onClose={() => setShowUpgradeModal(false)}
-        onUpgrade={handleUpgradeClick}
-        trialTimeRemaining={trialTimeRemaining}
-        isLoading={isUpgrading}
-      />
     </div>
   )
 }

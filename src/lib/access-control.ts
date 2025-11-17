@@ -28,8 +28,13 @@ export const isSubscriptionActive = (user: UserWithSubscription): boolean => {
 export const getAccessLevel = (user: UserWithSubscription): AccessLevel => {
   if (!user) return 'none'
   
-  // Only active subscription - give full access
+  // Active subscription - give full access
   if (user.subscription_status === 'active') {
+    return 'full'
+  }
+  
+  // Active trial (not expired) - give full access during trial period
+  if (user.subscription_status === 'trial' && !isTrialExpired(user)) {
     return 'full'
   }
   
@@ -38,8 +43,8 @@ export const getAccessLevel = (user: UserWithSubscription): AccessLevel => {
     return 'limited'
   }
   
-  // All other statuses (trial, expired, cancelled, or no subscription) - no access
-  // Users must pay before using the product
+  // All other statuses (expired trial, cancelled, or no subscription) - no access
+  // Users must upgrade after trial expires
   return 'none'
 }
 
@@ -59,7 +64,7 @@ export const canAccessFeature = (user: UserWithSubscription, feature: string, cu
     return true
   }
   
-  // All other features require active subscription (payment required)
+  // All other features require active subscription OR active trial
   return accessLevel === 'full'
 }
 
@@ -100,13 +105,33 @@ export const shouldShowUpgradePrompt = (user: UserWithSubscription): boolean => 
     return false
   }
   
-  // Show upgrade prompt for all users without active subscription
-  // They need to pay before using the product
-  return true
+  // Show upgrade prompt if trial is expired or user has no trial/subscription
+  if (user.subscription_status === 'trial' && isTrialExpired(user)) {
+    return true
+  }
+  
+  // Show upgrade prompt for users without active subscription or expired trial
+  if (user.subscription_status !== 'trial' || isTrialExpired(user)) {
+    return true
+  }
+  
+  return false
 }
 
-// Function to check if user needs to pay (no more trials)
+// Function to check if user needs to start trial
 export const needsTrialStart = (user: UserWithSubscription): boolean => {
-  // Never show trial start - users must pay
+  if (!user) return true
+  
+  // If user has no subscription status or it's null/empty, they need a trial
+  if (!user.subscription_status || user.subscription_status === 'free' || user.subscription_status === '') {
+    return true
+  }
+  
+  // If user has expired trial and no active subscription, they need to upgrade (not start trial)
+  if (user.subscription_status === 'trial' && isTrialExpired(user)) {
+    return false
+  }
+  
+  // If user already has an active trial or subscription, they don't need to start trial
   return false
 }

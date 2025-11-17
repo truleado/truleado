@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     // await checkAndUpdateTrialStatus(user.id, serviceSupabase)
 
     // Get user profile with subscription info
-    const { data: profile, error: profileError } = await serviceSupabase
+    let { data: profile, error: profileError } = await serviceSupabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
@@ -29,6 +29,55 @@ export async function GET(request: NextRequest) {
     if (profileError) {
       console.error('Error fetching user profile:', profileError)
       return NextResponse.json({ error: 'Failed to fetch subscription status' }, { status: 500 })
+    }
+
+    // If user has no subscription status or it's null/empty/free, give them a 7-day trial
+    if (!profile.subscription_status || profile.subscription_status === 'free' || profile.subscription_status === '') {
+      const trialEndsAt = new Date()
+      trialEndsAt.setDate(trialEndsAt.getDate() + 7)
+      
+      const { data: updatedProfile, error: updateError } = await serviceSupabase
+        .from('profiles')
+        .update({
+          subscription_status: 'trial',
+          trial_ends_at: trialEndsAt.toISOString(),
+          trial_count: 1,
+          last_trial_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id)
+        .select()
+        .single()
+
+      if (updateError) {
+        console.error('Error starting trial for user:', updateError)
+      } else {
+        profile = updatedProfile
+      }
+    }
+    
+    // If user has expired trial and no active subscription, check if we should give them a new trial
+    // (For now, we only give one trial per user - they need to upgrade after it expires)
+    if (profile.subscription_status === 'trial' && profile.trial_ends_at) {
+      const now = new Date()
+      const trialEndsAt = new Date(profile.trial_ends_at)
+      
+      // If trial expired, update status to expired
+      if (now > trialEndsAt) {
+        const { data: updatedProfile, error: updateError } = await serviceSupabase
+          .from('profiles')
+          .update({
+            subscription_status: 'expired',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id)
+          .select()
+          .single()
+
+        if (!updateError && updatedProfile) {
+          profile = updatedProfile
+        }
+      }
     }
 
     // Calculate next billing date for active subscriptions
