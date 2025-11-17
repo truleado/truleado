@@ -58,8 +58,9 @@ export function TrialBanner() {
   const isTrialUser = user?.subscription_status === 'trial'
   const isTrialExpired = currentTrialTime === 'Trial expired' || currentTrialTime === 'Loading...'
   
-  // Don't show if user has active subscription
-  if (user?.subscription_status === 'active') {
+  // Don't show if user has active subscription - this is the key check
+  // Also check for 'pending' status which might be set during payment processing
+  if (user?.subscription_status === 'active' || user?.subscription_status === 'pending') {
     return null
   }
   

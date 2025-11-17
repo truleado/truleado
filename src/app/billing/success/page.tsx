@@ -6,10 +6,12 @@ import { useRouter } from 'next/navigation'
 import AppLayout from '@/components/app-layout'
 import { CheckCircle, ArrowRight, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase-client'
+import { useSubscription } from '@/lib/subscription-context'
 
 function BillingSuccessContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const { refreshSubscription } = useSubscription()
   const [isLoading, setIsLoading] = useState(true)
   const sessionId = searchParams.get('session_id') || searchParams.get('transaction_id') || searchParams.get('checkout_id')
 
@@ -35,6 +37,11 @@ function BillingSuccessContent() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ userId, subscriptionStatus: 'active' })
             })
+            // Refresh subscription context after update
+            await refreshSubscription()
+          } else {
+            // Even if verification succeeded, refresh subscription to ensure UI updates
+            await refreshSubscription()
           }
         } catch {}
       } catch (e) {
@@ -48,12 +55,14 @@ function BillingSuccessContent() {
       setIsLoading(false)
     }, 2000)
 
-    // Auto-redirect back to Settings → Billing to reflect upgraded status
-    const redirectTimer = setTimeout(() => {
+    // Auto-redirect to Dashboard after successful payment
+    const redirectTimer = setTimeout(async () => {
       try {
         localStorage.setItem('payment_success', 'true')
+        // Refresh subscription one more time before redirecting
+        await refreshSubscription()
       } catch {}
-      router.push('/settings?tab=billing&payment_success=true')
+      router.push('/dashboard?payment_success=true')
     }, 2500)
 
     return () => {
@@ -107,23 +116,23 @@ function BillingSuccessContent() {
 
           <div className="space-y-4">
             <button
-              onClick={() => router.push('/settings?tab=billing&payment_success=true')}
-              className="w-full bg-[#148cfc] hover:bg-[#0d7ce8] text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
-            >
-              Go to Billing Settings
-              <ArrowRight className="h-4 w-4" />
-            </button>
-            
-            <button
               onClick={handleGoToDashboard}
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+              className="w-full bg-[#148cfc] hover:bg-[#0d7ce8] text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
             >
               Go to Dashboard
               <ArrowRight className="h-4 w-4" />
             </button>
             
+            <button
+              onClick={() => router.push('/settings?tab=billing&payment_success=true')}
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+            >
+              Go to Billing Settings
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            
             <p className="text-xs text-gray-500">
-              You can now access all premium features. Redirecting to Billing in a moment...
+              You can now access all premium features. Redirecting to Dashboard in a moment...
             </p>
           </div>
         </div>

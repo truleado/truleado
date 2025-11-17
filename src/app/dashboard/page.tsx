@@ -3,7 +3,7 @@
 import React from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { useSubscription } from '@/lib/subscription-context'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import AppLayout from '@/components/app-layout'
 import Link from 'next/link'
@@ -73,6 +73,7 @@ export default function Dashboard() {
   const { user, loading } = useAuth()
   const { subscriptionStatus, trialTimeRemaining, accessLevel, refreshSubscription } = useSubscription()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [stats, setStats] = useState<DashboardStats>({
     totalRedditLeads: 0,
     researchSessions: 0,
@@ -129,6 +130,28 @@ export default function Dashboard() {
   useEffect(() => {
     setCurrentTrialTime(trialTimeRemaining)
   }, [trialTimeRemaining])
+
+  // Handle payment success parameter - refresh subscription and remove URL param
+  useEffect(() => {
+    const paymentSuccess = searchParams.get('payment_success')
+    
+    if (paymentSuccess === 'true' && user) {
+      // Immediately refresh subscription to get updated status
+      refreshSubscription()
+      
+      // Force refresh again after a short delay to ensure webhook has processed
+      const refreshTimer = setTimeout(() => {
+        refreshSubscription()
+      }, 2000)
+      
+      // Remove the parameter from URL
+      const url = new URL(window.location.href)
+      url.searchParams.delete('payment_success')
+      window.history.replaceState({}, '', url.toString())
+      
+      return () => clearTimeout(refreshTimer)
+    }
+  }, [searchParams, user, refreshSubscription])
 
   const fetchDashboardData = async () => {
     try {
