@@ -95,7 +95,7 @@ export default function Pricing() {
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"> Perfect Plan</span>
             </h1>
             <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 mb-6 sm:mb-8 max-w-4xl mx-auto leading-relaxed px-4">
-              Start with a free trial, then pay $29/month if you want to continue. 
+              Start with a free trial, then pay $49/month if you want to continue. 
               <span className="font-semibold text-gray-800"> No commitment required.</span>
             </p>
           </div>
@@ -209,10 +209,10 @@ export default function Pricing() {
                 
                 <div className="mb-6 sm:mb-8">
                   <div className="flex items-baseline justify-center">
-                    <span className="text-4xl sm:text-5xl font-bold text-gray-900">$29</span>
+                    <span className="text-4xl sm:text-5xl font-bold text-gray-900">$49</span>
                     <span className="text-lg sm:text-xl text-gray-500 ml-2">/month</span>
                   </div>
-                  <p className="mt-2 text-xs sm:text-sm text-gray-600">Less than $1 per day for unlimited leads</p>
+                  <p className="mt-2 text-xs sm:text-sm text-gray-600">Affordable pricing for unlimited leads</p>
                 </div>
 
                 <Link 
@@ -357,7 +357,7 @@ export default function Pricing() {
               <div className="bg-gray-50 rounded-2xl p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">How does the free trial work?</h3>
                 <p className="text-gray-600 leading-relaxed">
-                  You get full access to all features for 1 day. No credit card required to start. You can choose to pay $29/month to continue, or simply stop using the service.
+                  You get full access to all features for 1 day. No credit card required to start. You can choose to pay $49/month to continue, or simply stop using the service.
                 </p>
               </div>
               
