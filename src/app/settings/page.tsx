@@ -196,15 +196,18 @@ function SettingsContent() {
     try {
       // Refresh subscription status from context
       await refreshSubscription()
-      
-      // Fetch billing info if user has active subscription
-      if (subscriptionStatus === 'active') {
-        await fetchBillingInfo()
-      }
     } catch (error) {
       console.error('Error fetching subscription status:', error)
     }
   }
+
+  // Refresh billing info when subscription status changes to active
+  useEffect(() => {
+    if (subscriptionStatus === 'active' && user) {
+      // Refresh billing info when subscription becomes active
+      fetchBillingInfo()
+    }
+  }, [subscriptionStatus, user])
 
   const fetchBillingInfo = async () => {
     try {
