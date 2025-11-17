@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { Suspense } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { useSubscription } from '@/lib/subscription-context'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -69,7 +69,7 @@ interface QuickAction {
   textColor: string
 }
 
-export default function Dashboard() {
+function DashboardContent() {
   const { user, loading } = useAuth()
   const { subscriptionStatus, trialTimeRemaining, accessLevel, refreshSubscription } = useSubscription()
   const router = useRouter()
@@ -576,5 +576,24 @@ export default function Dashboard() {
         </div>
       </div>
     </AppLayout>
+  )
+}
+
+export default function Dashboard() {
+  return (
+    <Suspense fallback={
+      <AppLayout>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+              <Activity className="h-8 w-8 text-gray-400" />
+            </div>
+            <p className="text-gray-600 font-medium">Loading...</p>
+          </div>
+        </div>
+      </AppLayout>
+    }>
+      <DashboardContent />
+    </Suspense>
   )
 }
