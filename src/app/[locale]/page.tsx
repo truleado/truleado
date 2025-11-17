@@ -1,72 +1,76 @@
 'use client'
 
-import Link from "next/link";
-import { ArrowRight, Filter, Target, Zap, Users, TrendingUp, CheckCircle, Sparkles, BarChart3, Clock, Shield, Globe, Star, Brain, Search, Bell, Mail, Megaphone, Instagram, DollarSign, TrendingDown, Globe2, Award, CheckCircle2, PlayCircle } from "lucide-react";
-import { useAuth } from "@/contexts/auth-context";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { PublicHeader } from "@/components/PublicHeader";
-import type { Locale } from "@/lib/translations";
-import { translations, getTranslation } from "@/lib/full-homepage-translations";
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import {
+  ArrowRight,
+  Sparkles,
+  Target,
+  FileText,
+  TrendingUp,
+  CheckCircle2,
+  MessageSquare,
+} from 'lucide-react'
+
+import { useAuth } from '@/contexts/auth-context'
+import { PublicHeader } from '@/components/PublicHeader'
+import type { Locale } from '@/lib/translations'
+import { translations } from '@/lib/full-homepage-translations'
 
 type Props = {
   params: { locale: Locale }
 }
 
+const CORE_FEATURES = [
+  {
+    title: 'Find customers on Reddit',
+    description: 'We scan thousands of subreddits every hour and surface threads where people literally describe your problem space.',
+    proof: 'Leads include search intent, buying temperature, and link to the live conversation.',
+    icon: Target,
+  },
+  {
+    title: 'Create subreddit-ready content',
+    description: 'Instantly turn each opportunity into a first-person post or reply that feels native to that community.',
+    proof: 'Our AI mirrors tone, slang, and format rules for 2,500+ subreddits.',
+    icon: FileText,
+  },
+  {
+    title: 'Earn karma & grow organically',
+    description: 'Plan replies, log follow-ups, and keep your karma flywheel spinning without sounding spammy.',
+    proof: 'Truleado reminds you when to rejoin threads and tracks what actually drove upvotes or demos.',
+    icon: TrendingUp,
+  },
+]
+
+const PROOF_POINTS = [
+  'No cold outreach. Join conversations already asking for you.',
+  'Every draft is fact-checked against your landing page before we show it.',
+  'Activity tracker nudges you when momentum is fading.',
+]
+
+const MINI_HIGHLIGHT = 'No credit card required'
+
 export default function Home({ params }: Props) {
   const { locale } = params
-  
-  // Get translations for current locale
-  const t = translations[locale] || translations['en']
-  
-  // Structured data for SEO
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "Truleado",
-    "description": "AI-powered Reddit marketing platform for SaaS companies. Master Reddit marketing with automated lead discovery and intelligent outreach tools.",
-    "applicationCategory": "BusinessApplication",
-    "operatingSystem": "Web",
-    "keywords": "reddit marketing, reddit lead generation, reddit outreach, saas marketing, reddit advertising, social media marketing",
-    "offers": {
-      "@type": "Offer",
-      "price": "29",
-      "priceCurrency": "USD"
-    },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.9",
-      "ratingCount": "127"
-    }
-  };
-
-  const organizationJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "Truleado",
-    "url": "https://www.truleado.com",
-    "logo": "https://www.truleado.com/truleadologo.png",
-    "description": "Master Reddit marketing with AI-powered tools. Discover leads, engage authentically, and grow your SaaS through strategic Reddit marketing.",
-    "sameAs": [
-      "https://x.com/truleado",
-      "https://www.facebook.com/truleado",
-      "https://www.instagram.com/truleado/"
-    ]
-  };
-
-  // Production-ready version with error handling
-  const { user, loading } = useAuth();
-  const router = useRouter();
+  const t = translations[locale] || translations.en
+  const [isClient, setIsClient] = useState(false)
+  const { user, loading } = useAuth()
+  const router = useRouter()
 
   useEffect(() => {
-    try {
-      if (!loading && user) {
-        router.push('/dashboard');
-      }
-    } catch (error) {
-      console.error('Home page error:', error);
+    setIsClient(true)
+  }, [])
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push('/dashboard')
     }
-  }, [user, loading, router]);
+  }, [user, loading, router])
+
+  if (!isClient) {
+    return null
+  }
 
   if (loading) {
     return (
@@ -78,11 +82,10 @@ export default function Home({ params }: Props) {
           <p className="text-gray-600 font-medium">{t.loading}</p>
         </div>
       </div>
-    );
+    )
   }
 
   if (user) {
-    // Don't render anything, will redirect in useEffect
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -92,714 +95,206 @@ export default function Home({ params }: Props) {
           <p className="text-gray-600 font-medium">{t.redirecting}</p>
         </div>
       </div>
-    );
+    )
   }
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Truleado',
+    description:
+      'Truleado helps SaaS teams find ready-to-buy customers on Reddit, create content people upvote, and earn karma organically.',
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Web',
+    offers: {
+      '@type': 'Offer',
+      price: '29',
+      priceCurrency: 'USD',
+    },
+  }
+
+  const organizationJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Truleado',
+    url: 'https://www.truleado.com',
+    logo: 'https://www.truleado.com/truleadologo.png',
+    description: 'Find customers on Reddit, create subreddit-ready content, and grow karma with Truleado.',
+    sameAs: ['https://x.com/truleado', 'https://www.facebook.com/truleado', 'https://www.instagram.com/truleado/'],
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Structured Data for SEO */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
-      />
-      
-      {/* Navigation */}
+    <div className="min-h-screen bg-white text-gray-900">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
+
       <PublicHeader />
 
-      {/* Hero Section */}
-      <section className="relative py-12 sm:py-20 lg:py-32 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 via-indigo-600/5 to-purple-600/5"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-blue-100 text-blue-800 text-xs sm:text-sm font-medium mb-4 sm:mb-6">
-              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-              {t.hero.badge}
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-16">
+        <section className="text-center space-y-6">
+          <div className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-orange-700">
+            <Sparkles className="h-3 w-3" />
+            All-in-one Reddit marketing tool
             </div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 mb-3 sm:mb-4 md:mb-6 leading-tight px-2 sm:px-4">
-              {t.hero.headline}
-            </h1>
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-gray-600 mb-4 sm:mb-6 max-w-4xl mx-auto leading-relaxed px-2 sm:px-4">
-              {t.hero.subheadline}
+          <h1 className="text-4xl font-bold leading-tight text-gray-900 sm:text-5xl lg:text-6xl">
+            Your buyers are on Reddit. We show you exactly where.
+          </h1>
+          <p className="mx-auto max-w-3xl text-lg text-gray-600">
+            Truleado surfaces the conversations asking for what you build, drafts subreddit-ready replies, and keeps your outreach and karma flywheel organized.
             </p>
-            
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8 md:mb-12 px-2 sm:px-4">
-              <Link 
-                href="/auth/signup" 
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 rounded-lg sm:rounded-xl md:rounded-2xl text-sm sm:text-base md:text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 flex items-center justify-center transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
+          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Link
+                href="/auth/signup"
+                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#FF4500] to-[#FF6A00] px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:opacity-90"
               >
-                {t.hero.cta}
-                <ArrowRight className="ml-1.5 sm:ml-2 w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
+                Start finding customers
+              <ArrowRight className="h-4 w-4" />
               </Link>
               <Link 
                 href={`/${locale}/pricing`}
-                className="border-2 border-gray-200 text-gray-700 px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 rounded-lg sm:rounded-xl md:rounded-2xl text-sm sm:text-base md:text-lg font-semibold hover:bg-gray-50 hover:border-gray-300 flex items-center justify-center transition-all duration-200"
+              className="text-sm font-semibold text-gray-700 underline-offset-4 hover:text-gray-900 hover:underline"
               >
-                View Pricing
+              See pricing
               </Link>
-            </div>
-            
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-3xl mx-auto px-2 sm:px-4">
-              <div className="text-center">
-                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">Unlimited</div>
-                <div className="text-xs sm:text-sm md:text-base text-gray-600">Access</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">AI-Powered</div>
-                <div className="text-xs sm:text-sm md:text-base text-gray-600">{t.stats.analysis}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">Strategic</div>
-                <div className="text-xs sm:text-sm md:text-base text-gray-600">{t.stats.pitchIdeas}</div>
-              </div>
-            </div>
           </div>
-        </div>
+          <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+            {MINI_HIGHLIGHT}
+          </p>
       </section>
 
-      {/* Features Section */}
-      <section className="py-12 sm:py-16 md:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8 sm:mb-12 md:mb-16">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
-              {t.features.title}
-            </h2>
-            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-2">
-              {t.features.subtitle}
+        <section className="rounded-3xl border border-gray-100 bg-black/5 p-4 sm:p-6">
+          <div className="aspect-video w-full overflow-hidden rounded-2xl shadow-lg">
+            <iframe
+              src="https://www.youtube.com/embed/v4YAQ9qrsKo"
+              title="Truleado demo"
+              className="h-full w-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        </section>
+
+        <section className="rounded-3xl border border-gray-100 bg-white p-8 sm:p-12">
+          <div className="mb-8 text-center sm:text-left">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Our 3 pillars</p>
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">Everything revolves around these three wins</h2>
+          </div>
+          <div className="grid gap-8 md:grid-cols-3">
+            {CORE_FEATURES.map(({ title, description, proof, icon: Icon }) => (
+              <div
+                key={title}
+                className="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:ring-gray-200"
+              >
+                <div className="mb-6 inline-flex items-center justify-center rounded-full bg-gray-900 p-3.5 shadow-sm transition-transform group-hover:scale-110">
+                  <Icon className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="mb-3 text-xl font-bold text-gray-900">{title}</h3>
+                <p className="mb-6 flex-1 text-base leading-relaxed text-gray-600">{description}</p>
+                <div className="rounded-xl bg-gray-50/80 p-4 ring-1 ring-gray-100/50">
+                  <p className="text-sm leading-relaxed text-gray-600">{proof}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="space-y-5 rounded-3xl border border-gray-100 p-8">
+            <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">Why teams stay with us</p>
+            <h2 className="text-3xl font-bold text-gray-900">Built for helpful founders, not spammers.</h2>
+            <p className="text-base text-gray-600">
+              Truleado keeps your Reddit strategy authentic. We surface buyer intent, craft posts in your voice, and show
+              you when it’s time to follow up so you stay consistent without sounding salesy.
             </p>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
-            
-            <div className="text-center group">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-200">
-                <Search className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
-              </div>
-              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">{t.features.step1Title}</h3>
-              <p className="text-sm sm:text-base text-gray-600 leading-relaxed px-2">
-                {t.features.step1Desc}
-              </p>
-            </div>
-            
-            <div className="text-center group">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-200">
-                <Users className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
-              </div>
-              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">{t.features.step2Title}</h3>
-              <p className="text-sm sm:text-base text-gray-600 leading-relaxed px-2">
-                {t.features.step2Desc}
-              </p>
-            </div>
-            
-            <div className="text-center group">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-200">
-                <Brain className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
-              </div>
-              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">{t.features.step3Title}</h3>
-              <p className="text-sm sm:text-base text-gray-600 leading-relaxed px-2">
-                {t.features.step3Desc}
-              </p>
-            </div>
-            
-            <div className="text-center group">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-200">
-                <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
-              </div>
-              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">{t.features.step4Title}</h3>
-              <p className="text-sm sm:text-base text-gray-600 leading-relaxed px-2">
-                {t.features.step4Desc}
-              </p>
+            <div className="space-y-3">
+              {PROOF_POINTS.map((point) => (
+                <div key={point} className="flex items-start gap-3 text-sm text-gray-700">
+                  <CheckCircle2 className="mt-1 h-4 w-4 text-green-500" />
+                  {point}
+                </div>
+              ))}
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Benefits Section */}
-      <section className="py-12 sm:py-16 md:py-20 bg-gradient-to-br from-gray-50 to-blue-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 md:gap-16 items-center">
-            <div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
-                {t.benefits.title}
-              </h2>
-              <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">
-                {t.benefits.description}
-              </p>
-              <div className="space-y-4 sm:space-y-6">
-                <div className="flex items-start group">
-                  <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-xl flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                    <Search className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+          <div className="rounded-3xl border border-gray-100 bg-white/80 p-8 shadow-sm">
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500">What you’ll see inside</p>
+            <div className="mt-6 space-y-4 text-sm text-gray-600">
+              {[
+                {
+                  icon: MessageSquare,
+                  title: 'Live Reddit conversations',
+                  body: 'Every opportunity includes summary, keyword match, sentiment, and the direct link so you can jump in confidently.',
+                },
+                {
+                  icon: FileText,
+                  title: 'Draft posts & replies',
+                  body: 'We extract proof points from your site, rewrite them in first-person, and respect each subreddit’s rules automatically.',
+                },
+                {
+                  icon: TrendingUp,
+                  title: 'Karma & response tracker',
+                  body: 'Log interactions, see what earned upvotes or DMs, and get pinged when conversations heat back up.',
+                },
+              ].map(({ icon: Icon, title, body }) => (
+                <div key={title} className="rounded-2xl border border-gray-100/80 bg-gray-50/80 p-4">
+                  <div className="mb-2 inline-flex items-center gap-2 text-gray-900">
+                    <Icon className="h-4 w-4" />
+                    <span className="font-semibold">{title}</span>
                   </div>
-                  <div className="ml-3 sm:ml-4">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">{t.benefits.why1Title}</h3>
-                    <p className="text-sm sm:text-base text-gray-600">{t.benefits.why1Desc}</p>
-                  </div>
+                  <p>{body}</p>
                 </div>
-                
-                <div className="flex items-start group">
-                  <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                    <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
-                  </div>
-                  <div className="ml-3 sm:ml-4">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">{t.benefits.why2Title}</h3>
-                    <p className="text-sm sm:text-base text-gray-600">{t.benefits.why2Desc}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start group">
-                  <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                    <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
-                  </div>
-                  <div className="ml-3 sm:ml-4">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">{t.benefits.why3Title}</h3>
-                    <p className="text-sm sm:text-base text-gray-600">{t.benefits.why3Desc}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start group">
-                  <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-indigo-100 rounded-xl flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-                    <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
-                  </div>
-                  <div className="ml-3 sm:ml-4">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">{t.benefits.why4Title}</h3>
-                    <p className="text-sm sm:text-base text-gray-600">{t.benefits.why4Desc}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl">
-              <div className="space-y-6 sm:space-y-8">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
-                    <Search className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                  </div>
-                  <div className="ml-3 sm:ml-4">
-                    <p className="text-xl sm:text-2xl font-bold text-gray-900">Any Website</p>
-                    <p className="text-sm sm:text-base text-gray-600">Research & Analysis</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-red-500 to-red-600 rounded-xl flex items-center justify-center">
-                    <Users className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                  </div>
-                  <div className="ml-3 sm:ml-4">
-                    <p className="text-xl sm:text-2xl font-bold text-gray-900">Strategic</p>
-                    <p className="text-sm sm:text-base text-gray-600">Reddit Opportunities</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
-                    <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                  </div>
-                  <div className="ml-3 sm:ml-4">
-                    <p className="text-xl sm:text-2xl font-bold text-gray-900">AI-Generated</p>
-                    <p className="text-sm sm:text-base text-gray-600">Pitch Ideas</p>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
-      {/* Pricing Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              {t.pricing.title}
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              {t.pricing.subtitle}
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto">
-            {/* Subscription Card - No Free Trial */}
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-gray-200 p-6 sm:p-8 hover:shadow-2xl transition-shadow duration-300">
-              <div className="text-center">
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Subscribe Now</h3>
-                <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8">Get full access to all features with an active subscription</p>
-                
-                <div className="mb-6 sm:mb-8">
-                  <div className="flex items-baseline justify-center">
-                    <span className="text-4xl sm:text-5xl font-bold text-gray-900">Starting at</span>
-                  </div>
-                  <p className="mt-2 text-xs sm:text-sm text-gray-600">See pricing page for details</p>
-                </div>
-
-                <Link 
-                  href={`/${locale}/pricing`}
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl"
-                >
-                  View Pricing
-                  <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
-                </Link>
-              </div>
-
-              <div className="mt-6 sm:mt-8 border-t border-gray-200 pt-6 sm:pt-8">
-                <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">What's Included</h4>
-                <ul className="space-y-3 sm:space-y-4">
-                  <li className="flex items-start">
-                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">Unlimited Reddit lead discovery</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">AI-powered content generation</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">Advanced analytics & insights</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">Product management tools</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">Export & data management</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">Priority support</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Pro Plan Card */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl sm:rounded-3xl shadow-2xl border-2 border-blue-200 p-6 sm:p-8 relative hover:shadow-3xl transition-shadow duration-300">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg">
-                  {t.pricing.proPlan.badge}
-                </span>
-              </div>
-              
-              <div className="text-center">
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{t.pricing.proPlan.title}</h3>
-                <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8">{t.pricing.proPlan.subtitle}</p>
-                
-                <div className="mb-6 sm:mb-8">
-                  <div className="flex items-baseline justify-center">
-                    <span className="text-4xl sm:text-5xl font-bold text-gray-900">{t.pricing.proPlan.price}</span>
-                    <span className="text-lg sm:text-xl text-gray-500 ml-2">{t.pricing.proPlan.period}</span>
-                  </div>
-                  <p className="mt-2 text-xs sm:text-sm text-gray-600">{t.pricing.proPlan.description}</p>
-                </div>
-
-                <Link 
-                  href={`/${locale}/pricing`}
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 flex items-center justify-center transition-all duration-200 shadow-xl hover:shadow-2xl"
-                >
-                  Subscribe Now
-                  <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
-                </Link>
-              </div>
-
-              <div className="mt-6 sm:mt-8 border-t border-gray-200 pt-6 sm:pt-8">
-                <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">{t.pricing.proPlan.includedTitle}</h4>
-                <ul className="space-y-3 sm:space-y-4">
-                  <li className="flex items-start">
-                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t.pricing.proPlan.item1}</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t.pricing.proPlan.item2}</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t.pricing.proPlan.item3}</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t.pricing.proPlan.item4}</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t.pricing.proPlan.item5}</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                    <span className="text-sm sm:text-base text-gray-700">{t.pricing.proPlan.item6}</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          
-          <div className="mt-12 text-center">
-            <Link 
-              href={`/${locale}/pricing`}
-              className="text-blue-600 hover:text-blue-700 font-semibold text-lg"
+      <section className="bg-gray-50">
+        <div className="mx-auto max-w-5xl px-4 py-16 text-center sm:px-6 lg:px-8">
+          <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">Grow the right way</p>
+          <h3 className="mt-4 text-3xl font-bold text-gray-900 sm:text-4xl">
+            Ready to turn Reddit into a steady channel?
+          </h3>
+          <p className="mt-3 text-base text-gray-600">
+            Start with the posts and subreddits that already want what you’re building.
+          </p>
+          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link
+              href="/auth/signup"
+              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#FF4500] to-[#FF6A00] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:opacity-90"
             >
-              {t.pricing.viewDetailed}
+              Start finding customers
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link 
+              href="/resources/blog"
+              className="text-sm font-semibold text-gray-700 underline-offset-4 hover:text-gray-900 hover:underline"
+            >
+              Browse playbooks
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Social Proof Section */}
-      <section className="py-16 sm:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              {t.socialProof.title}
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              {t.socialProof.subtitle}
-            </p>
+      <footer className="border-t border-gray-100 bg-white">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-10 text-center text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-3">
+            <img src="/truleadologo.png" alt="Truleado" className="h-8 w-8" />
+            <p className="text-gray-600">© {new Date().getFullYear()} Truleado. Built for helpful founders.</p>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Award className="w-6 h-6 text-blue-600" />
-                </div>
-                <div className="ml-4">
-                  <div className="text-2xl font-bold text-gray-900">{t.socialProof.stat1Value}</div>
-                  <div className="text-sm text-gray-600">{t.socialProof.stat1Label}</div>
-                </div>
-              </div>
-              <p className="text-gray-700">{t.socialProof.stat1Desc}</p>
-            </div>
-            
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-green-600" />
-                </div>
-                <div className="ml-4">
-                  <div className="text-2xl font-bold text-gray-900">{t.socialProof.stat2Value}</div>
-                  <div className="text-sm text-gray-600">{t.socialProof.stat2Label}</div>
-                </div>
-              </div>
-              <p className="text-gray-700">{t.socialProof.stat2Desc}</p>
-            </div>
-            
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                  <CheckCircle2 className="w-6 h-6 text-purple-600" />
-                </div>
-                <div className="ml-4">
-                  <div className="text-2xl font-bold text-gray-900">{t.socialProof.stat3Value}</div>
-                  <div className="text-sm text-gray-600">{t.socialProof.stat3Label}</div>
-                </div>
-              </div>
-              <p className="text-gray-700">{t.socialProof.stat3Desc}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Use Case Section */}
-      <section className="py-16 sm:py-20 bg-gradient-to-br from-gray-50 to-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              {t.useCases.title}
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              {t.useCases.subtitle}
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mb-4">
-                <Zap className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">{t.useCases.startupsTitle}</h3>
-              <p className="text-gray-600 mb-4">
-                {t.useCases.startupsDesc}
-              </p>
-              <ul className="space-y-2">
-                <li className="flex items-center text-sm text-gray-600">
-                  <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                  {t.useCases.startupsBullet1}
-                </li>
-                <li className="flex items-center text-sm text-gray-600">
-                  <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                  {t.useCases.startupsBullet2}
-                </li>
-                <li className="flex items-center text-sm text-gray-600">
-                  <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                  {t.useCases.startupsBullet3}
-                </li>
-              </ul>
-            </div>
-            
-            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-4">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">{t.useCases.growingTitle}</h3>
-              <p className="text-gray-600 mb-4">
-                {t.useCases.growingDesc}
-              </p>
-              <ul className="space-y-2">
-                <li className="flex items-center text-sm text-gray-600">
-                  <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                  {t.useCases.growingBullet1}
-                </li>
-                <li className="flex items-center text-sm text-gray-600">
-                  <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                  {t.useCases.growingBullet2}
-                </li>
-                <li className="flex items-center text-sm text-gray-600">
-                  <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                  {t.useCases.growingBullet3}
-                </li>
-              </ul>
-            </div>
-            
-            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-4">
-                <Target className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">{t.useCases.establishedTitle}</h3>
-              <p className="text-gray-600 mb-4">
-                {t.useCases.establishedDesc}
-              </p>
-              <ul className="space-y-2">
-                <li className="flex items-center text-sm text-gray-600">
-                  <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                  {t.useCases.establishedBullet1}
-                </li>
-                <li className="flex items-center text-sm text-gray-600">
-                  <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                  {t.useCases.establishedBullet2}
-                </li>
-                <li className="flex items-center text-sm text-gray-600">
-                  <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                  {t.useCases.establishedBullet3}
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Blog Section */}
-      <section className="py-16 sm:py-20 bg-gradient-to-br from-gray-50 to-blue-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              {t.blog.title}
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              {t.blog.subtitle}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Link href="/resources/blog/first-100-reddit-leads" className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-6">
-              <div className="text-4xl mb-3">🚀</div>
-              <div className="text-sm text-gray-500 mb-2">Lead Generation</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">How to Find Your First 100 Reddit Leads in 30 Days</h3>
-              <p className="text-gray-600 text-sm">A complete guide to discovering high-quality opportunities</p>
+          <div className="flex flex-wrap items-center justify-center gap-4 text-gray-600">
+            <Link href="/privacy" className="hover:text-gray-900">
+              Privacy
             </Link>
-
-            <Link href="/resources/blog/ultimate-reddit-marketing-strategy" className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-6">
-              <div className="text-4xl mb-3">📈</div>
-              <div className="text-sm text-gray-500 mb-2">Marketing</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">The Ultimate Reddit Marketing Strategy</h3>
-              <p className="text-gray-600 text-sm">Learn proven tactics for Reddit marketing success</p>
+            <Link href="/terms" className="hover:text-gray-900">
+              Terms
             </Link>
-
-            <Link href="/resources/blog/ai-powered-vs-manual-research" className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-6">
-              <div className="text-4xl mb-3">💡</div>
-              <div className="text-sm text-gray-500 mb-2">ROI</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">AI-Powered vs Manual Research: ROI Comparison</h3>
-              <p className="text-gray-600 text-sm">See how much time and money you can save</p>
+            <Link href="/support" className="hover:text-gray-900">
+              Support
             </Link>
-          </div>
-
-          <div className="text-center">
-            <Link href="/resources/blog" className="inline-flex items-center text-blue-600 hover:text-blue-700 font-semibold text-lg">
-              {t.blog.viewAll}
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ROI Section */}
-      <section className="py-16 sm:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-8 sm:p-12 text-white">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
-                {t.roi.title}
-              </h2>
-              <p className="text-xl text-blue-100 max-w-3xl mx-auto">
-                {t.roi.subtitle}
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center">
-                <div className="text-4xl font-bold mb-2">87%</div>
-                <div className="text-blue-100">Conversion Rate</div>
-                <p className="text-sm text-blue-200 mt-2">Higher response when reaching out to active Reddit discussions</p>
-              </div>
-              
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center">
-                <div className="text-4xl font-bold mb-2">10x</div>
-                <div className="text-blue-100">Faster Results</div>
-                <p className="text-sm text-blue-200 mt-2">Discover leads in minutes vs. hours of manual research</p>
-              </div>
-              
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center">
-                <div className="text-4xl font-bold mb-2">$29</div>
-                <div className="text-blue-100">Per Month</div>
-                <p className="text-sm text-blue-200 mt-2">Less than $1 per day for unlimited lead discovery</p>
-              </div>
-            </div>
-            
-            <div className="flex justify-center">
-              <Link 
-                href="/auth/signup" 
-                className="bg-white text-blue-600 px-8 py-4 rounded-2xl text-lg font-semibold hover:bg-gray-100 inline-flex items-center justify-center transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
-              >
-                {t.roi.cta}
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-indigo-600">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="text-center">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
-              {t.ctaSection.title}
-            </h2>
-            <p className="text-xl text-blue-100 max-w-3xl mx-auto mb-8">
-              {t.ctaSection.subtitle}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link 
-                href="/auth/signup" 
-                className="bg-white text-blue-600 px-8 py-4 rounded-2xl text-lg font-semibold hover:bg-gray-100 inline-flex items-center justify-center transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
-              >
-                {t.ctaSection.ctaPrimary}
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Link>
-              <Link 
-                href={`/${locale}/pricing`}
-                className="border-2 border-white text-white px-8 py-4 rounded-2xl text-lg font-semibold hover:bg-white hover:text-blue-600 inline-flex items-center justify-center transition-all duration-200"
-              >
-                {t.ctaSection.ctaSecondary}
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {/* Company Info */}
-            <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center mb-6">
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center">
-                  <img 
-                    src="/truleadologo.png" 
-                    alt="Truleado" 
-                    className="w-full h-full object-contain" 
-                  />
-                </div>
-                <span className="ml-3 text-xl font-bold text-white">Truleado</span>
-              </div>
-              <p className="text-gray-400 text-sm mb-6 max-w-md leading-relaxed">
-                {t.footer.description}
-              </p>
-              <div className="flex space-x-4">
-                <a href="https://x.com/truleado" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
-                  <span className="sr-only">Twitter</span>
-                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M6.29 18.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 01.8 7.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 16.407a11.616 11.616 0 006.29 1.84" />
-                  </svg>
-                </a>
-                <a href="https://www.instagram.com/truleado/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
-                  <span className="sr-only">Instagram</span>
-                  <Instagram className="h-5 w-5" />
-                </a>
-                <a href="https://www.facebook.com/truleado" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
-                  <span className="sr-only">Facebook</span>
-                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                  </svg>
-                </a>
-              </div>
-            </div>
-
-            {/* Product Links */}
-            <div>
-              <h3 className="text-white font-semibold mb-6">{t.footer.productTitle}</h3>
-              <ul className="space-y-3">
-                <li><a href="/auth/signup" className="text-gray-400 hover:text-white transition-colors text-sm">{t.footer.productLink1}</a></li>
-                <li><a href="/auth/signin" className="text-gray-400 hover:text-white transition-colors text-sm">{t.footer.productLink2}</a></li>
-                <li><a href={`/${locale}/pricing`} className="text-gray-400 hover:text-white transition-colors text-sm">{t.footer.productLink3}</a></li>
-                <li><a href="/dashboard" className="text-gray-400 hover:text-white transition-colors text-sm">{t.footer.productLink4}</a></li>
-              </ul>
-            </div>
-
-            {/* Resources Links */}
-            <div>
-              <h3 className="text-white font-semibold mb-6">{t.footer.resourcesTitle}</h3>
-              <ul className="space-y-3">
-                <li><a href="/resources/blog" className="text-gray-400 hover:text-white transition-colors text-sm">{t.footer.resourcesLink1}</a></li>
-                <li><a href="/resources/templates" className="text-gray-400 hover:text-white transition-colors text-sm">{t.footer.resourcesLink2}</a></li>
-                <li><a href="/resources/roi-calculator" className="text-gray-400 hover:text-white transition-colors text-sm">{t.footer.resourcesLink3}</a></li>
-                <li><a href="/support" className="text-gray-400 hover:text-white transition-colors text-sm">{t.footer.resourcesLink4}</a></li>
-              </ul>
-            </div>
-
-            {/* Legal Links */}
-            <div>
-              <h3 className="text-white font-semibold mb-6">{t.footer.legalTitle}</h3>
-              <ul className="space-y-3">
-                <li><a href="/terms" className="text-gray-400 hover:text-white transition-colors text-sm">{t.footer.legalLink1}</a></li>
-                <li><a href="/privacy" className="text-gray-400 hover:text-white transition-colors text-sm">{t.footer.legalLink2}</a></li>
-                <li><a href="/refund" className="text-gray-400 hover:text-white transition-colors text-sm">{t.footer.legalLink3}</a></li>
-                <li><a href="/cookie-policy" className="text-gray-400 hover:text-white transition-colors text-sm">{t.footer.legalLink4}</a></li>
-                <li><a href="/gdpr" className="text-gray-400 hover:text-white transition-colors text-sm">{t.footer.legalLink5}</a></li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Bottom Section */}
-          <div className="border-t border-gray-800 mt-12 pt-8">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <div className="text-center md:text-left">
-                <p className="text-gray-400 text-sm mb-2">
-                  {t.footer.madeWith}
-                </p>
-                <p className="text-gray-400 text-sm">
-                  {t.footer.copyright}
-                </p>
-              </div>
-              <div className="mt-4 md:mt-0 flex space-x-6">
-                <a href="/support" className="text-gray-400 hover:text-white transition-colors text-sm">{t.footer.support}</a>
-              </div>
-            </div>
           </div>
         </div>
       </footer>
     </div>
-  );
+  )
 }
+

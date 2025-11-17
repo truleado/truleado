@@ -2,9 +2,62 @@ import { NextRequest, NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
 import { callOpenRouterJSON } from '@/lib/openrouter-client'
 
+const MAX_REDIRECTS = 5
+const FETCH_TIMEOUT_MS = 15000
+const POSTS_PER_BATCH = 3
+const MAX_GENERATION_ATTEMPTS = 3
+
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
+
+async function fetchWithRedirects(url: string) {
+  let currentUrl = url
+
+  for (let i = 0; i < MAX_REDIRECTS; i++) {
+    const response = await fetch(currentUrl, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      },
+      redirect: 'manual',
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    })
+
+    // Success responses
+    if (response.ok) {
+      const html = await response.text()
+      return { html, finalUrl: response.url || currentUrl }
+    }
+
+    // Handle redirect responses (3xx)
+    if (response.status >= 300 && response.status < 400) {
+      const locationHeader = response.headers.get('location')
+      if (locationHeader) {
+        currentUrl = new URL(locationHeader, currentUrl).toString()
+        continue
+      }
+
+      // Some frameworks (Next.js app router) return soft redirects in the body
+      const body = await response.text().catch(() => '')
+      const nextRedirectMatch = body.match(/NEXT_REDIRECT;[^;]*;([^;]+);/i)
+      if (nextRedirectMatch?.[1]) {
+        currentUrl = new URL(nextRedirectMatch[1], currentUrl).toString()
+        continue
+      }
+
+      throw new Error(`Redirect (${response.status}) without location header from ${currentUrl}`)
+    }
+
+    // Non-success responses should include more detail
+    const errorText = await response.text().catch(() => '')
+    throw new Error(
+      `Failed to fetch URL: ${response.status}${errorText ? ` - ${errorText.slice(0, 200)}` : ''}`
+    )
+  }
+
+  throw new Error('Too many redirects while fetching the URL')
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,20 +72,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'OpenRouter API key not configured' }, { status: 500 })
     }
 
-    // Fetch the URL content
+    // Fetch the URL content with manual redirect handling
     console.log('📄 Fetching URL content:', url)
-    const fetchResponse = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      },
-      signal: AbortSignal.timeout(15000) // 15-second timeout
-    })
-
-    if (!fetchResponse.ok) {
-      throw new Error(`Failed to fetch URL: ${fetchResponse.status}`)
-    }
-
-    const html = await fetchResponse.text()
+    const { html, finalUrl } = await fetchWithRedirects(url)
+    console.log('📄 Final URL after redirects:', finalUrl)
     
     // Parse HTML using cheerio for better content extraction
     const $ = cheerio.load(html)
@@ -120,19 +163,46 @@ Respond ONLY in valid JSON format like this:
   "suggestedSubreddits": ["subreddit1", "subreddit2", "subreddit3", "subreddit4", "subreddit5", "subreddit6"]
 }`
 
-    const jsonResponse = await callOpenRouterJSON<{
-      posts: Array<{ title: string; description: string }>
-      suggestedSubreddits: string[]
-    }>(prompt, {
+    const aggregatedPosts: Array<{ title: string; description: string }> = []
+    const subredditSet = new Set<string>()
+
+    for (let attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt++) {
+      console.log(`🧠 Generating content attempt ${attempt + 1}`)
+      const jsonResponse = await callOpenRouterJSON<{
+        posts: Array<{ title: string; description: string }>
+        suggestedSubreddits: string[]
+      }>(prompt, {
         model: 'google/gemini-2.0-flash-exp:free',
-      temperature: 0.8,
-      max_tokens: 2000
-    })
+        temperature: 0.8,
+        max_tokens: 2000
+      })
+
+      if (jsonResponse.posts?.length) {
+        aggregatedPosts.push(...jsonResponse.posts)
+      }
+
+      jsonResponse.suggestedSubreddits?.forEach(sub => subredditSet.add(sub))
+
+      if (aggregatedPosts.length >= POSTS_PER_BATCH) {
+        break
+      }
+    }
+
+    if (aggregatedPosts.length === 0) {
+      throw new Error('No posts were generated. Please try again.')
+    }
+
+    const finalPosts = aggregatedPosts.slice(0, POSTS_PER_BATCH)
+    const finalSubreddits = Array.from(subredditSet).slice(0, 6)
+
+    if (finalPosts.length < POSTS_PER_BATCH) {
+      console.warn(`⚠️ Only generated ${finalPosts.length} posts after ${MAX_GENERATION_ATTEMPTS} attempts`)
+    }
 
     return NextResponse.json({
       success: true,
-      posts: jsonResponse.posts || [],
-      suggestedSubreddits: jsonResponse.suggestedSubreddits || []
+      posts: finalPosts,
+      suggestedSubreddits: finalSubreddits
     })
 
   } catch (error: any) {

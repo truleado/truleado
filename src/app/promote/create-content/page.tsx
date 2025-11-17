@@ -8,7 +8,8 @@ export default function CreateContentPage() {
   const [url, setUrl] = useState('')
   const [contentType, setContentType] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
-  const [generatedContent, setGeneratedContent] = useState<any>(null)
+  const [generatedPosts, setGeneratedPosts] = useState<any[]>([])
+  const [suggestedSubreddits, setSuggestedSubreddits] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const [copiedItem, setCopiedItem] = useState<string | null>(null)
 
@@ -22,14 +23,21 @@ export default function CreateContentPage() {
     }
   }
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (options?: { append?: boolean }) => {
     if (!url.trim()) {
       alert('Please enter a URL')
       return
     }
 
+    const append = options?.append ?? false
+
     setIsGenerating(true)
     setError(null)
+    
+    if (!append) {
+      setGeneratedPosts([])
+      setSuggestedSubreddits([])
+    }
     
     try {
       const response = await fetch('/api/promote/create-content', {
@@ -49,7 +57,15 @@ export default function CreateContentPage() {
       }
 
       const data = await response.json()
-      setGeneratedContent(data)
+      setGeneratedPosts(prev => append ? [...prev, ...(data.posts || [])] : (data.posts || []))
+      setSuggestedSubreddits(prev => {
+        const newSubs = data.suggestedSubreddits || []
+        if (append) {
+          const merged = [...prev, ...newSubs]
+          return Array.from(new Set(merged))
+        }
+        return newSubs
+      })
     } catch (err: any) {
       console.error('Error generating content:', err)
       setError(err.message || 'Failed to generate content. Please try again.')
@@ -57,6 +73,8 @@ export default function CreateContentPage() {
       setIsGenerating(false)
     }
   }
+
+  const handleGenerateMore = () => handleGenerate({ append: true })
 
   return (
     <AppLayout>
@@ -144,19 +162,18 @@ export default function CreateContentPage() {
           )}
 
           {/* Generated Content */}
-          {generatedContent && (
+          {(suggestedSubreddits.length > 0 || generatedPosts.length > 0) && (
             <div className="space-y-6">
               {/* Suggested Subreddits */}
-              {generatedContent.suggestedSubreddits && generatedContent.suggestedSubreddits.length > 0 && (
+              {suggestedSubreddits.length > 0 && (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                   <h2 className="text-xl font-semibold text-gray-900 mb-4">Suggested Subreddits</h2>
                   <div className="flex flex-wrap gap-2">
-                    {generatedContent.suggestedSubreddits.map((subreddit: string, idx: number) => {
-                      // Remove 'r/' prefix if already present
+                    {suggestedSubreddits.map((subreddit: string, idx: number) => {
                       const cleanSubreddit = subreddit.startsWith('r/') ? subreddit.substring(2) : subreddit
                       return (
                         <a
-                          key={idx}
+                          key={`${subreddit}-${idx}`}
                           href={`https://reddit.com/r/${cleanSubreddit}`}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -171,11 +188,33 @@ export default function CreateContentPage() {
               )}
 
               {/* Generated Posts */}
-              {generatedContent.posts && generatedContent.posts.length > 0 && (
+              {generatedPosts.length > 0 && (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-                  <h2 className="text-2xl font-semibold text-gray-900 mb-6">Generated Reddit Posts</h2>
+                  <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
+                    <div>
+                      <h2 className="text-2xl font-semibold text-gray-900">Generated Reddit Posts</h2>
+                      <p className="text-sm text-gray-500">Each batch creates 3 new post ideas.</p>
+                    </div>
+                    <button
+                      onClick={handleGenerateMore}
+                      disabled={isGenerating}
+                      className="inline-flex items-center px-5 py-2 bg-purple-600 text-white text-sm font-semibold rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Generate 3 More Posts
+                        </>
+                      )}
+                    </button>
+                  </div>
                       <div className="space-y-6">
-                        {generatedContent.posts.map((post: any, idx: number) => {
+                        {generatedPosts.map((post: any, idx: number) => {
                           const titleId = `post-${idx}-title`
                           const descriptionId = `post-${idx}-description`
                           const isTitleCopied = copiedItem === titleId
