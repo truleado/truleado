@@ -70,39 +70,89 @@ export async function POST(request: NextRequest) {
           // Don't fail the webhook if email fails
         }
 
-        // Try to update user subscription if we have userId
+        // Try to update user subscription - try multiple methods to find user
+        let profileToUpdate = null
+        
+        // Method 1: Use userId from custom_data if available
         if (userId) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single()
+          
+          if (profile && !profileError) {
+            profileToUpdate = profile
+          }
+        }
+        
+        // Method 2: If not found, try to find by email
+        if (!profileToUpdate && userEmail) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('email', userEmail.toLowerCase())
+            .single()
+          
+          if (profile && !profileError) {
+            profileToUpdate = profile
+            console.log('Found user by email:', userEmail)
+          }
+        }
+        
+        // Method 3: If still not found, try by paddle_customer_id
+        if (!profileToUpdate && session.customer_id) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('paddle_customer_id', session.customer_id)
+            .single()
+          
+          if (profile && !profileError) {
+            profileToUpdate = profile
+            console.log('Found user by paddle_customer_id:', session.customer_id)
+          }
+        }
+        
+        // Update subscription if we found a user
+        if (profileToUpdate) {
           try {
-            const nextBillingDate = session.next_billed_at || session.details?.next_billed_at
-            await updateUserSubscription(userId, {
+            const nextBillingDate = session.next_billed_at || session.details?.next_billed_at || session.items?.[0]?.price?.billing_cycle?.interval_unit === 'month' 
+              ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+              : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            
+            await updateUserSubscription(profileToUpdate.id, {
               subscription_status: 'active',
-              paddle_customer_id: session.customer_id,
-              subscription_ends_at: nextBillingDate 
-                ? new Date(nextBillingDate).toISOString()
-                : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+              paddle_customer_id: session.customer_id || profileToUpdate.paddle_customer_id,
+              paddle_subscription_id: session.subscription_id || profileToUpdate.paddle_subscription_id,
+              subscription_ends_at: nextBillingDate
             })
 
             // Log subscription change
             await trialManager.logSubscriptionChange(
-              userId,
+              profileToUpdate.id,
               'active',
-              'trial',
+              profileToUpdate.subscription_status || 'trial',
               'subscription_activated',
               `webhook_${event.event_id}`,
               { 
                 session_id: session.id,
                 customer_id: session.customer_id,
-                amount: session.details?.totals?.total
+                amount: session.details?.totals?.total || session.amount
               }
             )
 
-            console.log('Subscription activated for user:', userId)
+            console.log('✅ Subscription activated for user:', profileToUpdate.id, profileToUpdate.email)
           } catch (dbError) {
-            console.error('Failed to update user subscription:', dbError)
+            console.error('❌ Failed to update user subscription:', dbError)
             // Don't fail the webhook if database update fails
           }
         } else {
-          console.log('No user_id in custom data, skipping database update')
+          console.warn('⚠️ No user found for checkout session:', {
+            userId,
+            userEmail,
+            customerId: session.customer_id
+          })
         }
 
         break
@@ -254,8 +304,11 @@ export async function POST(request: NextRequest) {
           console.error('Failed to send upgrade email for transaction:', emailError)
         }
 
-        // Try to find and update user by customer ID
-        try {
+        // Try to find and update user - try multiple methods
+        let profileToUpdate = null
+        
+        // Method 1: Find by customer ID
+        if (transaction.customer_id) {
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -263,20 +316,47 @@ export async function POST(request: NextRequest) {
             .single()
 
           if (profile && !profileError) {
-            // Ensure subscription is active - use Paddle's actual billing cycle
-            const nextBillingDate = transaction.next_billed_at || transaction.details?.next_billed_at
-            await updateUserSubscription(profile.id, {
-              subscription_status: 'active',
-              subscription_ends_at: nextBillingDate 
-                ? new Date(nextBillingDate).toISOString()
-                : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-            })
-            console.log('Payment processed for user:', profile.id)
-          } else {
-            console.log('No user found for customer ID:', transaction.customer_id)
+            profileToUpdate = profile
           }
-        } catch (dbError) {
-          console.error('Failed to update user subscription:', dbError)
+        }
+        
+        // Method 2: If not found, try by email
+        if (!profileToUpdate && transaction.customer_email) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('email', transaction.customer_email.toLowerCase())
+            .single()
+
+          if (profile && !profileError) {
+            profileToUpdate = profile
+            console.log('Found user by email for transaction:', transaction.customer_email)
+          }
+        }
+        
+        // Update subscription if we found a user
+        if (profileToUpdate) {
+          try {
+            // Ensure subscription is active - use Paddle's actual billing cycle
+            const nextBillingDate = transaction.next_billed_at || transaction.details?.next_billed_at || 
+              (transaction.subscription_id ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null)
+            
+            await updateUserSubscription(profileToUpdate.id, {
+              subscription_status: 'active',
+              paddle_customer_id: transaction.customer_id || profileToUpdate.paddle_customer_id,
+              paddle_subscription_id: transaction.subscription_id || profileToUpdate.paddle_subscription_id,
+              subscription_ends_at: nextBillingDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            })
+            
+            console.log('✅ Payment processed for user:', profileToUpdate.id, profileToUpdate.email)
+          } catch (dbError) {
+            console.error('❌ Failed to update user subscription:', dbError)
+          }
+        } else {
+          console.warn('⚠️ No user found for transaction:', {
+            customerId: transaction.customer_id,
+            customerEmail: transaction.customer_email
+          })
         }
 
         break

@@ -299,35 +299,48 @@ function SettingsContent() {
 
   // Handle payment success parameter
   useEffect(() => {
-    const paymentSuccess = searchParams.get('payment_success')
+    const paymentSuccessParam = searchParams.get('payment_success')
     const sessionId = searchParams.get('session_id')
     
-    if (paymentSuccess === 'true' && user && sessionId) {
+    if (paymentSuccessParam === 'true' && user) {
+      // Set payment success state to show banner
+      setPaymentSuccess('true')
+      
       // Check payment status and update subscription
       const checkPaymentStatus = async () => {
         try {
           console.log('Payment success detected, updating subscription directly for user:', user.id)
           
-          // Directly update subscription status without API verification
-          const updateResponse = await fetch('/api/debug/manual-subscription-update', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              userId: user.id,
-              subscriptionStatus: 'active'
-            })
-          })
+          // Refresh subscription first to get latest status from webhook
+          await refreshSubscription()
           
-          if (updateResponse.ok) {
-            const result = await updateResponse.json()
-            console.log('Subscription updated successfully:', result)
-            
-            // Refresh subscription status after successful update
+          // Wait a bit and refresh again to ensure webhook has processed
+          setTimeout(async () => {
             await refreshSubscription()
-          } else {
-            console.error('Failed to update subscription')
+          }, 2000)
+          
+          // Also try manual update as fallback if webhook hasn't processed yet
+          if (sessionId) {
+            const updateResponse = await fetch('/api/debug/manual-subscription-update', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                userId: user.id,
+                subscriptionStatus: 'active'
+              })
+            })
+            
+            if (updateResponse.ok) {
+              const result = await updateResponse.json()
+              console.log('Subscription updated successfully:', result)
+              
+              // Refresh subscription status after successful update
+              await refreshSubscription()
+            } else {
+              console.error('Failed to update subscription')
+            }
           }
         } catch (error) {
           console.error('Error updating subscription:', error)
@@ -336,11 +349,17 @@ function SettingsContent() {
       
       checkPaymentStatus()
       
-      // Remove the parameters from URL
-      const url = new URL(window.location.href)
-      url.searchParams.delete('payment_success')
-      url.searchParams.delete('session_id')
-      window.history.replaceState({}, '', url.toString())
+      // Auto-hide success message after 10 seconds
+      const hideTimer = setTimeout(() => {
+        setPaymentSuccess(null)
+        const url = new URL(window.location.href)
+        url.searchParams.delete('payment_success')
+        url.searchParams.delete('session_id')
+        window.history.replaceState({}, '', url.toString())
+        try { localStorage.removeItem('payment_success') } catch {}
+      }, 10000)
+      
+      return () => clearTimeout(hideTimer)
     }
   }, [searchParams, user, refreshSubscription])
 
@@ -946,6 +965,36 @@ function SettingsContent() {
                     </button>
                   </div>
 
+                  {/* Payment Success Banner */}
+                  {(paymentSuccess === 'true' || searchParams.get('payment_success') === 'true') && (
+                    <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg">
+                      <div className="flex items-start">
+                        <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                        <div className="flex-1">
+                          <h4 className="text-sm font-semibold text-green-800 mb-1">Payment Successful!</h4>
+                          <p className="text-sm text-green-700">
+                            Your subscription has been activated. You now have full access to all features.
+                            {subscriptionStatus === 'active' && (
+                              <span className="block mt-1 font-medium">✓ Pro Plan Active</span>
+                            )}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setPaymentSuccess(null)
+                            const url = new URL(window.location.href)
+                            url.searchParams.delete('payment_success')
+                            window.history.replaceState({}, '', url.toString())
+                            try { localStorage.removeItem('payment_success') } catch {}
+                          }}
+                          className="text-green-600 hover:text-green-800 ml-4"
+                        >
+                          <XCircle className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                 {/* Current Plan Status */}
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
                   <div className="flex items-center justify-between">
@@ -971,7 +1020,7 @@ function SettingsContent() {
                     <div className="text-right">
                       {subscriptionStatus === 'active' && (
                         <div className="text-sm text-gray-600">
-                          <p className="font-medium text-gray-900">$29/month</p>
+                          <p className="font-medium text-gray-900">$49/month</p>
                           <p>Next billing: {billingInfo.nextBillingDate || 'N/A'}</p>
                           {billingInfo.isRecurring && (
                             <p className="text-xs text-green-600 font-medium">✓ Recurring subscription</p>
