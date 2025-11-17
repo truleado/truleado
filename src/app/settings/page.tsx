@@ -218,9 +218,11 @@ function SettingsContent() {
         const data = await response.json()
         setBillingInfo({
           nextBillingDate: data.next_billing_date || '',
-          amount: data.amount || '$29',
+          amount: data.amount || '$49.00',
           paymentMethod: data.payment_method || 'Card ending in ****',
-          invoiceHistory: data.invoices || []
+          invoiceHistory: data.invoices || [],
+          isRecurring: data.is_recurring || false,
+          billingCycle: data.billing_cycle || 'Monthly'
         })
       }
     } catch (error) {
@@ -313,10 +315,12 @@ function SettingsContent() {
           
           // Refresh subscription first to get latest status from webhook
           await refreshSubscription()
+          await fetchBillingInfo()
           
           // Wait a bit and refresh again to ensure webhook has processed
           setTimeout(async () => {
             await refreshSubscription()
+            await fetchBillingInfo()
           }, 2000)
           
           // Also try manual update as fallback if webhook hasn't processed yet
@@ -336,12 +340,19 @@ function SettingsContent() {
               const result = await updateResponse.json()
               console.log('Subscription updated successfully:', result)
               
-              // Refresh subscription status after successful update
+              // Refresh subscription status and billing info after successful update
               await refreshSubscription()
+              await fetchBillingInfo()
             } else {
               console.error('Failed to update subscription')
             }
           }
+          
+          // Final refresh after 5 seconds to ensure everything is updated
+          setTimeout(async () => {
+            await refreshSubscription()
+            await fetchBillingInfo()
+          }, 5000)
         } catch (error) {
           console.error('Error updating subscription:', error)
         }

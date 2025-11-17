@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
       paddle_subscription_id: profile.paddle_subscription_id,
       next_billing_date: nextBillingDate,
       is_recurring: isRecurring,
-      amount: '$29.00',
+      amount: '$49.00',
       payment_method: 'Card ending in 4242',
       invoices: invoices,
       billing_cycle: isRecurring ? 'Monthly' : 'One-time'
