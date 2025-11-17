@@ -13,7 +13,7 @@ export default function Home() {
     "operatingSystem": "Web",
     "offers": {
       "@type": "Offer",
-      "price": "29",
+      "price": "49",
       "priceCurrency": "USD"
     },
     "aggregateRating": {
@@ -416,10 +416,10 @@ export default function Home() {
                 
                 <div className="mb-6 sm:mb-8">
                   <div className="flex items-baseline justify-center">
-                    <span className="text-4xl sm:text-5xl font-bold text-gray-900">$29</span>
+                    <span className="text-4xl sm:text-5xl font-bold text-gray-900">$49</span>
                     <span className="text-lg sm:text-xl text-gray-500 ml-2">/month</span>
                   </div>
-                  <p className="mt-2 text-xs sm:text-sm text-gray-600">Less than $1 per day for unlimited leads</p>
+                  <p className="mt-2 text-xs sm:text-sm text-gray-600">Affordable pricing for unlimited leads</p>
                 </div>
 
                 <Link 
@@ -688,9 +688,9 @@ export default function Home() {
               </div>
               
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center">
-                <div className="text-4xl font-bold mb-2">$29</div>
+                <div className="text-4xl font-bold mb-2">$49</div>
                 <div className="text-blue-100">Per Month</div>
-                <p className="text-sm text-blue-200 mt-2">Less than $1 per day for unlimited lead discovery</p>
+                <p className="text-sm text-blue-200 mt-2">Affordable pricing for unlimited lead discovery</p>
               </div>
             </div>
             
