@@ -27,6 +27,71 @@ function extractContentFromHTML(html: string): string {
   ].filter(Boolean).join(' ').substring(0, 12000)
 }
 
+/**
+ * Follow all redirects until we reach the final destination
+ * Handles multiple redirects (301, 302, 307, 308, etc.)
+ */
+async function followRedirects(
+  url: string,
+  maxRedirects: number = 10,
+  visitedUrls: Set<string> = new Set()
+): Promise<{ finalUrl: string; response: Response }> {
+  // Prevent infinite loops
+  if (visitedUrls.has(url)) {
+    throw new Error(`Redirect loop detected: ${url} was already visited`)
+  }
+  
+  if (maxRedirects <= 0) {
+    throw new Error(`Maximum redirect limit (10) reached for ${url}`)
+  }
+
+  visitedUrls.add(url)
+  
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.5',
+    },
+    redirect: 'manual', // Handle redirects manually
+    signal: AbortSignal.timeout(30000),
+  })
+
+  // Check if it's a redirect status (3xx)
+  if (response.status >= 300 && response.status < 400) {
+    const location = response.headers.get('location')
+    if (!location) {
+      throw new Error(`Redirect (${response.status}) detected but no location header found for ${url}`)
+    }
+
+    // Resolve relative URLs
+    let redirectUrl = location
+    try {
+      const currentUrl = new URL(url)
+      if (location.startsWith('/')) {
+        // Absolute path on same domain
+        redirectUrl = `${currentUrl.protocol}//${currentUrl.host}${location}`
+      } else if (location.startsWith('http://') || location.startsWith('https://')) {
+        // Absolute URL
+        redirectUrl = location
+      } else {
+        // Relative path
+        redirectUrl = new URL(location, url).href
+      }
+    } catch (urlError) {
+      throw new Error(`Invalid redirect URL: ${location} from ${url}`)
+    }
+
+    console.log(`Following redirect ${response.status} from ${url} to ${redirectUrl} (${maxRedirects - 1} redirects remaining)`)
+    
+    // Recursively follow the redirect
+    return followRedirects(redirectUrl, maxRedirects - 1, visitedUrls)
+  }
+
+  // Not a redirect, return the response
+  return { finalUrl: url, response }
+}
+
 async function fetchReadableContent(url: string): Promise<string | null> {
   try {
     const proxyUrl = `https://r.jina.ai/${url}`
@@ -72,73 +137,40 @@ export async function POST(request: NextRequest) {
 
     console.log(`Analyzing website: ${normalizedUrl}`)
 
-    // Fetch website content with proper headers
+    // Fetch website content with proper headers, following all redirects
     let websiteContent = ''
     let contentSource: 'primary' | 'redirect' | 'readable-fallback' = 'primary'
+    let finalUrl = normalizedUrl
+    
     try {
-      const response = await fetch(normalizedUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.5',
-        },
-        redirect: 'manual', // Handle redirects manually to avoid loops
-        signal: AbortSignal.timeout(30000), // 30 second timeout
-      })
+      // Follow all redirects until we reach the final destination
+      const { finalUrl: resolvedUrl, response } = await followRedirects(normalizedUrl)
+      finalUrl = resolvedUrl
       
-      // Handle redirects manually to avoid loops
-      if (response.status >= 300 && response.status < 400) {
-        const location = response.headers.get('location')
-        if (location) {
-          console.log(`Redirect detected to: ${location}`)
-          
-          // Handle relative URLs
-          let redirectUrl = location
-          if (location.startsWith('/')) {
-            const url = new URL(normalizedUrl)
-            redirectUrl = `${url.protocol}//${url.host}${location}`
-          } else if (!location.startsWith('http')) {
-            redirectUrl = `${normalizedUrl}/${location}`
-          }
-          
-          console.log(`Resolved redirect URL: ${redirectUrl}`)
-          
-          // Try the redirect URL
-          const redirectResponse = await fetch(redirectUrl, {
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-              'Accept-Language': 'en-US,en;q=0.5',
-            },
-            signal: AbortSignal.timeout(30000),
-          })
-          
-          if (redirectResponse.ok) {
-            const html = await redirectResponse.text()
-            websiteContent = extractContentFromHTML(html)
-            console.log(`Extracted ${websiteContent.length} characters of content from redirect`)
-          } else {
-            throw new Error(`Failed to fetch redirected website: ${redirectResponse.status} ${redirectResponse.statusText}`)
-          }
-        } else {
-          throw new Error(`Redirect detected but no location header found`)
-        }
-      } else if (response.ok) {
-        const html = await response.text()
-        websiteContent = extractContentFromHTML(html)
-        console.log(`Extracted ${websiteContent.length} characters of content`)
-      } else {
+      if (resolvedUrl !== normalizedUrl) {
+        contentSource = 'redirect'
+        console.log(`Followed redirects from ${normalizedUrl} to final URL: ${resolvedUrl}`)
+      }
+      
+      if (!response.ok) {
         throw new Error(`Failed to fetch website: ${response.status} ${response.statusText}`)
       }
+      
+      const html = await response.text()
+      websiteContent = extractContentFromHTML(html)
+      console.log(`Extracted ${websiteContent.length} characters of content from ${resolvedUrl}`)
     } catch (fetchError: any) {
       console.error('Error fetching website:', fetchError)
       
       let errorMessage = 'Failed to fetch website content'
       let details = fetchError.message
       
-      if (fetchError.message.includes('redirect count exceeded')) {
-        errorMessage = 'Website has too many redirects'
-        details = 'This website has redirect loops or too many redirects. Please try a different URL or check if the website is accessible.'
+      if (fetchError.message.includes('Redirect loop')) {
+        errorMessage = 'Redirect loop detected'
+        details = 'The website has a redirect loop. Please try a different URL or check if the website is accessible.'
+      } else if (fetchError.message.includes('Maximum redirect limit')) {
+        errorMessage = 'Too many redirects'
+        details = 'The website has more than 10 redirects. Please try accessing the final URL directly.'
       } else if (fetchError.message.includes('fetch failed')) {
         errorMessage = 'Network error'
         details = 'Unable to connect to the website. Please check the URL and try again.'
@@ -150,14 +182,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         error: errorMessage,
         details: details,
-        website: normalizedUrl
+        website: normalizedUrl,
+        finalUrl: finalUrl !== normalizedUrl ? finalUrl : undefined
       }, { status: 400 })
     }
 
     // Fallback 1: Use readable proxy if content is too short
     if (!websiteContent || websiteContent.length < 300) {
       console.warn(`Primary extraction returned ${websiteContent?.length || 0} characters. Trying readability fallback...`)
-      const readableContent = await fetchReadableContent(normalizedUrl)
+      const readableContent = await fetchReadableContent(finalUrl)
       if (readableContent && readableContent.length > (websiteContent?.length || 0)) {
         websiteContent = readableContent
         contentSource = 'readable-fallback'
@@ -172,22 +205,18 @@ export async function POST(request: NextRequest) {
       try {
         const httpUrl = normalizedUrl.replace('https://', 'http://')
         console.log(`Trying HTTP version for additional content: ${httpUrl}`)
-        const httpResponse = await fetch(httpUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-          },
-          signal: AbortSignal.timeout(20000),
-        })
-
+        
+        // Follow redirects for HTTP version too
+        const { finalUrl: httpFinalUrl, response: httpResponse } = await followRedirects(httpUrl)
+        
         if (httpResponse.ok) {
           const httpHtml = await httpResponse.text()
           const httpContent = extractContentFromHTML(httpHtml)
           if (httpContent.length > (websiteContent?.length || 0)) {
             websiteContent = httpContent
+            finalUrl = httpFinalUrl
             contentSource = 'primary'
-            console.log(`HTTP fallback extracted ${websiteContent.length} characters`)
+            console.log(`HTTP fallback extracted ${websiteContent.length} characters from ${httpFinalUrl}`)
           }
         }
       } catch (httpError) {
