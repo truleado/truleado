@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/auth-context";
 import { SubscriptionProvider } from "@/lib/subscription-context";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { CookieBanner } from "@/components/CookieBanner";
 
 export const metadata: Metadata = {
   title: "Truleado - Find Your Next Customers on Reddit",
@@ -107,6 +108,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           <AuthProvider>
             <SubscriptionProvider>
               {children}
+              <CookieBanner />
             </SubscriptionProvider>
           </AuthProvider>
         </ErrorBoundary>
