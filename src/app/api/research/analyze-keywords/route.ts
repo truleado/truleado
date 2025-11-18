@@ -27,6 +27,33 @@ function extractContentFromHTML(html: string): string {
   ].filter(Boolean).join(' ').substring(0, 12000)
 }
 
+async function fetchReadableContent(url: string): Promise<string | null> {
+  try {
+    const proxyUrl = `https://r.jina.ai/${url}`
+    const response = await fetch(proxyUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+        'Accept': 'text/plain,text/html;q=0.9,*/*;q=0.8'
+      },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(20000)
+    })
+
+    if (!response.ok) {
+      console.warn(`Readable proxy request failed (${response.status}) for ${url}`)
+      return null
+    }
+
+    const text = await response.text()
+    const cleaned = text.replace(/\s\s+/g, ' ').trim()
+    console.log(`Readable proxy extracted ${cleaned.length} characters`)
+    return cleaned.substring(0, 20000)
+  } catch (error) {
+    console.error('Readable proxy fetch failed:', error)
+    return null
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('🔍 Starting website keyword analysis...')
@@ -47,6 +74,7 @@ export async function POST(request: NextRequest) {
 
     // Fetch website content with proper headers
     let websiteContent = ''
+    let contentSource: 'primary' | 'redirect' | 'readable-fallback' = 'primary'
     try {
       const response = await fetch(normalizedUrl, {
         headers: {
@@ -126,11 +154,56 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    if (!websiteContent || websiteContent.length < 100) {
+    // Fallback 1: Use readable proxy if content is too short
+    if (!websiteContent || websiteContent.length < 300) {
+      console.warn(`Primary extraction returned ${websiteContent?.length || 0} characters. Trying readability fallback...`)
+      const readableContent = await fetchReadableContent(normalizedUrl)
+      if (readableContent && readableContent.length > (websiteContent?.length || 0)) {
+        websiteContent = readableContent
+        contentSource = 'readable-fallback'
+        console.log(`Readable fallback succeeded with ${websiteContent.length} characters`)
+      } else {
+        console.warn('Readable fallback did not improve content length')
+      }
+    }
+
+    // Fallback 2: Try with non-https (some sites block https scraping)
+    if ((!websiteContent || websiteContent.length < 120) && normalizedUrl.startsWith('https://')) {
+      try {
+        const httpUrl = normalizedUrl.replace('https://', 'http://')
+        console.log(`Trying HTTP version for additional content: ${httpUrl}`)
+        const httpResponse = await fetch(httpUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+          },
+          signal: AbortSignal.timeout(20000),
+        })
+
+        if (httpResponse.ok) {
+          const httpHtml = await httpResponse.text()
+          const httpContent = extractContentFromHTML(httpHtml)
+          if (httpContent.length > (websiteContent?.length || 0)) {
+            websiteContent = httpContent
+            contentSource = 'primary'
+            console.log(`HTTP fallback extracted ${websiteContent.length} characters`)
+          }
+        }
+      } catch (httpError) {
+        console.warn('HTTP fallback attempt failed:', httpError)
+      }
+    }
+
+    if (!websiteContent || websiteContent.length < 60) {
       return NextResponse.json({ 
         error: 'Website content too short or empty',
-        details: 'Could not extract meaningful content from the website'
+        details: 'Could not extract meaningful content from the website after multiple attempts. Please verify the URL or try a different page.'
       }, { status: 400 })
+    }
+
+    if (websiteContent.length < 150) {
+      console.warn(`Proceeding with limited content (${websiteContent.length} characters) extracted from ${contentSource}`)
     }
 
     console.log(`Extracted ${websiteContent.length} characters of content`)
