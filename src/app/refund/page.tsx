@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import Link from "next/link";
 import { Filter, ArrowLeft } from "lucide-react";
+import { Footer } from "@/components/Footer";
 
 export default function RefundPolicy() {
   return (
@@ -138,6 +139,7 @@ export default function RefundPolicy() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

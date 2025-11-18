@@ -15,6 +15,7 @@ import {
 
 import { useAuth } from '@/contexts/auth-context'
 import { PublicHeader } from '@/components/PublicHeader'
+import { Footer } from '@/components/Footer'
 import type { Locale } from '@/lib/translations'
 import { translations } from '@/lib/full-homepage-translations'
 
@@ -275,25 +276,7 @@ export default function Home({ params }: Props) {
         </div>
       </section>
 
-      <footer className="border-t border-gray-100 bg-white">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-10 text-center text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-3">
-            <img src="/truleadologo.png" alt="Truleado" className="h-8 w-8" />
-            <p className="text-gray-600">© {new Date().getFullYear()} Truleado. Built for helpful founders.</p>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-4 text-gray-600">
-            <Link href="/privacy" className="hover:text-gray-900">
-              Privacy
-            </Link>
-            <Link href="/terms" className="hover:text-gray-900">
-              Terms
-            </Link>
-            <Link href="/support" className="hover:text-gray-900">
-              Support
-            </Link>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Filter, ArrowLeft } from "lucide-react";
+import { Footer } from "@/components/Footer";
 
 export default function CookiePolicy() {
   return (
@@ -139,6 +140,7 @@ export default function CookiePolicy() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import Link from "next/link";
 import { Filter, ArrowLeft, Mail, MessageCircle, HelpCircle, Clock } from "lucide-react";
+import { Footer } from "@/components/Footer";
 
 export default function SupportPage() {
   return (
@@ -148,6 +149,7 @@ export default function SupportPage() {
           </a>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

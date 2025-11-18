@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Filter, ArrowLeft } from "lucide-react";
+import { Footer } from "@/components/Footer";
 
 export default function GDPRPage() {
   return (
@@ -211,6 +212,7 @@ export default function GDPRPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

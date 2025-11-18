@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { ArrowRight, Download, FileText, Mail, MessageSquare } from 'lucide-react'
 import { PublicHeader } from '@/components/PublicHeader'
+import { Footer } from '@/components/Footer'
 
 const templates = [
   {
@@ -140,6 +141,7 @@ export default function TemplatesPage() {
           </div>
         </div>
       </section>
+      <Footer />
     </div>
   )
 }

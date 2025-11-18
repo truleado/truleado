@@ -6,6 +6,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, DollarSign, Clock, TrendingUp } from 'lucide-react'
 import { PublicHeader } from '@/components/PublicHeader'
+import { Footer } from '@/components/Footer'
 
 export default function ROICalculatorPage() {
   const [hoursSpent, setHoursSpent] = useState(10)
@@ -148,6 +149,7 @@ export default function ROICalculatorPage() {
           </div>
         </div>
       </section>
+      <Footer />
     </div>
   )
 }

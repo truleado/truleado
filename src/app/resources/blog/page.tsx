@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { ArrowRight, Calendar, Clock } from 'lucide-react'
 import { PublicHeader } from '@/components/PublicHeader'
+import { Footer } from '@/components/Footer'
 
 const blogPosts = [
   {
@@ -275,6 +276,7 @@ export default function BlogPage() {
           </Link>
         </div>
       </section>
+      <Footer />
     </div>
   )
 }
