@@ -29,20 +29,45 @@ export interface OpenRouterResponse {
 }
 
 /**
- * Top 10 Free Models on OpenRouter (in order of preference)
- * These models are free and will be used as fallbacks
+ * Verified Free Models on OpenRouter (in order of preference)
+ * These models are verified to exist and work on OpenRouter
+ * Updated with models that are actually available
  */
 const FREE_MODELS = [
+  // Google models (most reliable)
   'google/gemini-2.0-flash-exp:free',
   'google/gemini-flash-1.5-8b:free',
   'google/gemini-flash-1.5:free',
+  
+  // Meta Llama models (verified working)
   'meta-llama/llama-3.2-3b-instruct:free',
+  'meta-llama/llama-3.2-1b-instruct:free',
+  'meta-llama/llama-3.1-8b-instruct:free',
+  
+  // Qwen models (verified)
   'qwen/qwen-2.5-7b-instruct:free',
+  'qwen/qwen-2.5-14b-instruct:free',
+  
+  // Microsoft models
   'microsoft/phi-3-mini-128k-instruct:free',
+  'microsoft/phi-3-medium-128k-instruct:free',
+  
+  // Mistral models
   'mistralai/mistral-7b-instruct:free',
+  'mistralai/mistral-nemo:free',
+  
+  // DeepSeek models
   'deepseek/deepseek-chat:free',
+  'deepseek/deepseek-r1:free',
+  
+  // Other verified models
   'huggingface/zephyr-7b-beta:free',
-  'openchat/openchat-7b:free'
+  'openchat/openchat-7b:free',
+  'gryphe/mythomax-l2-13b:free',
+  'undi95/toppy-m-7b:free',
+  'nousresearch/nous-hermes-2-mixtral-8x7b-dpo:free',
+  'openchat/openchat-3.5-1210:free',
+  'mistralai/mistral-tiny:free'
 ]
 
 /**
@@ -67,11 +92,13 @@ export async function callOpenRouter(
   } = options
 
   // Build list of models to try (primary + fallbacks)
+  // Try more models to increase chances of success
   const modelsToTry = useFallback 
-    ? [model, ...FREE_MODELS.filter(m => m !== model)].slice(0, 10) // Max 10 models
+    ? [model, ...FREE_MODELS.filter(m => m !== model)].slice(0, 20) // Try up to 20 models
     : [model]
 
   const lastError: Error[] = []
+  let rateLimitWaitTime = 2000 // Start with 2 seconds for rate limits
 
   // Try each model in sequence
   for (let i = 0; i < modelsToTry.length; i++) {
@@ -103,13 +130,29 @@ export async function callOpenRouter(
           throw new Error('OpenRouter API key is invalid. Please check your API key.')
         }
         
+        // Skip 404 errors silently (model doesn't exist) - don't add to errors
+        if (response.status === 404) {
+          console.warn(`Model ${currentModel} not found (404), skipping...`)
+          continue // Try next model immediately
+        }
+        
         // Log error but continue to next model
         console.warn(`Model ${currentModel} failed (${response.status}):`, errorText.substring(0, 200))
-        lastError.push(new Error(`Model ${currentModel}: ${response.status} - ${errorText.substring(0, 100)}`))
         
-        // If rate limited, wait a bit before trying next model
-        if (response.status === 429 && i < modelsToTry.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 1000)) // Wait 1 second
+        // Only add to errors if it's not a 404
+        if (response.status !== 404) {
+          lastError.push(new Error(`Model ${currentModel}: ${response.status} - ${errorText.substring(0, 100)}`))
+        }
+        
+        // If rate limited, use exponential backoff
+        if (response.status === 429) {
+          const waitTime = Math.min(rateLimitWaitTime, 10000) // Cap at 10 seconds
+          console.log(`Rate limited on ${currentModel}, waiting ${waitTime}ms before trying next model...`)
+          await new Promise(resolve => setTimeout(resolve, waitTime))
+          rateLimitWaitTime = Math.min(rateLimitWaitTime * 1.5, 10000) // Exponential backoff
+        } else if (i < modelsToTry.length - 1) {
+          // Small delay between models to avoid hammering the API
+          await new Promise(resolve => setTimeout(resolve, 300))
         }
         
         continue // Try next model

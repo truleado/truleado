@@ -90,6 +90,8 @@ async function filterPostsByRelevance(
     // Process posts in batches of 10 to stay within token limits and time constraints
     const BATCH_SIZE = 10
     const relevantPosts: any[] = []
+    let successfulBatches = 0
+    let failedBatches = 0
     
     for (let i = 0; i < posts.length; i += BATCH_SIZE) {
       const batch = posts.slice(i, i + BATCH_SIZE)
@@ -163,6 +165,7 @@ Be STRICT with relevance - only mark posts as relevant (isRelevant: true) if the
           }
         })
         
+        successfulBatches++
         console.log(`✅ Filtered batch ${Math.floor(i / BATCH_SIZE) + 1}: ${batch.length} posts → ${analysis.results?.filter(r => r.isRelevant && r.relevanceScore >= 7).length || 0} relevant`)
         
         // Small delay between batches to avoid rate limiting
@@ -170,13 +173,26 @@ Be STRICT with relevance - only mark posts as relevant (isRelevant: true) if the
           await new Promise(resolve => setTimeout(resolve, 500))
         }
       } catch (batchError: any) {
-        console.error(`Error filtering batch ${Math.floor(i / BATCH_SIZE) + 1}:`, batchError)
+        failedBatches++
+        console.error(`Error filtering batch ${Math.floor(i / BATCH_SIZE) + 1}:`, batchError.message || batchError)
         // If batch fails, skip it (don't include those posts)
+        // Add a small delay before trying next batch
+        await new Promise(resolve => setTimeout(resolve, 1000))
         continue
       }
     }
     
-    console.log(`🎯 Relevance filtering: ${posts.length} posts → ${relevantPosts.length} highly relevant posts`)
+    // If all batches failed, return all posts (graceful degradation)
+    if (successfulBatches === 0 && failedBatches > 0) {
+      console.warn(`⚠️ All ${failedBatches} batches failed AI filtering. Returning all posts without filtering.`)
+      return posts.map(post => ({
+        ...post,
+        relevanceScore: 5, // Default score
+        relevanceReasoning: 'AI filtering unavailable - post included by default'
+      }))
+    }
+    
+    console.log(`🎯 Relevance filtering: ${posts.length} posts → ${relevantPosts.length} highly relevant posts (${successfulBatches} successful batches, ${failedBatches} failed)`)
     return relevantPosts
     
   } catch (error: any) {
