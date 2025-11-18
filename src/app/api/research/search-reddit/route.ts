@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { callOpenRouterJSON } from '@/lib/openrouter-client'
 
 // Force Node.js runtime to avoid Edge runtime fetch limitations
 export const runtime = 'nodejs'
@@ -66,6 +67,125 @@ async function getRedditAccessToken(userId?: string): Promise<string | null> {
   }
 }
 
+/**
+ * Filter posts by relevance to product value proposition using AI
+ * Returns only posts that are highly relevant (isRelevant: true)
+ */
+async function filterPostsByRelevance(
+  posts: any[],
+  productName: string,
+  productDescription: string,
+  painPoints: string[] = [],
+  benefits: string[] = []
+): Promise<any[]> {
+  if (posts.length === 0) return []
+  
+  const apiKey = process.env.OPENROUTER_API_KEY
+  if (!apiKey) {
+    console.warn('OpenRouter API key not configured, skipping relevance filtering')
+    return posts // Return all posts if AI is not available
+  }
+
+  try {
+    // Process posts in batches of 10 to stay within token limits and time constraints
+    const BATCH_SIZE = 10
+    const relevantPosts: any[] = []
+    
+    for (let i = 0; i < posts.length; i += BATCH_SIZE) {
+      const batch = posts.slice(i, i + BATCH_SIZE)
+      
+      // Build prompt for batch analysis
+      const postsData = batch.map((post, idx) => ({
+        index: idx + 1,
+        title: post.title,
+        content: (post.selftext || '').substring(0, 500), // Limit content length
+        subreddit: post.subreddit,
+        score: post.score,
+        num_comments: post.num_comments
+      }))
+      
+      const prompt = `You are a GTM strategist analyzing Reddit posts to find high-quality pitching opportunities.
+
+PRODUCT/SERVICE CONTEXT:
+- Product Name: ${productName}
+- Description: ${productDescription}
+${painPoints.length > 0 ? `- Pain Points Solved: ${painPoints.join(', ')}` : ''}
+${benefits.length > 0 ? `- Key Benefits: ${benefits.join(', ')}` : ''}
+
+REDDIT POSTS TO ANALYZE:
+${JSON.stringify(postsData, null, 2)}
+
+OBJECTIVE: For each post, determine if it represents a HIGH-QUALITY opportunity to pitch this product/service. A post is relevant ONLY if:
+1. The post discusses a problem/pain point that this product directly solves
+2. The post author is actively seeking a solution or expressing frustration
+3. The product's value proposition clearly aligns with the post's topic
+4. The post is NOT just tangentially related - it must be a strong match
+
+Return ONLY valid JSON with this exact structure:
+{
+  "results": [
+    {
+      "index": 1,
+      "isRelevant": true,
+      "relevanceScore": 8,
+      "reasoning": "Brief explanation (1-2 sentences) of why this post is relevant or not"
+    },
+    ...
+  ]
+}
+
+Be STRICT with relevance - only mark posts as relevant (isRelevant: true) if they are a STRONG match. Relevance score should be 1-10, where 7+ means highly relevant.`
+
+      try {
+        const analysis = await callOpenRouterJSON<{
+          results: Array<{
+            index: number
+            isRelevant: boolean
+            relevanceScore: number
+            reasoning: string
+          }>
+        }>(prompt, {
+          model: 'google/gemini-2.0-flash-exp:free',
+          temperature: 0.3, // Lower temperature for more consistent filtering
+          max_tokens: 2000
+        })
+        
+        // Map analysis results back to posts
+        batch.forEach((post, batchIdx) => {
+          const result = analysis.results?.find(r => r.index === batchIdx + 1)
+          if (result && result.isRelevant && result.relevanceScore >= 7) {
+            // Add relevance metadata to post
+            relevantPosts.push({
+              ...post,
+              relevanceScore: result.relevanceScore,
+              relevanceReasoning: result.reasoning
+            })
+          }
+        })
+        
+        console.log(`✅ Filtered batch ${Math.floor(i / BATCH_SIZE) + 1}: ${batch.length} posts → ${analysis.results?.filter(r => r.isRelevant && r.relevanceScore >= 7).length || 0} relevant`)
+        
+        // Small delay between batches to avoid rate limiting
+        if (i + BATCH_SIZE < posts.length) {
+          await new Promise(resolve => setTimeout(resolve, 500))
+        }
+      } catch (batchError: any) {
+        console.error(`Error filtering batch ${Math.floor(i / BATCH_SIZE) + 1}:`, batchError)
+        // If batch fails, skip it (don't include those posts)
+        continue
+      }
+    }
+    
+    console.log(`🎯 Relevance filtering: ${posts.length} posts → ${relevantPosts.length} highly relevant posts`)
+    return relevantPosts
+    
+  } catch (error: any) {
+    console.error('Error in relevance filtering:', error)
+    // If filtering fails entirely, return all posts (better than returning nothing)
+    return posts
+  }
+}
+
 export async function POST(request: NextRequest) {
   const startTime = Date.now()
   
@@ -76,12 +196,14 @@ export async function POST(request: NextRequest) {
     
     console.log('🔍 Starting strategic Reddit problem post search...')
     
-    const { keywords, keywordGroups, productDescription, productName } = await request.json()
+    const { keywords, keywordGroups, productDescription, productName, painPoints, benefits } = await request.json()
     console.log('📥 Request data:', { 
       keywordsCount: keywords?.length, 
       keywordGroupCount: keywordGroups?.length,
       hasDescription: !!productDescription,
-      hasProductName: !!productName
+      hasProductName: !!productName,
+      painPointsCount: painPoints?.length || 0,
+      benefitsCount: benefits?.length || 0
     })
     
     // Build search plan from keyword groups or fallback keywords
@@ -362,18 +484,51 @@ export async function POST(request: NextRequest) {
           continue
         }
 
-        // Return all posts without AI analysis to save API costs
-        // Users will click "Pitch" button to analyze individual posts
+        // Filter posts by relevance to product value proposition
+        console.log(`🎯 Filtering ${dedupedPosts.length} posts for relevance to "${productName}"...`)
+        const relevantPosts = await filterPostsByRelevance(
+          dedupedPosts,
+          productName || 'the product',
+          productDescription || '',
+          Array.isArray(painPoints) ? painPoints : [],
+          Array.isArray(benefits) ? benefits : []
+        )
+
+        if (relevantPosts.length === 0) {
+          console.log(`⚠️ No relevant posts found for "${keyword}" after filtering`)
+          results.push({
+            keyword,
+            groupType: plan.groupType,
+            groupLabel: plan.groupLabel,
+            totalPosts: dedupedPosts.length,
+            strategicPosts: 0,
+            posts: [],
+            note: `Found ${dedupedPosts.length} posts but none were highly relevant to the product's value proposition`
+          })
+          continue
+        }
+
+        // Sort by relevance score (highest first), then by engagement (score + comments)
+        const sortedPosts = relevantPosts.sort((a, b) => {
+          const scoreA = a.relevanceScore || 0
+          const scoreB = b.relevanceScore || 0
+          if (scoreA !== scoreB) return scoreB - scoreA
+          const engagementA = (a.score || 0) + (a.num_comments || 0)
+          const engagementB = (b.score || 0) + (b.num_comments || 0)
+          return engagementB - engagementA
+        })
+
+        // Return only highly relevant posts
         results.push({
           keyword,
           groupType: plan.groupType,
           groupLabel: plan.groupLabel,
           totalPosts: dedupedPosts.length,
-          strategicPosts: dedupedPosts.length, // All posts are potential opportunities
-          posts: dedupedPosts.slice(0, 50) // Limit to top 50 posts per keyword
+          strategicPosts: sortedPosts.length,
+          posts: sortedPosts.slice(0, 30) // Limit to top 30 most relevant posts per keyword
         })
 
-        console.log(`✅ Found ${postData.length} posts for "${keyword}" (ready for on-demand analysis)`)
+        console.log(`✅ Found ${sortedPosts.length} highly relevant posts for "${keyword}" (from ${dedupedPosts.length} total posts)`)
 
       } catch (error: any) {
         console.error(`Error processing keyword "${keyword}":`, error)

@@ -441,7 +441,9 @@ export default function ResearchPage() {
           keywords,
           keywordGroups,
           productDescription: description,
-          productName: analysisResult.productName
+          productName: analysisResult.productName,
+          painPoints: analysisResult.painPoints || [],
+          benefits: analysisResult.benefits || []
         })
       })
 
@@ -870,7 +872,8 @@ export default function ResearchPage() {
                       <h3 className="text-lg font-semibold text-gray-900">Reddit Results</h3>
                     </div>
                     <p className="text-sm text-gray-600 mt-1">
-                      {redditResults.totalStrategicPosts || 0} strategic pitching opportunities found across {redditResults.totalKeywords || 0} keywords
+                      {redditResults.totalStrategicPosts || 0} highly relevant pitching opportunities found across {redditResults.totalKeywords || 0} keywords
+                      <span className="ml-2 text-xs text-purple-600">✨ AI-filtered for value proposition alignment</span>
                     </p>
                   </div>
                   
@@ -970,7 +973,24 @@ export default function ResearchPage() {
                                           <span className="font-medium">{post.num_comments}</span>
                                           <span className="ml-1">💬</span>
                                         </span>
+                                        {post.relevanceScore && (
+                                          <span className="flex items-center text-purple-600 bg-purple-50 px-2 py-1 rounded-full">
+                                            <span className="font-semibold">{post.relevanceScore}/10</span>
+                                            <span className="ml-1">⭐</span>
+                                          </span>
+                                        )}
                                       </div>
+                                      
+                                      {/* Relevance Reasoning (shown if available) */}
+                                      {post.relevanceReasoning && !hasAnalysis && (
+                                        <div className="bg-purple-50 p-3 rounded-lg border-l-4 border-purple-300 mb-4">
+                                          <div className="flex items-start mb-1">
+                                            <div className="w-2 h-2 bg-purple-500 rounded-full mr-2 mt-1.5 flex-shrink-0"></div>
+                                            <h6 className="text-purple-900 font-semibold text-xs">Why This Post Is Relevant:</h6>
+                                          </div>
+                                          <p className="text-purple-800 text-xs leading-relaxed mt-1">{post.relevanceReasoning}</p>
+                                        </div>
+                                      )}
                                       
                                       {/* Analysis Results (shown after analysis) */}
                                       {hasAnalysis && (
