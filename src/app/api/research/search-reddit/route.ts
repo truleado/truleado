@@ -76,19 +76,55 @@ export async function POST(request: NextRequest) {
     
     console.log('🔍 Starting strategic Reddit problem post search...')
     
-    const { keywords, productDescription, productName } = await request.json()
+    const { keywords, keywordGroups, productDescription, productName } = await request.json()
     console.log('📥 Request data:', { 
       keywordsCount: keywords?.length, 
+      keywordGroupCount: keywordGroups?.length,
       hasDescription: !!productDescription,
       hasProductName: !!productName
     })
     
-    if (!keywords || !Array.isArray(keywords) || keywords.length === 0) {
+    // Build search plan from keyword groups or fallback keywords
+    const searchPlans: Array<{ keyword: string, groupType: string, groupLabel: string }> = []
+    
+    if (Array.isArray(keywordGroups) && keywordGroups.length > 0) {
+      keywordGroups.forEach((group: any) => {
+        const groupType = group?.type || 'custom'
+        const groupLabel = group?.label || groupType
+        if (Array.isArray(group?.keywords)) {
+          group.keywords.forEach((keyword: string) => {
+            if (keyword && keyword.trim().length > 1) {
+              searchPlans.push({
+                keyword: keyword.trim(),
+                groupType,
+                groupLabel
+              })
+            }
+          })
+        }
+      })
+    } else if (Array.isArray(keywords)) {
+      keywords.forEach((keyword: string) => {
+        if (keyword && keyword.trim().length > 1) {
+          searchPlans.push({
+            keyword: keyword.trim(),
+            groupType: 'legacy',
+            groupLabel: 'Keyword'
+          })
+        }
+      })
+    }
+    
+    if (searchPlans.length === 0) {
       return NextResponse.json({ 
-        error: 'Keywords array is required',
-        details: 'Please provide an array of keywords to search'
+        error: 'No keywords provided',
+        details: 'Please provide keywords or keywordGroups to search'
       }, { status: 400 })
     }
+    
+    const seenPostIds = new Set<string>()
+    const seenCanonicalUrls = new Set<string>()
+    const seenTitleHashes = new Set<string>()
 
     if (!productDescription) {
       return NextResponse.json({ 
@@ -108,7 +144,8 @@ export async function POST(request: NextRequest) {
     const results = []
     const MAX_EXECUTION_TIME = 50000 // 50 seconds to leave buffer for Vercel 60s limit
 
-    for (const keyword of keywords) {
+    for (const plan of searchPlans) {
+      const keyword = plan.keyword
       // Check if we're running out of time
       const elapsed = Date.now() - startTime
       if (elapsed > MAX_EXECUTION_TIME) {
@@ -116,7 +153,7 @@ export async function POST(request: NextRequest) {
         break
       }
       
-      console.log(`🔍 Searching Reddit for keyword: ${keyword}`)
+      console.log(`🔍 Searching Reddit for keyword: ${keyword} (type: ${plan.groupType})`)
       
       try {
         // Enhanced search strategy with more targeted terms for pitching opportunities
@@ -247,29 +284,93 @@ export async function POST(request: NextRequest) {
         }
 
         // Extract post data (without AI analysis to save API costs)
-        const postData = uniquePosts.map((post: any) => ({
-          title: post.data.title,
-          selftext: post.data.selftext || '',
-          subreddit: post.data.subreddit,
-          score: post.data.score,
-          num_comments: post.data.num_comments,
-          url: `https://reddit.com${post.data.permalink}`,
-          created_utc: post.data.created_utc,
-          author: post.data.author,
-          // Analysis will be done on-demand when user clicks "Pitch" button
-          reasoning: null,
-          samplePitch: null
-        }))
+        const postData = uniquePosts.map((post: any) => {
+          const permalink = post.data.permalink ? `https://reddit.com${post.data.permalink}` : ''
+          const externalUrl = post.data.url || ''
+          // Determine canonical URL (for text posts, use permalink; for link posts, use external URL)
+          const canonicalUrl = externalUrl && !externalUrl.startsWith('https://www.reddit.com')
+            ? externalUrl
+            : permalink
+
+          return {
+            id: post.data.id,
+            title: post.data.title,
+            selftext: post.data.selftext || '',
+            subreddit: post.data.subreddit,
+            score: post.data.score,
+            num_comments: post.data.num_comments,
+            url: permalink || externalUrl,
+            canonicalUrl,
+            created_utc: post.data.created_utc,
+            author: post.data.author,
+            matchedKeyword: keyword,
+            matchedGroupType: plan.groupType,
+            matchedGroupLabel: plan.groupLabel,
+            // Analysis will be done on-demand when user clicks "Pitch" button
+            reasoning: null,
+            samplePitch: null
+          }
+        })
         
-        console.log(`📝 Extracted post data for ${postData.length} posts (AI analysis will be done on-demand)`)
+        let duplicateCountForKeyword = 0
+        const dedupedPosts = postData.filter(post => {
+          const dedupeKey = post.id || post.url
+          const canonicalKey = (post.canonicalUrl || '').toLowerCase().replace(/\/$/, '')
+          const titleHash = (post.title || '').toLowerCase().replace(/\s+/g, ' ').substring(0, 140)
+
+          if (dedupeKey && seenPostIds.has(dedupeKey)) {
+            duplicateCountForKeyword++
+            return false
+          }
+          if (canonicalKey && seenCanonicalUrls.has(canonicalKey)) {
+            duplicateCountForKeyword++
+            return false
+          }
+          if (titleHash && seenTitleHashes.has(titleHash)) {
+            duplicateCountForKeyword++
+            return false
+          }
+
+          if (dedupeKey) {
+            seenPostIds.add(dedupeKey)
+          }
+          if (canonicalKey) {
+            seenCanonicalUrls.add(canonicalKey)
+          }
+          if (titleHash) {
+            seenTitleHashes.add(titleHash)
+          }
+          return true
+        })
+        
+        if (duplicateCountForKeyword > 0) {
+          console.log(`🧹 Removed ${duplicateCountForKeyword} duplicates for keyword "${keyword}"`)
+        }
+        
+        console.log(`📝 Extracted post data for ${dedupedPosts.length} posts (after dedupe)`)
+
+        if (dedupedPosts.length === 0) {
+          results.push({
+            keyword,
+            groupType: plan.groupType,
+            groupLabel: plan.groupLabel,
+            totalPosts: 0,
+            strategicPosts: 0,
+            posts: [],
+            note: 'All posts for this keyword were duplicates of other keywords'
+          })
+          continue
+        }
 
         // Return all posts without AI analysis to save API costs
         // Users will click "Pitch" button to analyze individual posts
         results.push({
           keyword,
-          totalPosts: uniquePosts.length,
-          strategicPosts: postData.length, // All posts are potential opportunities
-          posts: postData.slice(0, 50) // Limit to top 50 posts per keyword
+          groupType: plan.groupType,
+          groupLabel: plan.groupLabel,
+          totalPosts: dedupedPosts.length,
+          strategicPosts: dedupedPosts.length, // All posts are potential opportunities
+          posts: dedupedPosts.slice(0, 50) // Limit to top 50 posts per keyword
         })
 
         console.log(`✅ Found ${postData.length} posts for "${keyword}" (ready for on-demand analysis)`)
@@ -322,7 +423,9 @@ export async function POST(request: NextRequest) {
       success: true,
       results,
       totalKeywords,
-      totalStrategicPosts
+      totalStrategicPosts,
+      keywordGroupsUsed: Array.isArray(keywordGroups) ? keywordGroups.length : 0,
+      keywordPlans: searchPlans.length
     })
 
   } catch (error: any) {

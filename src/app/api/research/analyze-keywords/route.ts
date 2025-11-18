@@ -147,41 +147,91 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    // Create enhanced prompt for Gemini to extract product name, description, and keywords
-    const prompt = `Analyze the following website content and identify:
-1. The main product or service name that this website offers
-2. A brief description (2-3 sentences) of what this product/service is about and what it does
-3. The 3 most relevant keywords that best represent this website
+    // Create enhanced prompt for Gemini to extract detailed product insights and keyword groups
+    const prompt = `You are a GTM strategist helping a SaaS founder find relevant Reddit conversations. Analyze the website content and output structured JSON.
 
 Website URL: ${normalizedUrl}
-Website Content: ${websiteContent}
+Website Content (truncated): ${websiteContent}
 
-Return ONLY a valid JSON object with this exact structure:
+Return ONLY valid JSON with this exact structure:
 {
-  "productName": "Main product or service name",
-  "description": "Brief description of what the product/service is about and what it does",
-  "keywords": ["keyword1", "keyword2", "keyword3"]
-}`
+  "productName": "Actual product/service name from the site",
+  "description": "2-3 sentences explaining what the product does and the outcome it delivers",
+  "features": ["Feature name (2-4 words)", "..."],
+  "benefits": ["Quantified benefit (e.g. 'Save 10+ hours weekly')", "..."],
+  "painPoints": ["Specific problem customers complain about", "..."],
+  "idealCustomerProfile": "Job titles, industries, company size that would care",
+  "keywordGroups": [
+    {
+      "type": "core",
+      "label": "Core product terms",
+      "purpose": "Used to find posts about the product category itself",
+      "keywords": ["keyword", "keyword", "keyword"]
+    },
+    {
+      "type": "problem",
+      "label": "Problem phrases",
+      "purpose": "Used to find users complaining about the pain points",
+      "keywords": ["pain keyword", "pain keyword", "pain keyword"]
+    },
+    {
+      "type": "persona",
+      "label": "Persona & context",
+      "purpose": "Used to find posts from the target persona",
+      "keywords": ["persona keyword", "persona keyword"]
+    },
+    {
+      "type": "solution",
+      "label": "Alternatives & solutions",
+      "purpose": "Used to find 'what tool should I use' threads",
+      "keywords": ["solution keyword", "competitor keyword"]
+    }
+  ]
+}
+
+Guidelines:
+- Keep keyword lists concise (3-5 items per group)
+- Keywords should be multi-word phrases people might actually type/post on Reddit
+- Pain points must be phrased as the customer would complain (“support tickets piling up”, “inventory never syncs”)
+- Persona keywords should combine role + context (e.g. "Shopify CX lead", "B2B SaaS founder")
+- If information is missing, make a best guess consistent with the site content.`
 
     try {
       const analysisData = await callOpenRouterJSON<{
         productName: string
         description: string
-        keywords: string[]
+        features: string[]
+        benefits: string[]
+        painPoints: string[]
+        idealCustomerProfile: string
+        keywordGroups: Array<{
+          type: string
+          label: string
+          purpose: string
+          keywords: string[]
+        }>
       }>(prompt, {
         model: 'google/gemini-2.0-flash-exp:free',
         temperature: 0.7,
-        max_tokens: 1000
+        max_tokens: 2000
       })
       
       console.log('OpenRouter response:', analysisData)
 
       console.log('Analysis complete:', analysisData)
 
+      const keywordGroups = Array.isArray(analysisData.keywordGroups) ? analysisData.keywordGroups : []
+      const flattenedKeywords = keywordGroups.flatMap(group => group.keywords || []).filter(Boolean)
+
       return NextResponse.json({
         productName: analysisData.productName || 'Unknown Product',
         description: analysisData.description || 'No description available',
-        keywords: analysisData.keywords || []
+        features: analysisData.features || [],
+        benefits: analysisData.benefits || [],
+        painPoints: analysisData.painPoints || [],
+        idealCustomerProfile: analysisData.idealCustomerProfile || '',
+        keywordGroups,
+        keywords: flattenedKeywords.length > 0 ? flattenedKeywords : []
       })
 
     } catch (openrouterError: any) {

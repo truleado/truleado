@@ -9,6 +9,7 @@ export default function ResearchPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysisResult, setAnalysisResult] = useState<any>(null)
   const [editableKeywords, setEditableKeywords] = useState<string[]>([])
+  const [editableKeywordGroups, setEditableKeywordGroups] = useState<any[]>([])
   const [editableDescription, setEditableDescription] = useState('')
   const [isEditing, setIsEditing] = useState(false)
   const [redditResults, setRedditResults] = useState<any>(null)
@@ -56,6 +57,7 @@ export default function ResearchPage() {
           setWebsiteUrl(data.websiteUrl || '')
           setAnalysisResult(data.analysisResult || null)
           setEditableKeywords(data.editableKeywords || [])
+          setEditableKeywordGroups(data.editableKeywordGroups || [])
           setEditableDescription(data.editableDescription || '')
           setRedditResults(data.redditResults || null)
           setShowDataRestoredBanner(true)
@@ -82,6 +84,7 @@ export default function ResearchPage() {
         websiteUrl,
         analysisResult,
         editableKeywords,
+        editableKeywordGroups,
         editableDescription,
         redditResults,
         timestamp: Date.now()
@@ -95,7 +98,7 @@ export default function ResearchPage() {
         hasRedditResults: !!redditResults
       })
     }
-  }, [websiteUrl, analysisResult, editableKeywords, editableDescription, redditResults, dataLoaded])
+  }, [websiteUrl, analysisResult, editableKeywords, editableKeywordGroups, editableDescription, redditResults, dataLoaded])
 
   // Load saved post IDs when reddit results change
   useEffect(() => {
@@ -144,6 +147,7 @@ export default function ResearchPage() {
         const data = await response.json()
         setAnalysisResult(data)
         setEditableKeywords(data.keywords || [])
+        setEditableKeywordGroups(data.keywordGroups || [])
         setEditableDescription(data.description || '')
       } else {
         const errorData = await response.json()
@@ -168,9 +172,12 @@ export default function ResearchPage() {
 
   const handleSaveKeywords = () => {
     setIsEditing(false)
+    const flattenedGroupKeywords = editableKeywordGroups.flatMap((group: any) => group.keywords || []).filter(Boolean)
+    const updatedKeywords = flattenedGroupKeywords.length > 0 ? flattenedGroupKeywords : editableKeywords
     setAnalysisResult({ 
       ...analysisResult, 
-      keywords: editableKeywords,
+      keywords: updatedKeywords,
+      keywordGroups: editableKeywordGroups,
       description: editableDescription
     })
   }
@@ -178,6 +185,7 @@ export default function ResearchPage() {
   const handleCancelEdit = () => {
     setIsEditing(false)
     setEditableKeywords(analysisResult.keywords || [])
+    setEditableKeywordGroups(analysisResult.keywordGroups || [])
     setEditableDescription(analysisResult.description || '')
   }
 
@@ -187,11 +195,48 @@ export default function ResearchPage() {
     setEditableKeywords(newKeywords)
   }
 
+  const handleGroupKeywordChange = (groupIndex: number, keywordIndex: number, value: string) => {
+    setEditableKeywordGroups(prev =>
+      prev.map((group: any, idx: number) => {
+        if (idx === groupIndex) {
+          const keywords = [...(group.keywords || [])]
+          keywords[keywordIndex] = value
+          return { ...group, keywords }
+        }
+        return group
+      })
+    )
+  }
+
+  const handleAddKeywordToGroup = (groupIndex: number) => {
+    setEditableKeywordGroups(prev =>
+      prev.map((group: any, idx: number) =>
+        idx === groupIndex
+          ? { ...group, keywords: [...(group.keywords || []), ''] }
+          : group
+      )
+    )
+  }
+
+  const handleRemoveKeywordFromGroup = (groupIndex: number, keywordIndex: number) => {
+    setEditableKeywordGroups(prev =>
+      prev.map((group: any, idx: number) => {
+        if (idx === groupIndex) {
+          const keywords = [...(group.keywords || [])]
+          keywords.splice(keywordIndex, 1)
+          return { ...group, keywords }
+        }
+        return group
+      })
+    )
+  }
+
   const handleClearAllData = () => {
     if (confirm('Are you sure you want to clear all data? This will remove your analysis results and Reddit search data.')) {
       setWebsiteUrl('')
       setAnalysisResult(null)
       setEditableKeywords([])
+      setEditableKeywordGroups([])
       setEditableDescription('')
       setRedditResults(null)
       setIsEditing(false)
@@ -361,7 +406,10 @@ export default function ResearchPage() {
   }
 
   const handleSearchReddit = async () => {
-    const keywords = isEditing ? editableKeywords : analysisResult.keywords
+    const keywordGroups = isEditing ? editableKeywordGroups : (analysisResult.keywordGroups || [])
+    const keywords = keywordGroups.length > 0 
+      ? keywordGroups.flatMap((group: any) => group.keywords || [])
+      : (isEditing ? editableKeywords : analysisResult.keywords)
     const description = isEditing ? editableDescription : analysisResult.description
     
     if (!keywords || keywords.length === 0) {
@@ -391,6 +439,7 @@ export default function ResearchPage() {
         },
         body: JSON.stringify({ 
           keywords,
+          keywordGroups,
           productDescription: description,
           productName: analysisResult.productName
         })
@@ -578,13 +627,69 @@ export default function ResearchPage() {
                           )}
                         </div>
                       )}
+
+                      {/* Features */}
+                      {analysisResult.features && analysisResult.features.length > 0 && (
+                        <div className="bg-white border border-blue-100 rounded-lg p-4">
+                          <div className="flex items-center mb-2">
+                            <div className="w-2 h-2 bg-blue-400 rounded-full mr-2"></div>
+                            <h4 className="text-sm font-semibold text-blue-900">Key Features</h4>
+                          </div>
+                          <ul className="list-disc list-inside text-sm text-blue-800 space-y-1">
+                            {analysisResult.features.slice(0, 5).map((feature: string, idx: number) => (
+                              <li key={idx}>{feature}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Benefits */}
+                      {analysisResult.benefits && analysisResult.benefits.length > 0 && (
+                        <div className="bg-white border border-green-100 rounded-lg p-4">
+                          <div className="flex items-center mb-2">
+                            <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                            <h4 className="text-sm font-semibold text-green-900">Quantified Benefits</h4>
+                          </div>
+                          <ul className="list-disc list-inside text-sm text-green-800 space-y-1">
+                            {analysisResult.benefits.slice(0, 3).map((benefit: string, idx: number) => (
+                              <li key={idx}>{benefit}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Pain Points */}
+                      {analysisResult.painPoints && analysisResult.painPoints.length > 0 && (
+                        <div className="bg-white border border-red-100 rounded-lg p-4">
+                          <div className="flex items-center mb-2">
+                            <div className="w-2 h-2 bg-red-400 rounded-full mr-2"></div>
+                            <h4 className="text-sm font-semibold text-red-900">Customer Pain Points</h4>
+                          </div>
+                          <ul className="list-disc list-inside text-sm text-red-800 space-y-1">
+                            {analysisResult.painPoints.slice(0, 3).map((pain: string, idx: number) => (
+                              <li key={idx}>{pain}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* ICP */}
+                      {analysisResult.idealCustomerProfile && (
+                        <div className="bg-white border border-purple-100 rounded-lg p-4">
+                          <div className="flex items-center mb-2">
+                            <div className="w-2 h-2 bg-purple-400 rounded-full mr-2"></div>
+                            <h4 className="text-sm font-semibold text-purple-900">Ideal Customer Profile</h4>
+                          </div>
+                          <p className="text-sm text-purple-800">{analysisResult.idealCustomerProfile}</p>
+                        </div>
+                      )}
                       
                       {/* Keywords Display */}
                       <div>
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center">
                             <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                            <h4 className="text-sm font-semibold text-gray-900">Keywords</h4>
+                            <h4 className="text-sm font-semibold text-gray-900">Keywords & Signals</h4>
                           </div>
                           {!isEditing && (
                             <button
@@ -596,26 +701,79 @@ export default function ResearchPage() {
                             </button>
                           )}
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                          {(isEditing ? editableKeywords : analysisResult.keywords).map((keyword: string, index: number) => (
-                            isEditing ? (
-                              <input
-                                key={index}
-                                type="text"
-                                value={keyword}
-                                onChange={(e) => handleKeywordChange(index, e.target.value)}
-                                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              />
-                            ) : (
-                              <span 
-                                key={index} 
-                                className="inline-flex items-center px-3 py-2 bg-blue-100 text-blue-800 text-sm font-medium rounded-lg border border-blue-200"
-                              >
-                                {keyword}
-                              </span>
-                            )
-                          ))}
-                        </div>
+                        {((isEditing ? editableKeywordGroups : analysisResult.keywordGroups) || []).length > 0 ? (
+                          <div className="space-y-4">
+                            {(isEditing ? editableKeywordGroups : analysisResult.keywordGroups).map((group: any, groupIndex: number) => (
+                              <div key={groupIndex} className="border border-gray-200 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div>
+                                    <p className="text-xs uppercase tracking-wide text-gray-500">{group.label || group.type}</p>
+                                    <p className="text-xs text-gray-500">{group.purpose}</p>
+                                  </div>
+                                  <span className="text-xs px-2 py-1 bg-gray-100 rounded-full">{group.type}</span>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {(isEditing ? group.keywords : group.keywords)?.map((keyword: string, keywordIndex: number) => (
+                                    isEditing ? (
+                                      <div key={keywordIndex} className="flex items-center gap-1">
+                                        <input
+                                          type="text"
+                                          value={keyword}
+                                          onChange={(e) => handleGroupKeywordChange(groupIndex, keywordIndex, e.target.value)}
+                                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRemoveKeywordFromGroup(groupIndex, keywordIndex)}
+                                          className="text-gray-400 hover:text-red-600"
+                                        >
+                                          <X className="h-3 w-3" />
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <span 
+                                        key={keywordIndex} 
+                                        className="inline-flex items-center px-3 py-2 bg-blue-100 text-blue-800 text-sm font-medium rounded-lg border border-blue-200"
+                                      >
+                                        {keyword}
+                                      </span>
+                                    )
+                                  ))}
+                                </div>
+                                {isEditing && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleAddKeywordToGroup(groupIndex)}
+                                    className="mt-3 inline-flex items-center text-xs text-blue-600 hover:text-blue-800"
+                                  >
+                                    + Add keyword
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap gap-2">
+                            {(isEditing ? editableKeywords : analysisResult.keywords).map((keyword: string, index: number) => (
+                              isEditing ? (
+                                <input
+                                  key={index}
+                                  type="text"
+                                  value={keyword}
+                                  onChange={(e) => handleKeywordChange(index, e.target.value)}
+                                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                              ) : (
+                                <span 
+                                  key={index} 
+                                  className="inline-flex items-center px-3 py-2 bg-blue-100 text-blue-800 text-sm font-medium rounded-lg border border-blue-200"
+                                >
+                                  {keyword}
+                                </span>
+                              )
+                            ))}
+                          </div>
+                        )}
                       </div>
                       
                       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
@@ -768,13 +926,22 @@ export default function ResearchPage() {
                           <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200">
                             {/* Keyword Header */}
                             <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-red-50">
-                              <div className="flex items-center">
-                                <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
-                                <h4 className="text-lg font-semibold text-gray-900">🔍 "{result.keyword}"</h4>
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <div className="flex items-center">
+                                    <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
+                                    <h4 className="text-lg font-semibold text-gray-900">🔍 {result.groupLabel || `"${result.keyword}"`}</h4>
+                                  </div>
+                                  <p className="text-gray-600 text-sm mt-1">
+                                    Signal keyword: "{result.keyword}" • {result.posts?.length || 0} posts found
+                                  </p>
+                                </div>
+                                {result.groupType && (
+                                  <span className="text-xs px-2 py-1 bg-white/70 border border-orange-200 rounded-full uppercase tracking-wide text-orange-600">
+                                    {result.groupType}
+                                  </span>
+                                )}
                               </div>
-                              <p className="text-gray-600 text-sm mt-1">
-                                {result.posts?.length || 0} posts found • Click "Pitch" to analyze each lead
-                              </p>
                             </div>
                             
                             {/* Posts in Card Grid Layout */}
