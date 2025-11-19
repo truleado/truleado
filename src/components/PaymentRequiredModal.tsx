@@ -23,9 +23,13 @@ export function PaymentRequiredModal({
   const handleUpdatePayment = async () => {
     setIsProcessing(true)
     try {
-      // Redirect to Paddle customer portal or checkout
-      // For now, redirect to settings where they can update payment
-      window.location.href = '/settings?tab=billing&update_payment=true'
+      // For pending users, redirect to checkout to complete payment
+      if (subscriptionStatus === 'pending') {
+        window.location.href = '/checkout'
+      } else {
+        // For other statuses, redirect to settings billing tab
+        window.location.href = '/settings?tab=billing&update_payment=true'
+      }
     } catch (error) {
       console.error('Error updating payment:', error)
       alert('Failed to open payment page. Please try again.')
@@ -35,6 +39,16 @@ export function PaymentRequiredModal({
   }
 
   const getStatusMessage = () => {
+    if (subscriptionStatus === 'pending') {
+      return {
+        title: 'Payment Required',
+        message: 'Please complete your payment to start your 7-day free trial and access Truleado.',
+        icon: CreditCard,
+        iconColor: 'text-blue-600',
+        bgColor: 'bg-blue-100'
+      }
+    }
+    
     if (subscriptionStatus === 'past_due') {
       return {
         title: 'Payment Required',
@@ -127,7 +141,7 @@ export function PaymentRequiredModal({
                 className="flex-1 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
               >
                 <CreditCard className="w-5 h-5" />
-                <span>{isProcessing ? 'Processing...' : 'Update Payment Method'}</span>
+                <span>{isProcessing ? 'Processing...' : subscriptionStatus === 'pending' ? 'Complete Payment' : 'Update Payment Method'}</span>
               </button>
             </div>
 

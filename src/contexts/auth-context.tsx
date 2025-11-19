@@ -163,13 +163,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     })
     
-    // If the user is already registered, attempt to sign them in directly
-    if (error && /already registered/i.test(error.message)) {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: normalizedEmail,
-        password,
-      })
-      return { error: signInError || null }
+    // If the user is already registered, return a clear error message
+    if (error) {
+      if (/already registered/i.test(error.message) || 
+          /user already exists/i.test(error.message) ||
+          /email.*already.*registered/i.test(error.message)) {
+        return { 
+          error: { 
+            message: 'An account with this email already exists. Please sign in instead.' 
+          } 
+        }
+      }
     }
     
     return { error }

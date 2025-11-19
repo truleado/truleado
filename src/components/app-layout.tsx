@@ -84,12 +84,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth()
   const { user: subscriptionUser, accessLevel, trialTimeRemaining } = useSubscription()
 
-  // Redirect pending users to checkout
+  // Redirect pending users to checkout - BLOCK ALL ACCESS until payment
   React.useEffect(() => {
     if (subscriptionUser && subscriptionUser.subscription_status === 'pending') {
-      // Don't redirect if already on checkout page
-      if (pathname !== '/checkout') {
-        router.push('/checkout')
+      // Don't redirect if already on checkout or auth pages
+      if (pathname !== '/checkout' && !pathname?.startsWith('/auth')) {
+        // Immediately redirect - no access until checkout is completed
+        router.replace('/checkout')
       }
     }
   }, [subscriptionUser, pathname, router])
@@ -97,14 +98,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Check if user should be blocked and show payment modal
   React.useEffect(() => {
     if (subscriptionUser) {
+      // Block pending users from accessing anything except checkout/auth
       const shouldBlock = 
+        subscriptionUser.subscription_status === 'pending' ||
         subscriptionUser.subscription_status === 'past_due' ||
         subscriptionUser.subscription_status === 'expired' ||
         subscriptionUser.subscription_status === 'cancelled' ||
         (subscriptionUser.subscription_status === 'trial' && 
          trialTimeRemaining === 'Trial expired')
 
-      // Only show on protected routes (not settings, billing, checkout, etc.)
+      // Only show on protected routes (not settings, billing, checkout, auth, etc.)
       const isProtectedRoute = !pathname?.startsWith('/settings') && 
                                !pathname?.startsWith('/auth') &&
                                !pathname?.startsWith('/billing') &&
