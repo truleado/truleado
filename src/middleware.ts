@@ -79,6 +79,7 @@ export async function middleware(request: NextRequest) {
         pathname.startsWith('/sitemap') ||
         pathname.startsWith('/auth') ||
         pathname.startsWith('/billing') ||
+        pathname.startsWith('/checkout') ||
         pathname.startsWith('/admin') ||
         pathname.startsWith('/resources') ||
         pathname.startsWith('/pricing') ||
@@ -96,6 +97,7 @@ export async function middleware(request: NextRequest) {
         pathname === '/reddit-leads' ||
         pathname === '/track-leads' ||
         pathname === '/settings' ||
+        pathname === '/website-analyzer' ||
         pathname.startsWith('/products') ||
         pathname.startsWith('/promote')
       ) {

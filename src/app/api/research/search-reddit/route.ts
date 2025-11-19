@@ -260,9 +260,20 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
     
-    const seenPostIds = new Set<string>()
-    const seenCanonicalUrls = new Set<string>()
-    const seenTitleHashes = new Set<string>()
+    const seenPostIdsByGroup = new Map<string, Set<string>>()
+    const seenCanonicalByGroup = new Map<string, Set<string>>()
+    const seenTitleHashesByGroup = new Map<string, Set<string>>()
+
+    const getGroupKey = (plan: { groupType?: string, groupLabel?: string }) => {
+      return `${plan.groupType || 'default'}|${plan.groupLabel || plan.groupType || 'group'}`
+    }
+    
+    const getDedupSet = (map: Map<string, Set<string>>, key: string) => {
+      if (!map.has(key)) {
+        map.set(key, new Set<string>())
+      }
+      return map.get(key)!
+    }
 
     if (!productDescription) {
       return NextResponse.json({ 
@@ -284,6 +295,10 @@ export async function POST(request: NextRequest) {
 
     for (const plan of searchPlans) {
       const keyword = plan.keyword
+      const groupKey = getGroupKey(plan)
+      const groupPostIds = getDedupSet(seenPostIdsByGroup, groupKey)
+      const groupCanonicalSet = getDedupSet(seenCanonicalByGroup, groupKey)
+      const groupTitleHashSet = getDedupSet(seenTitleHashesByGroup, groupKey)
       // Check if we're running out of time
       const elapsed = Date.now() - startTime
       if (elapsed > MAX_EXECUTION_TIME) {
@@ -456,27 +471,27 @@ export async function POST(request: NextRequest) {
           const canonicalKey = (post.canonicalUrl || '').toLowerCase().replace(/\/$/, '')
           const titleHash = (post.title || '').toLowerCase().replace(/\s+/g, ' ').substring(0, 140)
 
-          if (dedupeKey && seenPostIds.has(dedupeKey)) {
+          if (dedupeKey && groupPostIds.has(dedupeKey)) {
             duplicateCountForKeyword++
             return false
           }
-          if (canonicalKey && seenCanonicalUrls.has(canonicalKey)) {
+          if (canonicalKey && groupCanonicalSet.has(canonicalKey)) {
             duplicateCountForKeyword++
             return false
           }
-          if (titleHash && seenTitleHashes.has(titleHash)) {
+          if (titleHash && groupTitleHashSet.has(titleHash)) {
             duplicateCountForKeyword++
             return false
           }
 
           if (dedupeKey) {
-            seenPostIds.add(dedupeKey)
+            groupPostIds.add(dedupeKey)
           }
           if (canonicalKey) {
-            seenCanonicalUrls.add(canonicalKey)
+            groupCanonicalSet.add(canonicalKey)
           }
           if (titleHash) {
-            seenTitleHashes.add(titleHash)
+            groupTitleHashSet.add(titleHash)
           }
           return true
         })

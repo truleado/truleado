@@ -1,6 +1,6 @@
 import { User } from '@supabase/supabase-js'
 
-export type SubscriptionStatus = 'trial' | 'active' | 'expired' | 'cancelled' | 'past_due'
+export type SubscriptionStatus = 'trial' | 'active' | 'expired' | 'cancelled' | 'past_due' | 'pending'
 export type AccessLevel = 'full' | 'limited' | 'none'
 
 export interface UserWithSubscription extends User {
@@ -28,6 +28,11 @@ export const isSubscriptionActive = (user: UserWithSubscription): boolean => {
 export const getAccessLevel = (user: UserWithSubscription): AccessLevel => {
   if (!user) return 'none'
   
+  // Pending status - user needs to complete checkout
+  if (user.subscription_status === 'pending') {
+    return 'none'
+  }
+  
   // Active subscription - give full access
   if (user.subscription_status === 'active') {
     return 'full'
@@ -38,13 +43,16 @@ export const getAccessLevel = (user: UserWithSubscription): AccessLevel => {
     return 'full'
   }
   
-  // Past due subscription - limited access
-  if (user.subscription_status === 'past_due') {
-    return 'limited'
+  // Past due, expired, or cancelled - BLOCK ACCESS (no access)
+  // User must pay to continue using the app
+  if (user.subscription_status === 'past_due' || 
+      user.subscription_status === 'expired' || 
+      user.subscription_status === 'cancelled' ||
+      (user.subscription_status === 'trial' && isTrialExpired(user))) {
+    return 'none'
   }
   
-  // All other statuses (expired trial, cancelled, or no subscription) - no access
-  // Users must upgrade after trial expires
+  // All other statuses - no access
   return 'none'
 }
 
@@ -105,13 +113,15 @@ export const shouldShowUpgradePrompt = (user: UserWithSubscription): boolean => 
     return false
   }
   
-  // Show upgrade prompt if trial is expired or user has no trial/subscription
+  // Show upgrade prompt if trial is expired
   if (user.subscription_status === 'trial' && isTrialExpired(user)) {
     return true
   }
   
-  // Show upgrade prompt for users without active subscription or expired trial
-  if (user.subscription_status !== 'trial' || isTrialExpired(user)) {
+  // Show upgrade prompt for past_due, expired, or cancelled subscriptions
+  if (user.subscription_status === 'past_due' || 
+      user.subscription_status === 'expired' || 
+      user.subscription_status === 'cancelled') {
     return true
   }
   

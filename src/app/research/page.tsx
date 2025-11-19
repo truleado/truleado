@@ -405,6 +405,67 @@ export default function ResearchPage() {
     }
   }
 
+  const mergeRedditResults = (existing: any, incoming: any) => {
+    if (!existing || existing.error) return incoming
+    if (!incoming || incoming.error) return incoming
+
+    const mergedByKey = new Map<string, any>()
+
+    const addResult = (result: any) => {
+      if (!result) return
+      const keyParts = [
+        result.groupType || 'group',
+        result.groupLabel || result.keyword || 'unknown',
+        result.keyword || 'keyword'
+      ]
+      const key = keyParts.join('|')
+      const existingEntry = mergedByKey.get(key) || {
+        ...result,
+        posts: []
+      }
+
+      const postsMap = new Map<string, any>()
+      existingEntry.posts?.forEach((post: any) => {
+        if (!post) return
+        const postKey = post.url || `${post.subreddit}-${post.title}`
+        postsMap.set(postKey, post)
+      })
+
+      result.posts?.forEach((post: any) => {
+        if (!post) return
+        const postKey = post.url || `${post.subreddit}-${post.title}`
+        if (!postsMap.has(postKey)) {
+          postsMap.set(postKey, post)
+        }
+      })
+
+      const mergedPosts = Array.from(postsMap.values())
+      mergedByKey.set(key, {
+        ...existingEntry,
+        ...result,
+        posts: mergedPosts,
+        totalPosts: mergedPosts.length
+      })
+    }
+
+    existing.results?.forEach(addResult)
+    incoming.results?.forEach(addResult)
+
+    const mergedResults = Array.from(mergedByKey.values())
+    const totalStrategicPosts = mergedResults.reduce((sum, res) => sum + (res.posts?.length || 0), 0)
+
+    return {
+      ...incoming,
+      results: mergedResults,
+      totalKeywords: mergedResults.length,
+      totalStrategicPosts,
+      aggregatedFrom: [
+        ...(existing.aggregatedFrom || [existing.generatedAt || 'previous']),
+        incoming.generatedAt || new Date().toISOString()
+      ]
+    }
+  }
+
   const handleSearchReddit = async () => {
     const keywordGroups = isEditing ? editableKeywordGroups : (analysisResult.keywordGroups || [])
     const keywords = keywordGroups.length > 0 
@@ -423,7 +484,7 @@ export default function ResearchPage() {
     }
 
     setIsSearchingReddit(true)
-    setRedditResults(null)
+    const previousResults = redditResults
 
     try {
       console.log('🔍 Starting Reddit search with:', { 
@@ -457,7 +518,10 @@ export default function ResearchPage() {
           resultsCount: data.results?.length,
           success: data.success
         })
-        setRedditResults(data)
+        const mergedResults = previousResults && !previousResults.error
+          ? mergeRedditResults(previousResults, data)
+          : data
+        setRedditResults(mergedResults)
       } else {
         const errorData = await response.json()
         console.error('❌ Reddit search failed:', errorData)
@@ -865,227 +929,251 @@ export default function ResearchPage() {
 
               {/* Reddit Results */}
               {redditResults && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                  <div className="px-6 py-4 border-b border-gray-200">
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
-                      <h3 className="text-lg font-semibold text-gray-900">Reddit Results</h3>
+                <>
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div className="px-6 py-4 border-b border-gray-200">
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
+                        <h3 className="text-lg font-semibold text-gray-900">Reddit Results</h3>
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {redditResults.totalStrategicPosts || 0} highly relevant pitching opportunities found across {redditResults.totalKeywords || 0} keywords
+                        <span className="ml-2 text-xs text-purple-600">✨ AI-filtered for value proposition alignment</span>
+                      </p>
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {redditResults.totalStrategicPosts || 0} highly relevant pitching opportunities found across {redditResults.totalKeywords || 0} keywords
-                      <span className="ml-2 text-xs text-purple-600">✨ AI-filtered for value proposition alignment</span>
-                    </p>
-                  </div>
-                  
-                  <div className="p-6">
-                    {redditResults.error ? (
-                      <div className="text-center py-8">
-                        <div className="text-red-600 mb-2">
-                          <MessageSquare className="h-12 w-12 mx-auto" />
+                    
+                    <div className="p-6">
+                      {redditResults.error ? (
+                        <div className="text-center py-8">
+                          <div className="text-red-600 mb-2">
+                            <MessageSquare className="h-12 w-12 mx-auto" />
+                          </div>
+                          <h4 className="text-lg font-medium text-red-900 mb-2">Search Failed</h4>
+                          <p className="text-red-700 mb-2">{redditResults.error}</p>
+                          {redditResults.details && (
+                            <p className="text-red-600 text-sm">{redditResults.details}</p>
+                          )}
                         </div>
-                        <h4 className="text-lg font-medium text-red-900 mb-2">Search Failed</h4>
-                        <p className="text-red-700 mb-2">{redditResults.error}</p>
-                        {redditResults.details && (
-                          <p className="text-red-600 text-sm">{redditResults.details}</p>
-                        )}
-                      </div>
-                    ) : redditResults.totalStrategicPosts === 0 ? (
-                      <div className="text-center py-8">
-                        <div className="text-gray-400 mb-4">
-                          <MessageSquare className="h-12 w-12 mx-auto" />
+                      ) : redditResults.totalStrategicPosts === 0 ? (
+                        <div className="text-center py-8">
+                          <div className="text-gray-400 mb-4">
+                            <MessageSquare className="h-12 w-12 mx-auto" />
+                          </div>
+                          <h4 className="text-lg font-medium text-gray-900 mb-2">No Strategic Opportunities Found</h4>
+                          <p className="text-gray-600 mb-4">
+                            We analyzed {redditResults.results?.reduce((sum: number, result: any) => sum + (result.totalPosts || 0), 0) || 0} Reddit posts across {redditResults.totalKeywords || 0} keywords but didn't find any high-quality pitching opportunities.
+                          </p>
+                          <p className="text-gray-500 text-sm">
+                            Try editing your keywords or product description to find more relevant opportunities.
+                          </p>
                         </div>
-                        <h4 className="text-lg font-medium text-gray-900 mb-2">No Strategic Opportunities Found</h4>
-                        <p className="text-gray-600 mb-4">
-                          We analyzed {redditResults.results?.reduce((sum: number, result: any) => sum + (result.totalPosts || 0), 0) || 0} Reddit posts across {redditResults.totalKeywords || 0} keywords but didn't find any high-quality pitching opportunities.
-                        </p>
-                        <p className="text-gray-500 text-sm">
-                          Try editing your keywords or product description to find more relevant opportunities.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-6">
-                        {/* Summary Stats */}
-                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
-                          <div className="grid grid-cols-3 gap-4 text-center">
-                            <div>
-                              <div className="text-2xl font-bold text-blue-600">{redditResults.totalKeywords || 0}</div>
-                              <div className="text-gray-600 text-sm">Keywords</div>
-                            </div>
-                            <div>
-                              <div className="text-2xl font-bold text-orange-600">{redditResults.totalStrategicPosts || 0}</div>
-                              <div className="text-gray-600 text-sm">Strategic Opportunities</div>
-                            </div>
-                            <div>
-                              <div className="text-2xl font-bold text-green-600">
-                                {redditResults.results?.reduce((sum: number, result: any) => sum + (result.totalPosts || 0), 0) || 0}
+                      ) : (
+                        <div className="space-y-6">
+                          {/* Summary Stats */}
+                          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+                            <div className="grid grid-cols-3 gap-4 text-center">
+                              <div>
+                                <div className="text-2xl font-bold text-blue-600">{redditResults.totalKeywords || 0}</div>
+                                <div className="text-gray-600 text-sm">Keywords</div>
                               </div>
-                              <div className="text-gray-600 text-sm">Total Analyzed</div>
+                              <div>
+                                <div className="text-2xl font-bold text-orange-600">{redditResults.totalStrategicPosts || 0}</div>
+                                <div className="text-gray-600 text-sm">Strategic Opportunities</div>
+                              </div>
+                              <div>
+                                <div className="text-2xl font-bold text-green-600">
+                                  {redditResults.results?.reduce((sum: number, result: any) => sum + (result.totalPosts || 0), 0) || 0}
+                                </div>
+                                <div className="text-gray-600 text-sm">Total Analyzed</div>
+                              </div>
                             </div>
                           </div>
-                        </div>
 
-                        {/* Results by Keyword */}
-                        {redditResults.results?.map((result: any, index: number) => (
-                          <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200">
-                            {/* Keyword Header */}
-                            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-red-50">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <div className="flex items-center">
-                                    <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
-                                    <h4 className="text-lg font-semibold text-gray-900">🔍 {result.groupLabel || `"${result.keyword}"`}</h4>
+                          {/* Results by Keyword */}
+                          {redditResults.results?.map((result: any, index: number) => (
+                            <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200">
+                              {/* Keyword Header */}
+                              <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-red-50">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <div className="flex items-center">
+                                      <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
+                                      <h4 className="text-lg font-semibold text-gray-900">🔍 {result.groupLabel || `"${result.keyword}"`}</h4>
+                                    </div>
+                                    <p className="text-gray-600 text-sm mt-1">
+                                      Signal keyword: "{result.keyword}" • {result.posts?.length || 0} posts found
+                                    </p>
                                   </div>
-                                  <p className="text-gray-600 text-sm mt-1">
-                                    Signal keyword: "{result.keyword}" • {result.posts?.length || 0} posts found
-                                  </p>
+                                  {result.groupType && (
+                                    <span className="text-xs px-2 py-1 bg-white/70 border border-orange-200 rounded-full uppercase tracking-wide text-orange-600">
+                                      {result.groupType}
+                                    </span>
+                                  )}
                                 </div>
-                                {result.groupType && (
-                                  <span className="text-xs px-2 py-1 bg-white/70 border border-orange-200 rounded-full uppercase tracking-wide text-orange-600">
-                                    {result.groupType}
-                                  </span>
-                                )}
                               </div>
-                            </div>
-                            
-                            {/* Posts in Card Grid Layout */}
-                            {result.posts && result.posts.length > 0 ? (
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
-                                {result.posts.map((post: any, postIndex: number) => {
-                                  const hasAnalysis = post.reasoning && post.samplePitch
-                                  const isAnalyzing = analyzingPosts.has(post.url)
-                                  const productName = analysisResult?.productName || 'this product'
-                                  
-                                  return (
-                                    <div key={postIndex} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col">
-                                      {/* Post Title */}
-                                      <h5 className="text-base font-semibold text-gray-900 mb-3 line-clamp-2 leading-tight flex-shrink-0">
-                                        {post.title}
-                                      </h5>
-                                      
-                                      {/* Post Meta */}
-                                      <div className="flex items-center text-xs text-gray-500 gap-3 mb-4 flex-shrink-0">
-                                        <span className="bg-gray-100 px-2 py-1 rounded-full">r/{post.subreddit}</span>
-                                        <span className="flex items-center text-green-600">
-                                          <span className="font-medium">{post.score}</span>
-                                          <span className="ml-1">↑</span>
-                                        </span>
-                                        <span className="flex items-center text-blue-600">
-                                          <span className="font-medium">{post.num_comments}</span>
-                                          <span className="ml-1">💬</span>
-                                        </span>
-                                        {post.relevanceScore && (
-                                          <span className="flex items-center text-purple-600 bg-purple-50 px-2 py-1 rounded-full">
-                                            <span className="font-semibold">{post.relevanceScore}/10</span>
-                                            <span className="ml-1">⭐</span>
+                              
+                              {/* Posts in Card Grid Layout */}
+                              {result.posts && result.posts.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+                                  {result.posts.map((post: any, postIndex: number) => {
+                                    const hasAnalysis = post.reasoning && post.samplePitch
+                                    const isAnalyzing = analyzingPosts.has(post.url)
+                                    const productName = analysisResult?.productName || 'this product'
+                                    
+                                    return (
+                                      <div key={postIndex} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col">
+                                        {/* Post Title */}
+                                        <h5 className="text-base font-semibold text-gray-900 mb-3 line-clamp-2 leading-tight flex-shrink-0">
+                                          {post.title}
+                                        </h5>
+                                        
+                                        {/* Post Meta */}
+                                        <div className="flex items-center text-xs text-gray-500 gap-3 mb-4 flex-shrink-0">
+                                          <span className="bg-gray-100 px-2 py-1 rounded-full">r/{post.subreddit}</span>
+                                          <span className="flex items-center text-green-600">
+                                            <span className="font-medium">{post.score}</span>
+                                            <span className="ml-1">↑</span>
                                           </span>
-                                        )}
-                                      </div>
-                                      
-                                      {/* Relevance Reasoning (shown if available) */}
-                                      {post.relevanceReasoning && !hasAnalysis && (
-                                        <div className="bg-purple-50 p-3 rounded-lg border-l-4 border-purple-300 mb-4">
-                                          <div className="flex items-start mb-1">
-                                            <div className="w-2 h-2 bg-purple-500 rounded-full mr-2 mt-1.5 flex-shrink-0"></div>
-                                            <h6 className="text-purple-900 font-semibold text-xs">Why This Post Is Relevant:</h6>
+                                          <span className="flex items-center text-blue-600">
+                                            <span className="font-medium">{post.num_comments}</span>
+                                            <span className="ml-1">💬</span>
+                                          </span>
+                                          {post.relevanceScore && (
+                                            <span className="flex items-center text-purple-600 bg-purple-50 px-2 py-1 rounded-full">
+                                              <span className="font-semibold">{post.relevanceScore}/10</span>
+                                              <span className="ml-1">⭐</span>
+                                            </span>
+                                          )}
+                                        </div>
+                                        
+                                        {/* Relevance Reasoning (shown if available) */}
+                                        {post.relevanceReasoning && !hasAnalysis && (
+                                          <div className="bg-purple-50 p-3 rounded-lg border-l-4 border-purple-300 mb-4">
+                                            <div className="flex items-start mb-1">
+                                              <div className="w-2 h-2 bg-purple-500 rounded-full mr-2 mt-1.5 flex-shrink-0"></div>
+                                              <h6 className="text-purple-900 font-semibold text-xs">Why This Post Is Relevant:</h6>
+                                            </div>
+                                            <p className="text-purple-800 text-xs leading-relaxed mt-1">{post.relevanceReasoning}</p>
                                           </div>
-                                          <p className="text-purple-800 text-xs leading-relaxed mt-1">{post.relevanceReasoning}</p>
-                                        </div>
-                                      )}
-                                      
-                                      {/* Analysis Results (shown after analysis) */}
-                                      {hasAnalysis && (
-                                        <div className="flex-1 space-y-3 mb-4">
-                                          {/* Strategic Analysis */}
-                                          {post.reasoning && (
-                                            <div className="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-300">
-                                              <div className="flex items-start mb-1">
-                                                <div className="w-2 h-2 bg-blue-500 rounded-full mr-2 mt-1.5 flex-shrink-0"></div>
-                                                <h6 className="text-blue-900 font-semibold text-xs">Why This Is A Good Opportunity:</h6>
-                                              </div>
-                                              <p className="text-blue-800 text-xs leading-relaxed mt-1">{post.reasoning}</p>
-                                            </div>
-                                          )}
-                                          
-                                          {/* Sample Pitch */}
-                                          {post.samplePitch && (
-                                            <div className="bg-green-50 p-3 rounded-lg border-l-4 border-green-300">
-                                              <div className="flex items-start mb-1">
-                                                <div className="w-2 h-2 bg-green-500 rounded-full mr-2 mt-1.5 flex-shrink-0"></div>
-                                                <h6 className="text-green-900 font-semibold text-xs">Sample Pitch Idea:</h6>
-                                              </div>
-                                              <p className="text-green-800 text-xs leading-relaxed italic mt-1">"{post.samplePitch}"</p>
-                                            </div>
-                                          )}
-                                        </div>
-                                      )}
-                                      
-                                      {/* Action Buttons */}
-                                      <div className="flex flex-col gap-2 mt-auto">
-                                        {!hasAnalysis && (
-                                          <button
-                                            onClick={() => handleAnalyzePost(post, result.keyword)}
-                                            disabled={isAnalyzing}
-                                            className="w-full inline-flex items-center justify-center px-4 py-2.5 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                          >
-                                            {isAnalyzing ? (
-                                              <>
-                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                                Analyzing...
-                                              </>
-                                            ) : (
-                                              <>
-                                                <Plane className="h-4 w-4 mr-2" />
-                                                Pitch {productName} to this lead
-                                              </>
-                                            )}
-                                          </button>
                                         )}
                                         
-                                        <div className="flex gap-2">
-                                          <a
-                                            href={post.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
-                                          >
-                                            <MessageSquare className="h-4 w-4 mr-1.5" />
-                                            View
-                                          </a>
-                                          <button
-                                            onClick={() => handleSaveRedditLead(post, result.keyword)}
-                                            disabled={savingPosts.has(`${post.subreddit}-${post.title.substring(0, 20)}`)}
-                                            className={`flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
-                                              savedPostIds.has(post.url)
-                                                ? 'bg-green-500 hover:bg-green-600 text-white'
-                                                : 'bg-blue-500 hover:bg-blue-600 text-white'
-                                            }`}
-                                          >
-                                            {savingPosts.has(`${post.subreddit}-${post.title.substring(0, 20)}`) ? (
-                                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                            ) : savedPostIds.has(post.url) ? (
-                                              'Saved'
-                                            ) : (
-                                              'Save'
+                                        {/* Analysis Results (shown after analysis) */}
+                                        {hasAnalysis && (
+                                          <div className="flex-1 space-y-3 mb-4">
+                                            {/* Strategic Analysis */}
+                                            {post.reasoning && (
+                                              <div className="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-300">
+                                                <div className="flex items-start mb-1">
+                                                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2 mt-1.5 flex-shrink-0"></div>
+                                                  <h6 className="text-blue-900 font-semibold text-xs">Why This Is A Good Opportunity:</h6>
+                                                </div>
+                                                <p className="text-blue-800 text-xs leading-relaxed mt-1">{post.reasoning}</p>
+                                              </div>
                                             )}
-                                          </button>
+                                            
+                                            {/* Sample Pitch */}
+                                            {post.samplePitch && (
+                                              <div className="bg-green-50 p-3 rounded-lg border-l-4 border-green-300">
+                                                <div className="flex items-start mb-1">
+                                                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2 mt-1.5 flex-shrink-0"></div>
+                                                  <h6 className="text-green-900 font-semibold text-xs">Sample Pitch Idea:</h6>
+                                                </div>
+                                                <p className="text-green-800 text-xs leading-relaxed italic mt-1">"{post.samplePitch}"</p>
+                                              </div>
+                                            )}
+                                          </div>
+                                        )}
+                                        
+                                        {/* Action Buttons */}
+                                        <div className="flex flex-col gap-2 mt-auto">
+                                          {!hasAnalysis && (
+                                            <button
+                                              onClick={() => handleAnalyzePost(post, result.keyword)}
+                                              disabled={isAnalyzing}
+                                              className="w-full inline-flex items-center justify-center px-4 py-2.5 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            >
+                                              {isAnalyzing ? (
+                                                <>
+                                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                                  Analyzing...
+                                                </>
+                                              ) : (
+                                                <>
+                                                  <Plane className="h-4 w-4 mr-2" />
+                                                  Pitch {productName} to this lead
+                                                </>
+                                              )}
+                                            </button>
+                                          )}
+                                          
+                                          <div className="flex gap-2">
+                                            <a
+                                              href={post.url}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                                            >
+                                              <MessageSquare className="h-4 w-4 mr-1.5" />
+                                              View
+                                            </a>
+                                            <button
+                                              onClick={() => handleSaveRedditLead(post, result.keyword)}
+                                              disabled={savingPosts.has(`${post.subreddit}-${post.title.substring(0, 20)}`)}
+                                              className={`flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                                                savedPostIds.has(post.url)
+                                                  ? 'bg-green-500 hover:bg-green-600 text-white'
+                                                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+                                              }`}
+                                            >
+                                              {savingPosts.has(`${post.subreddit}-${post.title.substring(0, 20)}`) ? (
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                              ) : savedPostIds.has(post.url) ? (
+                                                'Saved'
+                                              ) : (
+                                                'Save'
+                                              )}
+                                            </button>
+                                          </div>
                                         </div>
                                       </div>
-                                    </div>
-                                  )
-                                })}
-                              </div>
-                            ) : (
-                              <div className="p-8 text-center text-gray-500">
-                                <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                                <p className="text-sm">No strategic opportunities found for this keyword</p>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                                    )
+                                  })}
+                                </div>
+                              ) : (
+                                <div className="p-8 text-center text-gray-500">
+                                  <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                                  <p className="text-sm">No strategic opportunities found for this keyword</p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                  <div className="text-center mt-6">
+                    <button
+                      onClick={handleSearchReddit}
+                      disabled={isSearchingReddit || isEditing}
+                      className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold shadow-sm hover:shadow-md hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSearchingReddit ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Generating more leads...
+                        </>
+                      ) : (
+                        <>
+                          <Plane className="h-4 w-4 mr-2" />
+                          Generate More Leads
+                        </>
+                      )}
+                    </button>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Tweak your keywords or description above, then tap the button to refresh opportunities.
+                    </p>
+                  </div>
+                </>
               )}
           </div>
         </div>

@@ -76,13 +76,13 @@ export async function GET(request: NextRequest) {
       .from('subscriptions')
       .select('created_at, status, razorpay_plan_id')
 
-    // Calculate revenue based on plan (assuming $29/month for pro)
-    const totalRevenue = revenueData?.filter(sub => sub.status === 'active').length * 2900 || 0
+    // Calculate revenue based on plan (assuming $49/month for pro)
+    const totalRevenue = revenueData?.filter(sub => sub.status === 'active').length * 4900 || 0
 
     const revenueThisMonth = revenueData?.filter(sub => {
       const subDate = new Date(sub.created_at)
       return subDate >= monthAgo && sub.status === 'active'
-    }).length * 2900 || 0
+    }).length * 4900 || 0
 
     // Calculate metrics
     const averageLeadsPerUser = totalUsers && totalUsers > 0 ? totalLeadsCount / totalUsers : 0

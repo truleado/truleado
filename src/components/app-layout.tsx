@@ -23,10 +23,14 @@ import {
   TrendingUp,
   FileText,
   PlayCircle,
-  HelpCircle
+  HelpCircle,
+  Globe,
+  Search
 } from 'lucide-react'
 import { TrialBanner } from './TrialBanner'
 import { NotificationBell } from './NotificationBell'
+import { PaymentRequiredModal } from './PaymentRequiredModal'
+import { useSubscription } from '@/lib/subscription-context'
 
 // Custom Reddit Icon Component
 const RedditIcon = ({ className }: { className?: string }) => (
@@ -43,13 +47,14 @@ const RedditIcon = ({ className }: { className?: string }) => (
 const navigation = [
   { name: 'How to Use', href: '/how-to-use', icon: PlayCircle, description: 'Learn how to use Truleado' },
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, description: 'Overview & analytics' },
+  { name: 'Website Analyzer', href: '/website-analyzer', icon: Globe, description: 'Analyze website copy, SEO, and content' },
   { 
     name: 'Reddit', 
     icon: RedditIcon, 
     description: 'Reddit tools and features',
     children: [
       { name: 'Research', href: '/research', icon: Plane, description: 'Website research and Reddit lead discovery' },
-      { name: 'Reddit Leads', href: '/reddit-leads', icon: Users, description: 'Saved Reddit opportunities' },
+      { name: 'Saved Leads', href: '/reddit-leads', icon: Users, description: 'Saved Reddit opportunities' },
       { name: 'Track Leads', href: '/track-leads', icon: BarChart3, description: 'Track and monitor lead performance' },
     ]
   },
@@ -73,9 +78,46 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [growOnRedditOpen, setGrowOnRedditOpen] = useState(true)
   const [redditLeadsCount, setRedditLeadsCount] = useState(0)
   const [trackLeadsCount, setTrackLeadsCount] = useState(0)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
   const { user, signOut } = useAuth()
+  const { user: subscriptionUser, accessLevel, trialTimeRemaining } = useSubscription()
+
+  // Redirect pending users to checkout
+  React.useEffect(() => {
+    if (subscriptionUser && subscriptionUser.subscription_status === 'pending') {
+      // Don't redirect if already on checkout page
+      if (pathname !== '/checkout') {
+        router.push('/checkout')
+      }
+    }
+  }, [subscriptionUser, pathname, router])
+
+  // Check if user should be blocked and show payment modal
+  React.useEffect(() => {
+    if (subscriptionUser) {
+      const shouldBlock = 
+        subscriptionUser.subscription_status === 'past_due' ||
+        subscriptionUser.subscription_status === 'expired' ||
+        subscriptionUser.subscription_status === 'cancelled' ||
+        (subscriptionUser.subscription_status === 'trial' && 
+         trialTimeRemaining === 'Trial expired')
+
+      // Only show on protected routes (not settings, billing, checkout, etc.)
+      const isProtectedRoute = !pathname?.startsWith('/settings') && 
+                               !pathname?.startsWith('/auth') &&
+                               !pathname?.startsWith('/billing') &&
+                               !pathname?.startsWith('/support') &&
+                               !pathname?.startsWith('/checkout')
+
+      if (shouldBlock && isProtectedRoute && accessLevel === 'none') {
+        setShowPaymentModal(true)
+      } else {
+        setShowPaymentModal(false)
+      }
+    }
+  }, [subscriptionUser, accessLevel, trialTimeRemaining, pathname])
 
   const handleSignOut = async () => {
     await signOut()
@@ -159,7 +201,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="ml-4 mt-1 space-y-1">
               {item.children.map((child: any) => {
                 const isChildActive = pathname === child.href
-                const count = child.name === 'Reddit Leads' ? redditLeadsCount : 
+                const count = child.name === 'Saved Leads' ? redditLeadsCount : 
                              child.name === 'Track Leads' ? trackLeadsCount : null
                 return (
                   <Link
@@ -317,7 +359,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-
+      {/* Payment Required Modal */}
+      <PaymentRequiredModal
+        isOpen={showPaymentModal}
+        onClose={() => {
+          // Don't allow closing - redirect to settings
+          router.push('/settings?tab=billing')
+        }}
+        subscriptionStatus={subscriptionUser?.subscription_status}
+        trialTimeRemaining={trialTimeRemaining}
+      />
     </div>
   )
 }

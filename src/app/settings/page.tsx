@@ -5,14 +5,10 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
 import AppLayout from '@/components/app-layout'
 import { useSubscription } from '@/lib/subscription-context'
-
-// Force dynamic rendering
-export const dynamic = 'force-dynamic'
 import { 
   Settings as SettingsIcon, 
   User, 
   Bell, 
-  CreditCard, 
   Save,
   Eye,
   EyeOff,
@@ -25,13 +21,12 @@ import {
   XCircle,
   AlertTriangle,
   Calendar,
-  DollarSign,
-  RefreshCw,
-  Download,
   Shield,
-  Zap,
   Target,
-  Link2
+  Link2,
+  Zap,
+  CreditCard,
+  DollarSign
 } from 'lucide-react'
 
 function SettingsContent() {
@@ -43,22 +38,14 @@ function SettingsContent() {
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
-  const [showCancelModal, setShowCancelModal] = useState(false)
-  const [isCancelling, setIsCancelling] = useState(false)
-  const [billingInfo, setBillingInfo] = useState({
-    nextBillingDate: '',
-    amount: '',
-    paymentMethod: '',
-    invoiceHistory: []
-  })
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [isUpgrading, setIsUpgrading] = useState(false)
-  const [isPollingUpgrade, setIsPollingUpgrade] = useState(false)
-  const [paymentSuccess, setPaymentSuccess] = useState<string | null>(null)
   const [redditConnected, setRedditConnected] = useState(false)
   const [redditUsername, setRedditUsername] = useState<string | null>(null)
   const [isConnecting, setIsConnecting] = useState(false)
   const [isDisconnecting, setIsDisconnecting] = useState(false)
+  const [billingStatus, setBillingStatus] = useState<any>(null)
+  const [isCancelling, setIsCancelling] = useState(false)
+  const [isRestarting, setIsRestarting] = useState(false)
+  const [showCancelModal, setShowCancelModal] = useState(false)
   const [redditConnectSuccess, setRedditConnectSuccess] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
@@ -201,37 +188,6 @@ function SettingsContent() {
     }
   }
 
-  // Refresh billing info when subscription status changes to active
-  useEffect(() => {
-    if (subscriptionStatus === 'active' && user) {
-      // Refresh billing info when subscription becomes active
-      fetchBillingInfo()
-    }
-  }, [subscriptionStatus, user])
-
-  const fetchBillingInfo = async () => {
-    try {
-      const response = await fetch('/api/billing/status', {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setBillingInfo({
-          nextBillingDate: data.next_billing_date || '',
-          amount: data.amount || '$49.00',
-          paymentMethod: data.payment_method || 'Card ending in ****',
-          invoiceHistory: data.invoices || [],
-          isRecurring: data.is_recurring || false,
-          billingCycle: data.billing_cycle || 'Monthly'
-        })
-      }
-    } catch (error) {
-      console.error('Error fetching billing info:', error)
-    }
-  }
 
   const fetchUserPreferences = async () => {
     try {
@@ -258,15 +214,6 @@ function SettingsContent() {
   }
 
 
-  const handleRefreshBilling = async () => {
-    setIsRefreshing(true)
-    try {
-      await fetchSubscriptionStatus()
-      await fetchBillingInfo()
-    } finally {
-      setIsRefreshing(false)
-    }
-  }
 
   useEffect(() => {
     // Check for tab parameter in URL
@@ -279,200 +226,24 @@ function SettingsContent() {
     // Check for success/error parameters from OAuth redirect
     const success = urlParams.get('success')
     const error = urlParams.get('error')
-    
-    // Check payment success from localStorage on client side only
-    const urlPaymentSuccess = urlParams.get('payment_success')
-    const localPaymentSuccess = localStorage.getItem('payment_success')
-    setPaymentSuccess(urlPaymentSuccess || localPaymentSuccess)
-    
-
-    // If returned from billing success, refresh and clean URL
-    if (paymentSuccess === 'true') {
-      ;(async () => {
-        try {
-          await fetchSubscriptionStatus()
-          await fetchBillingInfo()
-        } finally {
-          const url = new URL(window.location.href)
-          url.searchParams.delete('payment_success')
-          window.history.replaceState({}, '', url.toString())
-          try { localStorage.removeItem('payment_success') } catch {}
-        }
-      })()
-    }
   }, [])
 
-  // Handle payment success parameter
+  // Fetch billing status when billing tab is active
   useEffect(() => {
-    const paymentSuccessParam = searchParams.get('payment_success')
-    const sessionId = searchParams.get('session_id')
-    
-    if (paymentSuccessParam === 'true' && user) {
-      // Set payment success state to show banner
-      setPaymentSuccess('true')
-      
-      // Check payment status and update subscription
-      const checkPaymentStatus = async () => {
-        try {
-          console.log('Payment success detected, updating subscription directly for user:', user.id)
-          
-          // Refresh subscription first to get latest status from webhook
-          await refreshSubscription()
-          await fetchBillingInfo()
-          
-          // Wait a bit and refresh again to ensure webhook has processed
-          setTimeout(async () => {
-            await refreshSubscription()
-            await fetchBillingInfo()
-          }, 2000)
-          
-          // Also try manual update as fallback if webhook hasn't processed yet
-          if (sessionId) {
-            const updateResponse = await fetch('/api/debug/manual-subscription-update', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                userId: user.id,
-                subscriptionStatus: 'active'
-              })
-            })
-            
-            if (updateResponse.ok) {
-              const result = await updateResponse.json()
-              console.log('Subscription updated successfully:', result)
-              
-              // Refresh subscription status and billing info after successful update
-              await refreshSubscription()
-              await fetchBillingInfo()
-            } else {
-              console.error('Failed to update subscription')
-            }
-          }
-          
-          // Final refresh after 5 seconds to ensure everything is updated
-          setTimeout(async () => {
-            await refreshSubscription()
-            await fetchBillingInfo()
-          }, 5000)
-        } catch (error) {
-          console.error('Error updating subscription:', error)
-        }
-      }
-      
-      checkPaymentStatus()
-      
-      // Auto-hide success message after 10 seconds
-      const hideTimer = setTimeout(() => {
-        setPaymentSuccess(null)
-        const url = new URL(window.location.href)
-        url.searchParams.delete('payment_success')
-        url.searchParams.delete('session_id')
-        window.history.replaceState({}, '', url.toString())
-        try { localStorage.removeItem('payment_success') } catch {}
-      }, 10000)
-      
-      return () => clearTimeout(hideTimer)
+    if (activeTab === 'billing' && user) {
+      fetchBillingStatus()
     }
-  }, [searchParams, user, refreshSubscription])
+  }, [activeTab, user])
 
-
-  const handleUpgrade = async () => {
-    setIsUpgrading(true)
+  const fetchBillingStatus = async () => {
     try {
-      const startUpgradePolling = () => {
-        if (isPollingUpgrade) return
-        setIsPollingUpgrade(true)
-        const startedAt = Date.now()
-        const poll = async () => {
-          try {
-            const res = await fetch('/api/debug/subscription')
-            if (res.ok) {
-              const data = await res.json()
-              if (data.subscription_status === 'active') {
-                await fetchBillingInfo()
-                setIsPollingUpgrade(false)
-                return
-              }
-            }
-          } catch {}
-          if (Date.now() - startedAt < 3 * 60 * 1000) {
-            setTimeout(poll, 5000)
-          } else {
-            setIsPollingUpgrade(false)
-          }
-        }
-        setTimeout(poll, 5000)
-      }
-
-      // Try client-side Paddle first (works even if server API key is misconfigured)
-      let clientTried = false
-      try {
-        const pubRes = await fetch('/api/billing/public-config')
-        const pub = await pubRes.json()
-        if (pub?.clientToken && pub?.priceId) {
-          clientTried = true
-          const { initializePaddle } = await import('@paddle/paddle-js')
-          const paddle = await initializePaddle({
-            environment: pub.environment === 'production' ? 'production' : 'sandbox',
-            token: pub.clientToken,
-            eventCallback: async (event: any) => {
-              try {
-                if (event?.name === 'checkout.completed') {
-                  // Mark success and refresh subscription immediately
-                  try { localStorage.setItem('payment_success', 'true') } catch {}
-                  await fetch('/api/debug/manual-subscription-update', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: user?.id, subscriptionStatus: 'active' })
-                  })
-                  await refreshSubscription()
-                  // Bring user to Billing tab updated
-                  window.location.href = '/settings?tab=billing&payment_success=true'
-                }
-              } catch (e) {
-                console.error('Checkout event handling failed', e)
-              }
-            }
-          })
-          if (!paddle || !paddle.Checkout) {
-            throw new Error('Paddle initialization failed')
-          }
-          // Start polling in background while overlay is open
-          startUpgradePolling()
-          await paddle.Checkout.open({
-            items: [{ priceId: pub.priceId, quantity: 1 }],
-            settings: { displayMode: 'overlay' },
-            customer: user?.email ? { email: user.email } : undefined,
-            customData: user ? { user_id: user.id, user_email: user.email } : undefined
-          })
-          // If user closes overlay without paying, fall back to server flow below
-        }
-      } catch (e) {
-        console.error('Client Paddle checkout attempt failed:', e)
-      }
-
-      // If client-side wasn't attempted or didn’t open, use server-side session
-      if (!clientTried) {
-        const response = await fetch('/api/billing/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        })
-        if (response.ok) {
-          const data = await response.json()
-          window.location.href = data.checkout_url
-        } else {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-          console.error('Failed to create checkout session:', errorData.error)
-          alert('Billing is temporarily unavailable. Please try again soon.')
-        }
+      const response = await fetch('/api/billing/status')
+      if (response.ok) {
+        const data = await response.json()
+        setBillingStatus(data)
       }
     } catch (error) {
-      console.error('Error creating checkout session:', error)
-      alert('Error creating checkout session. Please try again.')
-    } finally {
-      setIsUpgrading(false)
+      console.error('Error fetching billing status:', error)
     }
   }
 
@@ -480,32 +251,54 @@ function SettingsContent() {
     setIsCancelling(true)
     try {
       const response = await fetch('/api/billing/cancel', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        method: 'POST'
       })
 
+      const data = await response.json()
+
       if (response.ok) {
-        const data = await response.json()
         setShowCancelModal(false)
-        setShowSuccessMessage(true)
-        setTimeout(() => setShowSuccessMessage(false), 5000)
-        // Refresh the page to update subscription context
-        window.location.reload()
+        // Redirect to home page immediately after successful cancellation
+        // Don't wait for status refresh to avoid any errors
+        router.push('/')
       } else {
-        const errorData = await response.json()
-        console.error('Failed to cancel subscription:', errorData.error)
-        alert('Failed to cancel subscription. Please try again.')
+        alert(data.error || 'Failed to cancel subscription')
       }
     } catch (error) {
       console.error('Error cancelling subscription:', error)
-      alert('Error cancelling subscription. Please try again.')
+      alert('Failed to cancel subscription. Please try again.')
     } finally {
       setIsCancelling(false)
     }
   }
 
+  const handleRestartSubscription = async () => {
+    setIsRestarting(true)
+    try {
+      const response = await fetch('/api/billing/restart', {
+        method: 'POST'
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Always redirect to checkout to restart subscription
+        if (data.requiresCheckout) {
+          router.push('/checkout')
+        } else {
+          // Fallback: still redirect to checkout
+          router.push('/checkout')
+        }
+      } else {
+        alert(data.error || 'Failed to restart subscription')
+      }
+    } catch (error) {
+      console.error('Error restarting subscription:', error)
+      alert('Failed to restart subscription. Please try again.')
+    } finally {
+      setIsRestarting(false)
+    }
+  }
 
   const handleSave = async (section: string) => {
     try {
@@ -964,43 +757,24 @@ function SettingsContent() {
               {/* Billing Tab */}
               {activeTab === 'billing' && (
                 <div className="space-y-8">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-2">Billing & Subscription</h3>
-                      <p className="text-gray-600">Manage your subscription and billing information.</p>
-                    </div>
-                    <button
-                      onClick={handleRefreshBilling}
-                      disabled={isRefreshing}
-                      className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 disabled:opacity-50 transition-colors"
-                    >
-                      <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-                      Refresh
-                    </button>
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Billing & Subscription</h3>
+                    <p className="text-gray-600">Manage your subscription and billing information.</p>
                   </div>
 
-                  {/* Payment Success Banner */}
-                  {(paymentSuccess === 'true' || searchParams.get('payment_success') === 'true') && (
+                  {/* Success Message */}
+                  {showSuccessMessage && (
                     <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg">
                       <div className="flex items-start">
                         <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
                         <div className="flex-1">
-                          <h4 className="text-sm font-semibold text-green-800 mb-1">Payment Successful!</h4>
+                          <h4 className="text-sm font-semibold text-green-800 mb-1">Success!</h4>
                           <p className="text-sm text-green-700">
-                            Your subscription has been activated. You now have full access to all features.
-                            {subscriptionStatus === 'active' && (
-                              <span className="block mt-1 font-medium">✓ Pro Plan Active</span>
-                            )}
+                            Your subscription has been updated successfully.
                           </p>
                         </div>
                         <button
-                          onClick={() => {
-                            setPaymentSuccess(null)
-                            const url = new URL(window.location.href)
-                            url.searchParams.delete('payment_success')
-                            window.history.replaceState({}, '', url.toString())
-                            try { localStorage.removeItem('payment_success') } catch {}
-                          }}
+                          onClick={() => setShowSuccessMessage(false)}
                           className="text-green-600 hover:text-green-800 ml-4"
                         >
                           <XCircle className="h-5 w-5" />
@@ -1009,130 +783,54 @@ function SettingsContent() {
                     </div>
                   )}
 
-                {/* Current Plan Status */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
-                        <Star className="w-6 h-6 text-white" />
+                  {/* Current Subscription Status */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                          <Star className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="text-xl font-semibold text-gray-900">
+                            {billingStatus?.subscription_status === 'active' ? 'Pro Plan Active' : 
+                             billingStatus?.subscription_status === 'cancelled' ? 'Plan Cancelled' :
+                             billingStatus?.subscription_status === 'trial' ? 'Free Trial' : 
+                             billingStatus?.subscription_status === 'pending' ? 'Pending Activation' :
+                             'Subscription Status'}
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            {billingStatus?.subscription_status === 'active' ? 'Full access to all features' :
+                             billingStatus?.subscription_status === 'cancelled' ? 'Limited access - subscription cancelled' :
+                             billingStatus?.subscription_status === 'trial' ? 
+                               (billingStatus?.trial_ends_at ? 
+                                 `Trial ends on ${new Date(billingStatus.trial_ends_at).toLocaleDateString()}` : 
+                                 '7-day free trial active') :
+                             billingStatus?.subscription_status === 'pending' ? 'Please complete checkout to activate your subscription' :
+                             'Loading subscription status...'}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="text-xl font-semibold text-gray-900">
-                          {subscriptionStatus === 'active' ? 'Pro Plan Active' : 
-                           subscriptionStatus === 'cancelled' ? 'Plan Cancelled' :
-                           accessLevel === 'full' ? 'Free Trial' : 'Free Plan'}
-                        </h4>
-                        <p className="text-sm text-gray-600">
-                          {subscriptionStatus === 'active' ? 'Full access to all features' :
-                           subscriptionStatus === 'cancelled' ? 'Limited access - subscription cancelled' :
-                           accessLevel === 'full' 
-                            ? (trialTimeRemaining === 'Trial expired' ? 'Trial has ended - upgrade to continue' : `Trial ends in ${trialTimeRemaining}`)
-                            : 'Limited features available'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      {subscriptionStatus === 'active' && (
-                        <div className="text-sm text-gray-600">
-                          <p className="font-medium text-gray-900">$49/month</p>
-                          <p>Next billing: {billingInfo.nextBillingDate || 'N/A'}</p>
-                          {billingInfo.isRecurring && (
-                            <p className="text-xs text-green-600 font-medium">✓ Recurring subscription</p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Billing Information - Only show for active subscribers */}
-                {subscriptionStatus === 'active' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Payment Method */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-lg font-medium text-gray-900">Payment Method</h4>
-                        <CreditCard className="w-5 h-5 text-gray-400" />
-                      </div>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600">Card</span>
-                          <span className="text-sm font-medium text-gray-900">{billingInfo.paymentMethod}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600">Amount</span>
-                          <span className="text-sm font-medium text-gray-900">{billingInfo.amount}/{billingInfo.billingCycle || 'month'}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600">Billing cycle</span>
-                          <span className="text-sm font-medium text-gray-900">{billingInfo.billingCycle || 'Monthly'}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600">Next billing</span>
-                          <span className="text-sm font-medium text-gray-900">{billingInfo.nextBillingDate || 'N/A'}</span>
-                        </div>
-                        {billingInfo.isRecurring && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">Status</span>
-                            <span className="text-sm font-medium text-green-600">✓ Auto-renewal enabled</span>
+                      <div className="text-right">
+                        {billingStatus?.subscription_status === 'active' && (
+                          <div className="text-sm text-gray-600">
+                            <p className="font-medium text-gray-900">$49/month</p>
+                            {billingStatus?.subscription_ends_at && (
+                              <p>Next billing: {new Date(billingStatus.subscription_ends_at).toLocaleDateString()}</p>
+                            )}
                           </div>
                         )}
                       </div>
-                      <div className="mt-4 pt-4 border-t border-gray-200">
-                        <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
-                          Update Payment Method
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Billing History */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-lg font-medium text-gray-900">Billing History</h4>
-                        <Download className="w-5 h-5 text-gray-400" />
-                      </div>
-                      <div className="space-y-3">
-                        {billingInfo.invoiceHistory.length > 0 ? (
-                          billingInfo.invoiceHistory.slice(0, 3).map((invoice: any, index: number) => (
-                            <div key={index} className="flex items-center justify-between py-2">
-                              <div>
-                                <p className="text-sm font-medium text-gray-900">{invoice.date}</p>
-                                <p className="text-xs text-gray-500">{invoice.description}</p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-sm font-medium text-gray-900">{invoice.amount}</p>
-                                <button className="text-xs text-blue-600 hover:text-blue-800">Download</button>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="text-center py-4">
-                            <Calendar className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                            <p className="text-sm text-gray-500">No billing history yet</p>
-                          </div>
-                        )}
-                      </div>
-                      {billingInfo.invoiceHistory.length > 3 && (
-                        <div className="mt-4 pt-4 border-t border-gray-200">
-                          <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
-                            View All Invoices
-                          </button>
-                        </div>
-                      )}
                     </div>
                   </div>
-                )}
 
-                {/* Subscription Management */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Upgrade/Downgrade */}
+                  {/* Subscription Management */}
                   <div className="bg-white border border-gray-200 rounded-lg p-6">
                     <div className="flex items-center justify-between mb-4">
-                      <h4 className="text-lg font-medium text-gray-900">Plan Management</h4>
+                      <h4 className="text-lg font-medium text-gray-900">Subscription Management</h4>
                       <Zap className="w-5 h-5 text-gray-400" />
                     </div>
                     
-                    {subscriptionStatus === 'active' ? (
+                    {billingStatus?.subscription_status === 'active' ? (
                       <div className="space-y-4">
                         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                           <div className="flex items-center">
@@ -1149,7 +847,7 @@ function SettingsContent() {
                           Cancel Subscription
                         </button>
                       </div>
-                    ) : subscriptionStatus === 'cancelled' ? (
+                    ) : billingStatus?.subscription_status === 'cancelled' ? (
                       <div className="space-y-4">
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                           <div className="flex items-center">
@@ -1159,11 +857,11 @@ function SettingsContent() {
                           <p className="text-xs text-yellow-700 mt-1">Limited access to features</p>
                         </div>
                         <button
-                          onClick={handleUpgrade}
-                          disabled={isUpgrading}
+                          onClick={handleRestartSubscription}
+                          disabled={isRestarting}
                           className="w-full inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {isUpgrading ? (
+                          {isRestarting ? (
                             <>
                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                               Processing...
@@ -1171,112 +869,61 @@ function SettingsContent() {
                           ) : (
                             <>
                               <Star className="w-4 h-4 mr-2" />
-                              Resubscribe
+                              Restart Subscription
                             </>
                           )}
                         </button>
                       </div>
-                    ) : (
+                    ) : billingStatus?.subscription_status === 'trial' ? (
                       <div className="space-y-4">
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                           <div className="flex items-center">
                             <Clock className="w-5 h-5 text-blue-500 mr-2" />
-                            <span className="text-sm font-medium text-blue-800">
-                              {accessLevel === 'full' ? 'Free Trial' : 'Free Plan'}
-                            </span>
+                            <span className="text-sm font-medium text-blue-800">Free Trial Active</span>
                           </div>
                           <p className="text-xs text-blue-700 mt-1">
-                            {accessLevel === 'full' 
-                              ? (trialTimeRemaining === 'Trial expired' ? 'Trial has ended - upgrade to continue' : `Trial ends in ${trialTimeRemaining}`)
-                              : 'Limited features available'
-                            }
+                            {billingStatus?.trial_ends_at ? 
+                              `Trial ends on ${new Date(billingStatus.trial_ends_at).toLocaleDateString()}` : 
+                              '7-day free trial active'}
                           </p>
                         </div>
+                        <p className="text-sm text-gray-600">
+                          After your trial ends, you'll be automatically charged $49/month to continue using the app.
+                        </p>
                         <button
-                          onClick={handleUpgrade}
-                          disabled={isUpgrading}
-                          className="w-full inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={() => setShowCancelModal(true)}
+                          className="w-full inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500"
                         >
-                          {isUpgrading ? (
-                            <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                              Processing...
-                            </>
-                          ) : (
-                            <>
-                              <Star className="w-4 h-4 mr-2" />
-                              Upgrade to Pro
-                            </>
-                          )}
+                          <XCircle className="w-4 h-4 mr-2" />
+                          Cancel Trial
                         </button>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                        <p className="text-sm text-gray-600">Loading subscription status...</p>
                       </div>
                     )}
                   </div>
 
-                  {/* Refund Policy */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h4 className="text-lg font-medium text-gray-900">Refund Policy</h4>
-                      <Shield className="w-5 h-5 text-gray-400" />
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex items-start">
-                        <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">14-Day Money Back Guarantee</p>
-                          <p className="text-xs text-gray-600">Full refund within 14 days, no questions asked</p>
-                        </div>
+                  {/* Support Section */}
+                  <div className="bg-gray-50 rounded-lg p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-lg font-medium text-gray-900">Need Help?</h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Have questions about billing or need assistance with your subscription?
+                        </p>
                       </div>
-                      <div className="flex items-start">
-                        <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">Cancel Anytime</p>
-                          <p className="text-xs text-gray-600">No long-term contracts or commitments</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start">
-                        <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">Instant Access</p>
-                          <p className="text-xs text-gray-600">Resubscribe anytime to regain full access</p>
-                        </div>
+                      <div className="flex space-x-3">
+                        <a 
+                          href="mailto:support@truleado.com"
+                          className="inline-flex items-center rounded-md bg-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
+                        >
+                          Contact Support
+                        </a>
                       </div>
                     </div>
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <a 
-                        href="/refund" 
-                        className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                      >
-                        View Full Refund Policy →
-                      </a>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Support Section */}
-                <div className="bg-gray-50 rounded-lg p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-lg font-medium text-gray-900">Need Help?</h4>
-                      <p className="text-sm text-gray-600 mt-1">
-                        Have questions about billing or need assistance with your subscription?
-                      </p>
-                    </div>
-                    <div className="flex space-x-3">
-                      <a 
-                        href="mailto:support@truleado.com"
-                        className="inline-flex items-center rounded-md bg-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
-                      >
-                        Contact Support
-                      </a>
-                      <a 
-                        href="/support"
-                        className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
-                      >
-                        Help Center
-                      </a>
-                    </div>
-                  </div>
                   </div>
                 </div>
               )}
@@ -1296,17 +943,29 @@ function SettingsContent() {
             </div>
             
             <p className="text-sm text-gray-600 mb-6">
-              Are you sure you want to cancel your subscription? This action will:
+              {billingStatus?.subscription_status === 'trial' 
+                ? 'Are you sure you want to cancel your free trial? This action will:'
+                : 'Are you sure you want to cancel your subscription? This action will:'}
             </p>
             
             <ul className="text-sm text-gray-600 mb-6 space-y-2">
               <li className="flex items-center">
                 <XCircle className="w-4 h-4 text-red-500 mr-2" />
-                Immediately revoke access to all premium features
+                {billingStatus?.subscription_status === 'trial' 
+                  ? 'Immediately end your trial period'
+                  : 'Immediately revoke access to all premium features'}
               </li>
               <li className="flex items-center">
                 <XCircle className="w-4 h-4 text-red-500 mr-2" />
-                Stop all future billing
+                {billingStatus?.subscription_status === 'trial' 
+                  ? 'Prevent automatic charge after trial'
+                  : 'Stop all future billing'}
+              </li>
+              <li className="flex items-center">
+                <XCircle className="w-4 h-4 text-red-500 mr-2" />
+                {billingStatus?.subscription_status === 'trial' 
+                  ? 'Revoke access to premium features'
+                  : 'Cancel your subscription in Paddle'}
               </li>
               <li className="flex items-center">
                 <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
@@ -1333,6 +992,7 @@ function SettingsContent() {
           </div>
         </div>
       )}
+
     </AppLayout>
   )
 }

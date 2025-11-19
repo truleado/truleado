@@ -146,7 +146,7 @@ export default function RedditLeadsPage() {
           <div className="mb-8">
             <div className="flex items-center mb-2">
               <Users className="h-8 w-8 text-blue-600 mr-3" />
-              <h1 className="text-3xl font-bold text-gray-900">Reddit Leads</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Saved Leads</h1>
             </div>
             <p className="text-gray-600 text-lg">Saved Reddit opportunities for strategic pitching</p>
           </div>
@@ -159,7 +159,7 @@ export default function RedditLeadsPage() {
                   <MessageSquare className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Leads</p>
+                    <p className="text-sm font-medium text-gray-600">Total Saved</p>
                   <p className="text-2xl font-bold text-gray-900">{leads.length}</p>
                 </div>
               </div>

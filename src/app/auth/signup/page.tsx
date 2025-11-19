@@ -59,8 +59,8 @@ export default function SignUp() {
         // Don't fail the signup if email fails
       }
       
-      // Redirect immediately to dashboard
-      router.push('/dashboard')
+      // Redirect to checkout to collect payment information
+      router.push('/checkout')
     }
     
     setLoading(false)

@@ -1,36 +1,22 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Crown, Clock, CheckCircle, ArrowRight, LogOut } from 'lucide-react'
+import { X, Crown, Clock, CheckCircle, LogOut } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 
 interface UpgradeRequiredModalProps {
   isOpen: boolean
   onClose: () => void
-  onUpgrade: () => void
   trialTimeRemaining?: string
-  isLoading?: boolean
 }
 
 export function UpgradeRequiredModal({ 
   isOpen, 
   onClose, 
-  onUpgrade, 
-  trialTimeRemaining = 'Trial expired',
-  isLoading = false 
+  trialTimeRemaining = 'Trial expired'
 }: UpgradeRequiredModalProps) {
-  const [isUpgrading, setIsUpgrading] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const { signOut } = useAuth()
-
-  const handleUpgrade = async () => {
-    setIsUpgrading(true)
-    try {
-      await onUpgrade()
-    } finally {
-      setIsUpgrading(false)
-    }
-  }
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
@@ -94,15 +80,15 @@ export function UpgradeRequiredModal({
               </h3>
               <p className="text-gray-600">
                 {isTrialExpired 
-                  ? 'Your 7-day free trial has ended. Upgrade now to continue using all Truleado features.'
-                  : `Your free trial ends ${trialTimeRemaining}. Upgrade now to continue enjoying all features.`
+                  ? 'Your 7-day free trial has ended.'
+                  : `Your free trial ends ${trialTimeRemaining}.`
                 }
               </p>
             </div>
 
             {/* Features List */}
             <div className="space-y-3">
-              <h4 className="font-medium text-gray-900">Continue enjoying:</h4>
+              <h4 className="font-medium text-gray-900">Features:</h4>
               <div className="space-y-2">
                 {[
                   'Unlimited Reddit lead discovery',
@@ -117,15 +103,6 @@ export function UpgradeRequiredModal({
                     <span className="text-sm text-gray-700">{feature}</span>
                   </div>
                 ))}
-              </div>
-            </div>
-
-            {/* Pricing Info */}
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
-              <div className="text-center">
-                <p className="text-sm font-medium text-gray-900 mb-1">Starting at just</p>
-                <p className="text-2xl font-bold text-blue-600">$29/month</p>
-                <p className="text-xs text-gray-600 mt-1">Cancel anytime • No long-term contracts</p>
               </div>
             </div>
           </div>
@@ -150,14 +127,6 @@ export function UpgradeRequiredModal({
                 <span>{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
               </button>
             )}
-            <button
-              onClick={handleUpgrade}
-              disabled={isUpgrading || isLoading}
-              className={`${isTrialExpired ? 'flex-1' : 'flex-1'} px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2`}
-            >
-              <span>{isUpgrading ? 'Processing...' : 'Upgrade Now'}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
           </div>
         </div>
       </div>

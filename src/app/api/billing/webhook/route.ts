@@ -1,517 +1,263 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
 import { paddleAPI, updateUserSubscription } from '@/lib/paddle-config'
-import { trialManager } from '@/lib/trial-manager'
-import { sendUpgradeThankYouEmail } from '@/lib/upgrade-email-service'
-
-export async function GET() {
-  return NextResponse.json({ 
-    message: 'Paddle webhook endpoint is active',
-    methods: ['POST'],
-    status: 'ready'
-  })
-}
+import { createClient } from '@/lib/supabase-server'
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('Paddle webhook received')
-    
     const body = await request.text()
     const signature = request.headers.get('paddle-signature') || ''
-    
-    console.log('Webhook signature:', signature)
-    console.log('Webhook body length:', body.length)
-    
-    // Verify webhook signature (skip in development/testing)
+
+    // Verify webhook signature
     if (process.env.NODE_ENV === 'production' && !paddleAPI.verifyWebhookSignature(body, signature)) {
-      console.error('Invalid webhook signature')
+      console.error('❌ Invalid webhook signature')
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
 
     const event = JSON.parse(body)
-    console.log('Webhook event:', event.event_type, event.event_id)
-    console.log('Event data:', JSON.stringify(event.data, null, 2))
+    console.log('📥 Paddle webhook received:', event.event_type)
 
     const supabase = await createClient()
 
+    // Handle different event types
     switch (event.event_type) {
-      case 'checkout.session.completed': {
-        const session = event.data
-        console.log('Checkout session completed:', session.id)
-        
-        // Get user email from session
-        const userEmail = session.customer_email
-        const customData = session.custom_data || {}
-        const userId = customData.user_id
+      case 'checkout.completed': {
+        const checkout = event.data
+        console.log('✅ Checkout completed:', checkout.id)
 
-        console.log('Checkout session details:', {
-          sessionId: session.id,
-          customerEmail: userEmail,
-          customData,
-          userId
-        })
+        // Find user by email or customer ID
+        const customerEmail = checkout.customer?.email || checkout.customer_email
+        const subscriptionId = checkout.subscription_id
 
-        // Send upgrade thank you email immediately (don't wait for database lookup)
-        try {
-          if (userEmail) {
-            console.log('Sending upgrade thank you email to:', userEmail)
-            const emailResult = await sendUpgradeThankYouEmail(userEmail, 'Valued Customer', 'Pro')
-            if (emailResult.success) {
-              console.log('✅ Upgrade thank you email sent successfully to:', userEmail)
-            } else {
-              console.error('❌ Failed to send upgrade email:', emailResult.error)
-            }
-          } else {
-            console.warn('No customer email found in checkout session')
-          }
-        } catch (emailError) {
-          console.error('Failed to send upgrade email:', emailError)
-          // Don't fail the webhook if email fails
-        }
+        if (customerEmail && subscriptionId) {
+          // Find user by email
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id, email')
+            .eq('email', customerEmail)
+            .single()
 
-        // Try to update user subscription - try multiple methods to find user
-        let profileToUpdate = null
-        
-        // Method 1: Use userId from custom_data if available
-        if (userId) {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', userId)
-            .single()
-          
-          if (profile && !profileError) {
-            profileToUpdate = profile
-          }
-        }
-        
-        // Method 2: If not found, try to find by email
-        if (!profileToUpdate && userEmail) {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('email', userEmail.toLowerCase())
-            .single()
-          
-          if (profile && !profileError) {
-            profileToUpdate = profile
-            console.log('Found user by email:', userEmail)
-          }
-        }
-        
-        // Method 3: If still not found, try by paddle_customer_id
-        if (!profileToUpdate && session.customer_id) {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('paddle_customer_id', session.customer_id)
-            .single()
-          
-          if (profile && !profileError) {
-            profileToUpdate = profile
-            console.log('Found user by paddle_customer_id:', session.customer_id)
-          }
-        }
-        
-        // Update subscription if we found a user
-        if (profileToUpdate) {
-          try {
-            const nextBillingDate = session.next_billed_at || session.details?.next_billed_at || session.items?.[0]?.price?.billing_cycle?.interval_unit === 'month' 
-              ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-              : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+          if (profile) {
+            // Get subscription details from Paddle
+            const subscription = await paddleAPI.getSubscription(subscriptionId)
             
-            await updateUserSubscription(profileToUpdate.id, {
-              subscription_status: 'active',
-              paddle_customer_id: session.customer_id || profileToUpdate.paddle_customer_id,
-              paddle_subscription_id: session.subscription_id || profileToUpdate.paddle_subscription_id,
-              subscription_ends_at: nextBillingDate
+            // Determine status - if trialing, set to trial, otherwise active
+            const status = subscription.status === 'trialing' || subscription.status === 'active' 
+              ? (subscription.status === 'trialing' ? 'trial' : 'active')
+              : 'trial' // Default to trial if status is unclear
+            
+            // Calculate trial end date (7 days from now if not provided)
+            let trialEndsAt = subscription.trialEndsAt
+            if (!trialEndsAt && status === 'trial') {
+              const trialEnd = new Date()
+              trialEnd.setDate(trialEnd.getDate() + 7)
+              trialEndsAt = trialEnd.toISOString()
+            }
+            
+            await updateUserSubscription(profile.id, {
+              subscription_status: status,
+              paddle_subscription_id: subscriptionId,
+              paddle_customer_id: checkout.customer_id || subscription.customerId,
+              trial_ends_at: trialEndsAt || null,
+              subscription_ends_at: subscription.nextBilledAt || null
             })
-
-            // Log subscription change
-            await trialManager.logSubscriptionChange(
-              profileToUpdate.id,
-              'active',
-              profileToUpdate.subscription_status || 'trial',
-              'subscription_activated',
-              `webhook_${event.event_id}`,
-              { 
-                session_id: session.id,
-                customer_id: session.customer_id,
-                amount: session.details?.totals?.total || session.amount
-              }
-            )
-
-            console.log('✅ Subscription activated for user:', profileToUpdate.id, profileToUpdate.email)
-          } catch (dbError) {
-            console.error('❌ Failed to update user subscription:', dbError)
-            // Don't fail the webhook if database update fails
+            console.log(`✅ User subscription created with ${status} status (7-day trial, then $49/month):`, profile.id)
           }
-        } else {
-          console.warn('⚠️ No user found for checkout session:', {
-            userId,
-            userEmail,
-            customerId: session.customer_id
-          })
         }
-
         break
       }
 
       case 'subscription.created': {
         const subscription = event.data
-        console.log('Subscription created:', subscription.id)
-        
-        // Send upgrade thank you email immediately if we have customer email
-        try {
-          if (subscription.customer_email) {
-            console.log('Sending upgrade email for subscription.created to:', subscription.customer_email)
-            const emailResult = await sendUpgradeThankYouEmail(subscription.customer_email, 'Valued Customer', 'Pro')
-            if (emailResult.success) {
-              console.log('✅ Upgrade thank you email sent successfully for subscription:', subscription.customer_email)
-            } else {
-              console.error('❌ Failed to send upgrade email for subscription:', emailResult.error)
-            }
-          }
-        } catch (emailError) {
-          console.error('Failed to send upgrade email for subscription:', emailError)
-        }
+        console.log('✅ Subscription created:', subscription.id)
 
-        // Try to find and update user - try multiple methods
-        let profileToUpdate = null
+        // Find user by subscription ID or customer email
+        let profile = null
         
-        // Method 1: Find by customer ID
-        if (subscription.customer_id) {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('paddle_customer_id', subscription.customer_id)
-            .single()
+        // Try to find by subscription ID first
+        const { data: profileBySub } = await supabase
+          .from('profiles')
+          .select('id, email')
+          .eq('paddle_subscription_id', subscription.id)
+          .single()
+        
+        profile = profileBySub
 
-          if (profile && !profileError) {
-            profileToUpdate = profile
-          }
-        }
-        
-        // Method 2: If not found, try by email
-        if (!profileToUpdate && subscription.customer_email) {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('email', subscription.customer_email.toLowerCase())
-            .single()
-
-          if (profile && !profileError) {
-            profileToUpdate = profile
-            console.log('Found user by email for subscription:', subscription.customer_email)
-          }
-        }
-        
-        // Update subscription if we found a user
-        if (profileToUpdate) {
+        // If not found, try to find by customer email
+        if (!profile && subscription.customer_id) {
+          // Get customer from Paddle to get email
           try {
-            // Update user with subscription ID
-            await updateUserSubscription(profileToUpdate.id, {
-              subscription_status: 'active',
-              paddle_customer_id: subscription.customer_id || profileToUpdate.paddle_customer_id,
-              paddle_subscription_id: subscription.id,
-              subscription_ends_at: subscription.next_billed_at 
-                ? new Date(subscription.next_billed_at).toISOString()
-                : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-            })
-            console.log('✅ Subscription created for user:', profileToUpdate.id, profileToUpdate.email)
-          } catch (dbError) {
-            console.error('❌ Failed to update user subscription:', dbError)
+            const customer = await paddleAPI.getCustomer(subscription.customer_id)
+            if (customer?.email) {
+              const { data: profileByEmail } = await supabase
+                .from('profiles')
+                .select('id, email')
+                .eq('email', customer.email)
+                .single()
+              profile = profileByEmail
+            }
+          } catch (err) {
+            console.error('Error fetching customer:', err)
           }
-        } else {
-          console.warn('⚠️ No user found for subscription:', {
-            customerId: subscription.customer_id,
-            customerEmail: subscription.customer_email
-          })
         }
 
+        if (profile) {
+          // Determine if subscription is in trial
+          const isTrialing = subscription.status === 'trialing' || subscription.status === 'active'
+          const status = isTrialing ? 'trial' : 'active'
+          
+          // Calculate trial end (7 days from creation if not provided)
+          let trialEndsAt = subscription.trial_end || null
+          if (!trialEndsAt && status === 'trial') {
+            const trialEnd = new Date()
+            trialEnd.setDate(trialEnd.getDate() + 7)
+            trialEndsAt = trialEnd.toISOString()
+          }
+          
+          await updateUserSubscription(profile.id, {
+            subscription_status: status,
+            paddle_subscription_id: subscription.id,
+            paddle_customer_id: subscription.customer_id || null,
+            subscription_ends_at: subscription.next_billed_at || null,
+            trial_ends_at: trialEndsAt
+          })
+          console.log(`✅ Updated user subscription status to ${status} (7-day trial, then $49/month)`)
+        }
         break
       }
 
       case 'subscription.updated': {
         const subscription = event.data
-        console.log('Subscription updated:', subscription.id)
-        
-        // Find user by subscription ID
-        const { data: profile, error: profileError } = await supabase
+        console.log('🔄 Subscription updated:', subscription.id)
+
+        const { data: profile } = await supabase
           .from('profiles')
-          .select('*')
+          .select('id')
           .eq('paddle_subscription_id', subscription.id)
           .single()
 
-        if (profileError || !profile) {
-          console.error('Error finding user profile:', profileError)
-          return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        if (profile) {
+          const status = subscription.status === 'active' ? 'active' : 
+                       subscription.status === 'trialing' ? 'trial' :
+                       subscription.status === 'past_due' ? 'past_due' :
+                       subscription.status === 'canceled' ? 'cancelled' : 'expired'
+
+          await updateUserSubscription(profile.id, {
+            subscription_status: status as any,
+            subscription_ends_at: subscription.next_billed_at || null,
+            trial_ends_at: subscription.trial_end || null
+          })
+          console.log('✅ Updated subscription status:', status)
         }
+        break
+      }
 
-        // Update subscription status based on subscription status
-        const subscriptionStatus = subscription.status === 'active' ? 'active' : 'cancelled'
-        
-        await updateUserSubscription(profile.id, {
-          subscription_status: subscriptionStatus,
-          subscription_ends_at: subscription.next_billed_at 
-            ? new Date(subscription.next_billed_at).toISOString()
-            : undefined
-        })
+      case 'subscription.payment_succeeded': {
+        const transaction = event.data
+        const subscriptionId = transaction.subscription_id
 
-        // Log subscription change
-        await trialManager.logSubscriptionChange(
-          profile.id,
-          subscriptionStatus,
-          'active',
-          'subscription_updated',
-          `webhook_${event.event_id}`,
-          { 
-            subscription_id: subscription.id,
-            status: subscription.status
-          }
-        )
+        console.log('💳 Payment succeeded for subscription:', subscriptionId)
 
-        console.log('Subscription updated for user:', profile.id, 'Status:', subscriptionStatus)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('paddle_subscription_id', subscriptionId)
+          .single()
+
+        if (profile) {
+          // Get subscription details to get next billing date
+          const subscription = await paddleAPI.getSubscription(subscriptionId)
+          
+          await updateUserSubscription(profile.id, {
+            subscription_status: 'active',
+            subscription_ends_at: subscription.nextBilledAt || null
+          })
+          console.log('✅ User subscription activated:', profile.id)
+        }
+        break
+      }
+
+      case 'subscription.payment_failed': {
+        const transaction = event.data
+        const subscriptionId = transaction.subscription_id
+
+        console.log('❌ Payment failed for subscription:', subscriptionId)
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('paddle_subscription_id', subscriptionId)
+          .single()
+
+        if (profile) {
+          await updateUserSubscription(profile.id, {
+            subscription_status: 'past_due'
+          })
+          console.log('⚠️ User subscription set to past_due:', profile.id)
+        }
         break
       }
 
       case 'subscription.canceled': {
         const subscription = event.data
-        console.log('Subscription cancelled:', subscription.id)
-        
-        // Find user by subscription ID
-        const { data: profile, error: profileError } = await supabase
+        console.log('🚫 Subscription cancelled:', subscription.id)
+
+        const { data: profile } = await supabase
           .from('profiles')
-          .select('*')
+          .select('id')
           .eq('paddle_subscription_id', subscription.id)
           .single()
 
-        if (profileError || !profile) {
-          console.error('Error finding user profile:', profileError)
-          return NextResponse.json({ error: 'User not found' }, { status: 404 })
-        }
-
-        // Update subscription status to cancelled
-        await updateUserSubscription(profile.id, {
-          subscription_status: 'cancelled'
-        })
-
-        // Log subscription change
-        await trialManager.logSubscriptionChange(
-          profile.id,
-          'cancelled',
-          'active',
-          'subscription_cancelled',
-          `webhook_${event.event_id}`,
-          { 
-            subscription_id: subscription.id
-          }
-        )
-
-        console.log('Subscription cancelled for user:', profile.id)
-        break
-      }
-
-      case 'transaction.completed': {
-        const transaction = event.data
-        console.log('Payment succeeded:', transaction.id)
-        
-        // Send upgrade thank you email immediately if we have customer email
-        try {
-          if (transaction.customer_email) {
-            console.log('Sending upgrade email for transaction.completed to:', transaction.customer_email)
-            const emailResult = await sendUpgradeThankYouEmail(transaction.customer_email, 'Valued Customer', 'Pro')
-            if (emailResult.success) {
-              console.log('✅ Upgrade thank you email sent successfully for transaction:', transaction.customer_email)
-            } else {
-              console.error('❌ Failed to send upgrade email for transaction:', emailResult.error)
-            }
-          }
-        } catch (emailError) {
-          console.error('Failed to send upgrade email for transaction:', emailError)
-        }
-
-        // Try to find and update user - try multiple methods
-        let profileToUpdate = null
-        
-        // Method 1: Find by customer ID
-        if (transaction.customer_id) {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('paddle_customer_id', transaction.customer_id)
-            .single()
-
-          if (profile && !profileError) {
-            profileToUpdate = profile
-          }
-        }
-        
-        // Method 2: If not found, try by email
-        if (!profileToUpdate && transaction.customer_email) {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('email', transaction.customer_email.toLowerCase())
-            .single()
-
-          if (profile && !profileError) {
-            profileToUpdate = profile
-            console.log('Found user by email for transaction:', transaction.customer_email)
-          }
-        }
-        
-        // Update subscription if we found a user
-        if (profileToUpdate) {
-          try {
-            // Ensure subscription is active - use Paddle's actual billing cycle
-            const nextBillingDate = transaction.next_billed_at || transaction.details?.next_billed_at || 
-              (transaction.subscription_id ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null)
-            
-            await updateUserSubscription(profileToUpdate.id, {
-              subscription_status: 'active',
-              paddle_customer_id: transaction.customer_id || profileToUpdate.paddle_customer_id,
-              paddle_subscription_id: transaction.subscription_id || profileToUpdate.paddle_subscription_id,
-              subscription_ends_at: nextBillingDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-            })
-            
-            console.log('✅ Payment processed for user:', profileToUpdate.id, profileToUpdate.email)
-          } catch (dbError) {
-            console.error('❌ Failed to update user subscription:', dbError)
-          }
-        } else {
-          console.warn('⚠️ No user found for transaction:', {
-            customerId: transaction.customer_id,
-            customerEmail: transaction.customer_email
+        if (profile) {
+          await updateUserSubscription(profile.id, {
+            subscription_status: 'cancelled'
           })
+          console.log('✅ User subscription cancelled:', profile.id)
         }
-
         break
       }
 
-      case 'transaction.payment_failed': {
-        const transaction = event.data
-        console.log('Payment failed:', transaction.id)
-        
-        // Find user by customer ID
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('paddle_customer_id', transaction.customer_id)
-          .single()
-
-        if (profileError || !profile) {
-          console.error('Error finding user profile:', profileError)
-          return NextResponse.json({ error: 'User not found' }, { status: 404 })
-        }
-
-        // Log payment failure
-        await trialManager.logSubscriptionChange(
-          profile.id,
-          'payment_failed',
-          'active',
-          'payment_failed',
-          `webhook_${event.event_id}`,
-          { 
-            transaction_id: transaction.id,
-            amount: transaction.details?.totals?.total
-          }
-        )
-
-        console.log('Payment failed for user:', profile.id)
-        break
-      }
-
-      case 'subscription.payment_succeeded': {
+      case 'subscription.trial_ended': {
         const subscription = event.data
-        console.log('Recurring payment succeeded:', subscription.id)
-        
-        // Find user by subscription ID
-        const { data: profile, error: profileError } = await supabase
+        console.log('⏰ Trial ended for subscription:', subscription.id)
+
+        const { data: profile } = await supabase
           .from('profiles')
-          .select('*')
+          .select('id')
           .eq('paddle_subscription_id', subscription.id)
           .single()
 
-        if (profileError || !profile) {
-          console.error('Error finding user profile:', profileError)
-          return NextResponse.json({ error: 'User not found' }, { status: 404 })
-        }
-
-        // Update subscription with new billing date
-        await updateUserSubscription(profile.id, {
-          subscription_status: 'active',
-          subscription_ends_at: subscription.next_billed_at 
-            ? new Date(subscription.next_billed_at).toISOString()
-            : undefined
-        })
-
-        // Log successful recurring payment
-        await trialManager.logSubscriptionChange(
-          profile.id,
-          'active',
-          'active',
-          'recurring_payment_succeeded',
-          `webhook_${event.event_id}`,
-          { 
-            subscription_id: subscription.id,
-            next_billed_at: subscription.next_billed_at
+        if (profile) {
+          // If payment hasn't succeeded yet, mark as expired
+          if (subscription.status !== 'active') {
+            await updateUserSubscription(profile.id, {
+              subscription_status: 'expired'
+            })
+            console.log('⚠️ Trial ended, subscription expired:', profile.id)
           }
-        )
-
-        console.log('Recurring payment processed for user:', profile.id)
-        break
-      }
-
-      case 'subscription.payment_failed': {
-        const subscription = event.data
-        console.log('Recurring payment failed:', subscription.id)
-        
-        // Find user by subscription ID
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('paddle_subscription_id', subscription.id)
-          .single()
-
-        if (profileError || !profile) {
-          console.error('Error finding user profile:', profileError)
-          return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
-
-        // Update subscription status to past_due (Paddle will retry)
-        await updateUserSubscription(profile.id, {
-          subscription_status: 'past_due'
-        })
-
-        // Log failed recurring payment
-        await trialManager.logSubscriptionChange(
-          profile.id,
-          'past_due',
-          'active',
-          'recurring_payment_failed',
-          `webhook_${event.event_id}`,
-          { 
-            subscription_id: subscription.id,
-            next_retry_at: subscription.next_billed_at
-          }
-        )
-
-        console.log('Recurring payment failed for user:', profile.id)
         break
       }
 
       default:
-        console.log('Unhandled webhook event type:', event.event_type)
+        console.log('ℹ️ Unhandled event type:', event.event_type)
     }
 
     return NextResponse.json({ received: true })
 
   } catch (error) {
-    console.error('Webhook error:', error)
-    return NextResponse.json({ 
+    console.error('❌ Webhook error:', error)
+    return NextResponse.json({
       error: error instanceof Error ? error.message : 'Webhook processing failed'
     }, { status: 500 })
   }
 }
+
+// GET endpoint for webhook verification
+export async function GET(request: NextRequest) {
+  return NextResponse.json({
+    message: 'Paddle webhook endpoint is active',
+    timestamp: new Date().toISOString()
+  })
+}
+

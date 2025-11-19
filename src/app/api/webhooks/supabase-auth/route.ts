@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { sendWelcomeEmailDirect } from '@/lib/direct-email-service'
+import { paddleAPI, paddleConfig, updateUserSubscription } from '@/lib/paddle-config'
 
 
 export async function POST(request: NextRequest) {
@@ -88,27 +89,23 @@ export async function POST(request: NextRequest) {
       var profileCreatedAt = profile.created_at
     }
 
-    // Set subscription status to trial with 7-day trial period
-    // The database trigger should already set this, but we ensure it's correct
-    const trialEndsAt = new Date()
-    trialEndsAt.setDate(trialEndsAt.getDate() + 7) // 7 days from now
+    // Set initial status to 'pending' - user needs to complete checkout
+    // The subscription with 7-day trial will be created when checkout completes
+    // After trial, Paddle will automatically charge $49/month
+    const fallbackTrialEndsAt = new Date()
+    fallbackTrialEndsAt.setDate(fallbackTrialEndsAt.getDate() + 7)
     
-    const { error: subscriptionError } = await supabase
+    await supabase
       .from('profiles')
       .update({
-        subscription_status: 'trial',
-        trial_ends_at: trialEndsAt.toISOString(),
+        subscription_status: 'pending', // User needs to complete checkout to start trial
+        trial_ends_at: fallbackTrialEndsAt.toISOString(),
         trial_count: 1,
         last_trial_at: new Date().toISOString()
       })
       .eq('id', userId)
 
-    if (subscriptionError) {
-      console.error('Error setting subscription status for user:', subscriptionError)
-      // Don't fail the webhook if this fails - profile was created by trigger
-    }
-
-    console.log('New user registered:', userId, '- 7-day free trial started')
+    console.log('New user registered:', userId, '- Pending checkout to start 7-day trial')
 
     // Send welcome email using the new service
     const emailResult = await sendWelcomeEmailDirect(userEmail, userName || 'User')

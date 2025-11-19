@@ -116,7 +116,7 @@ export default function RedditMarketingROIPage() {
             </p>
             <ul className="list-disc list-outside ml-6 space-y-3 text-gray-700 mb-6">
               <li><strong>Time investment</strong> - Hours spent monitoring, engaging, following up</li>
-              <li><strong>Tool costs</strong> - Automation platforms, monitoring software ($29-99/month typical)</li>
+              <li><strong>Tool costs</strong> - Automation platforms, monitoring software ($49-99/month typical)</li>
               <li><strong>Opportunity cost</strong> - What else could that person be working on?</li>
             </ul>
 
@@ -135,7 +135,7 @@ export default function RedditMarketingROIPage() {
                   <div>
                     <p className="font-semibold">Monthly Reddit Marketing Costs</p>
                     <ul className="text-sm mt-2 space-y-1">
-                      <li>• Tool: $29/month</li>
+                      <li>• Tool: $49/month</li>
                       <li>• Time: 15 hours @ $50/hour</li>
                       <li>• Total: $779</li>
                     </ul>
@@ -236,7 +236,7 @@ export default function RedditMarketingROIPage() {
                   <li>✅ 24/7 automation vs manual monitoring</li>
                   <li>✅ AI lead scoring saves time</li>
                   <li>✅ Response suggestions accelerate engagement</li>
-                  <li>✅ $29/month = unlimited opportunities</li>
+                  <li>✅ $49/month = unlimited opportunities</li>
                 </ul>
               </div>
 

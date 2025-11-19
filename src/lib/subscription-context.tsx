@@ -79,7 +79,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       if (!user) {
         console.log('Refreshing subscription for user:', authUser.id)
       }
-      const response = await fetch('/api/billing/status', {
+      const response = await fetch('/api/subscription/status', {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',

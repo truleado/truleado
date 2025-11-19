@@ -199,9 +199,13 @@ function DashboardContent() {
       const avgQuality = allLeads.length > 0 ? 
         allLeads.reduce((sum: number, lead: any) => sum + (lead.quality_score || lead.relevanceScore || 3), 0) / allLeads.length : 0
       
+      const calculatedResearchSessions = allLeads.length > 0 
+        ? Math.max(1, Math.floor(allLeads.length / 3)) 
+        : 0
+
       setStats({
         totalRedditLeads: allLeads.length,
-        researchSessions: Math.floor(allLeads.length / 3) + 1, // Estimate based on leads
+        researchSessions: calculatedResearchSessions,
         keywordsAnalyzed: new Set(allLeads.map((lead: any) => lead.keyword || lead.subreddit).filter(Boolean)).size,
         leadsThisWeek,
         leadsToday,

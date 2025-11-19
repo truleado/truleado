@@ -8,10 +8,9 @@ const resolvedBaseUrl = resolvedEnvironment === 'production'
   ? 'https://api.paddle.com'
   : 'https://api.sandbox.paddle.com'
 
-// Helper function to clean environment variable values (remove quotes and whitespace)
+// Helper function to clean environment variable values
 function cleanEnvVar(value: string): string {
   if (!value) return ''
-  // Remove surrounding quotes (single or double) and trim whitespace
   return value.trim().replace(/^["']|["']$/g, '').trim()
 }
 
@@ -24,54 +23,20 @@ export const paddleConfig = {
   baseUrl: resolvedBaseUrl
 }
 
-// Log configuration for debugging
-console.log('Paddle Config Loaded:', {
-  hasApiKey: !!paddleConfig.apiKey,
-  hasClientToken: !!paddleConfig.clientToken,
-  hasWebhookSecret: !!paddleConfig.webhookSecret,
-  hasPriceId: !!paddleConfig.priceId,
-  environment: paddleConfig.environment,
-  baseUrl: paddleConfig.baseUrl,
-  priceIdValue: paddleConfig.priceId,
-  apiKeyLength: paddleConfig.apiKey ? paddleConfig.apiKey.length : 0,
-  apiKeyPreview: paddleConfig.apiKey ? `"${paddleConfig.apiKey.substring(0, 12)}..."` : 'Not set',
-  apiKeyHasWhitespace: paddleConfig.apiKey ? /\s/.test(paddleConfig.apiKey) : false,
-  apiKeyTrimmedLength: paddleConfig.apiKey ? paddleConfig.apiKey.trim().length : 0
-})
-
-// Initialize Paddle SDK with error handling
+// Initialize Paddle SDK
 let paddle: Paddle | null = null
 
 try {
   if (paddleConfig.apiKey) {
-    console.log('Initializing Paddle SDK with API key:', paddleConfig.apiKey.substring(0, 8) + '...')
-    console.log('Environment:', paddleConfig.environment)
-    
     paddle = new Paddle(paddleConfig.apiKey, {
       environment: paddleConfig.environment === 'production' ? 'production' : 'sandbox'
     })
-    console.log('Paddle SDK initialized successfully')
-    console.log('SDK object:', paddle)
-    console.log('SDK object keys:', Object.keys(paddle))
-    console.log('SDK checkoutSessions:', paddle.checkoutSessions)
-    console.log('SDK has checkoutSessions:', 'checkoutSessions' in paddle)
-    console.log('SDK checkoutSessions type:', typeof paddle.checkoutSessions)
-    
-    // Check what methods are available
-    console.log('Available methods on paddle object:')
-    Object.keys(paddle).forEach(key => {
-      const value = paddle[key]
-      console.log(`- ${key}:`, typeof value, value)
-      if (typeof value === 'object' && value !== null) {
-        console.log(`  - ${key} methods:`, Object.keys(value))
-      }
-    })
+    console.log('✅ Paddle SDK initialized successfully')
   } else {
-    console.warn('Paddle API key not found, SDK not initialized')
+    console.warn('⚠️ Paddle API key not found, SDK not initialized')
   }
 } catch (error) {
-  console.error('Failed to initialize Paddle SDK:', error)
-  console.error('Error details:', error)
+  console.error('❌ Failed to initialize Paddle SDK:', error)
   paddle = null
 }
 
@@ -91,578 +56,287 @@ export class PaddleAPI {
     if (!this.paddle) {
       throw new Error('Paddle SDK not initialized. Please check your PADDLE_API_KEY environment variable.')
     }
-    
-    // Debug the paddle instance
-    console.log('ensureSDKInitialized - paddle object:', this.paddle)
-    console.log('ensureSDKInitialized - paddle keys:', Object.keys(this.paddle))
-    console.log('ensureSDKInitialized - checkoutSessions:', this.paddle.checkoutSessions)
-    console.log('ensureSDKInitialized - has checkoutSessions:', 'checkoutSessions' in this.paddle)
-    
     return this.paddle
   }
 
-  private async makeRequest(endpoint: string, options: RequestInit = {}) {
-    if (!this.apiKey) {
-      throw new Error('PADDLE_API_KEY is required. Please set up your Paddle environment variables.')
-    }
-    
-    // Detect API version from key format
-    const isV2Key = this.apiKey.startsWith('pdl_')
-    const apiVersion = isV2Key ? 'v2' : 'v1'
-    
-    // Use correct API version endpoints
-    const baseUrl = isV2Key ? this.baseUrl : this.baseUrl
-    const url = `${baseUrl}${endpoint}`
-    
-    console.log(`Making Paddle API ${apiVersion} request to: ${url}`)
-    console.log('Request options:', {
-      method: options.method || 'GET',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        ...(isV2Key ? {} : { 'Paddle-Version': '2023-10-01' }),
-        ...options.headers,
-      },
-      body: options.body
-    })
-    
-    try {
-      const response = await fetch(url, {
-        ...options,
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          ...(isV2Key ? {} : { 'Paddle-Version': '2023-10-01' }),
-          ...options.headers,
-        },
-      })
-
-      console.log('Response status:', response.status)
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()))
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        console.error('Paddle API Error:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorData,
-          apiVersion,
-          url
-        })
-        throw new Error(`Paddle API Error: ${response.status} - ${errorData.error?.detail || response.statusText}`)
-      }
-
-      const data = await response.json()
-      console.log('Paddle API Response:', data)
-      return data
-    } catch (error) {
-      console.error('Fetch error details:', {
-        error: error instanceof Error ? error.message : error,
-        stack: error instanceof Error ? error.stack : undefined,
-        url,
-        apiVersion,
-        isV2Key,
-        errorType: error instanceof Error ? error.constructor.name : typeof error,
-        isNetworkError: error instanceof Error && (
-          error.message.includes('fetch failed') ||
-          error.message.includes('network') ||
-          error.message.includes('ECONNREFUSED') ||
-          error.message.includes('ENOTFOUND') ||
-          error.message.includes('ETIMEDOUT')
-        )
-      })
-      
-      // Provide more specific error messages
-      if (error instanceof Error) {
-        if (error.message.includes('fetch failed')) {
-          throw new Error(`Network error: Unable to connect to Paddle API at ${url}. This could be due to network connectivity, DNS resolution, or SSL issues.`)
-        } else if (error.message.includes('ECONNREFUSED')) {
-          throw new Error(`Connection refused: Paddle API server is not responding at ${url}`)
-        } else if (error.message.includes('ENOTFOUND')) {
-          throw new Error(`DNS error: Cannot resolve Paddle API hostname. Check your network connection.`)
-        } else if (error.message.includes('ETIMEDOUT')) {
-          throw new Error(`Timeout: Paddle API request timed out. The server may be slow or unreachable.`)
-        }
-      }
-      
-      throw error
-    }
-  }
-
-  // Create a checkout session
-  async createCheckoutSession(data: {
-    priceId: string
-    customerEmail: string
-    customerName?: string
-    successUrl: string
-    cancelUrl: string
-    metadata?: Record<string, any>
-  }) {
-    console.log('Creating Paddle checkout session using SDK:', {
-      priceId: data.priceId,
-      customerEmail: data.customerEmail,
-      successUrl: data.successUrl,
-      cancelUrl: data.cancelUrl,
-      hasApiKey: !!this.apiKey,
-      environment: paddleConfig.environment
-    })
-    
-    try {
-      // Validate required fields
-      if (!data.priceId) {
-        throw new Error('Price ID is required')
-      }
-      if (!data.customerEmail) {
-        throw new Error('Customer email is required')
-      }
-      if (!data.successUrl) {
-        throw new Error('Success URL is required')
-      }
-      if (!data.cancelUrl) {
-        throw new Error('Cancel URL is required')
-      }
-
-      // Use direct API call since checkoutSessions is not available in this SDK version
-      const apiData = {
-        items: [
-          {
-            price_id: data.priceId,
-            quantity: 1
-          }
-        ],
-        customer_email: data.customerEmail,
-        custom_data: data.metadata || {},
-        checkout: {
-          return_url: data.successUrl,
-          cancel_url: data.cancelUrl
-        }
-      }
-
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(data.customerEmail)) {
-        throw new Error(`Invalid email format: ${data.customerEmail}`)
-      }
-
-      // Validate URLs
-      try {
-        new URL(data.successUrl)
-        new URL(data.cancelUrl)
-      } catch (urlError) {
-        throw new Error(`Invalid URL format: ${urlError instanceof Error ? urlError.message : 'Unknown error'}`)
-      }
-
-      console.log('Paddle API request data:', JSON.stringify(apiData, null, 2))
-
-      // Create checkout session using Paddle API v2
-      let session
-      try {
-        const sdk = this.ensureSDKInitialized()
-        
-        // Try SDK first if available
-        if (sdk.checkoutSessions && typeof sdk.checkoutSessions.create === 'function') {
-          console.log('Using SDK checkoutSessions.create')
-          session = await sdk.checkoutSessions.create(apiData)
-        } else {
-          throw new Error('SDK checkoutSessions not available')
-        }
-      } catch (sdkError) {
-        console.log('SDK checkoutSessions failed, trying direct API:', sdkError)
-        
-        // Use direct API call to create checkout session
-        try {
-          // Try checkout-sessions endpoint first
-          session = await this.makeRequest('/checkout-sessions', {
-            method: 'POST',
-            body: JSON.stringify(apiData)
-          })
-        } catch (apiError) {
-          console.log('Direct API checkout-sessions failed, trying transactions:', apiError)
-          
-          // Fallback to transactions if checkout-sessions doesn't work
-          const transactionData = {
-            items: [
-              {
-                price_id: data.priceId,
-                quantity: 1
-              }
-            ],
-            customer_email: data.customerEmail,
-            custom_data: data.metadata || {}
-          }
-          
-          try {
-            session = await this.makeRequest('/transactions', {
-              method: 'POST',
-              body: JSON.stringify(transactionData)
-            })
-          } catch (transactionError) {
-            console.log('Transactions also failed, trying direct checkout:', transactionError)
-            
-            // Last fallback - try direct checkout endpoint
-            session = await this.makeRequest('/checkout', {
-              method: 'POST',
-              body: JSON.stringify(apiData)
-            })
-          }
-        }
-      }
-      
-      console.log('Checkout session created successfully:', session.id)
-      return session
-    } catch (error) {
-      console.error('Error creating checkout session:', {
-        error: error instanceof Error ? error.message : error,
-        stack: error instanceof Error ? error.stack : undefined,
-        priceId: data.priceId,
-        customerEmail: data.customerEmail,
-        hasApiKey: !!this.apiKey,
-        environment: paddleConfig.environment,
-        errorDetails: error
-      })
-      
-      // Handle specific Paddle validation errors
-      if (error instanceof Error && error.message.includes('validation')) {
-        throw new Error(`Paddle validation error: ${error.message}. Please check your price ID and ensure it's configured for recurring billing.`)
-      }
-      
-      throw error
-    }
-  }
-
-  // Test basic connectivity to Paddle API
-  async testConnectivity() {
-    try {
-      console.log('Testing Paddle API connectivity...')
-      console.log('API Key format:', this.apiKey ? `${this.apiKey.substring(0, 8)}...` : 'Not set')
-      console.log('API Key length:', this.apiKey ? this.apiKey.length : 0)
-      console.log('Base URL:', this.baseUrl)
-      console.log('Price ID:', this.priceId)
-      
-      // Test basic connectivity with a simple GET request
-      const testUrl = `${this.baseUrl}/prices/${this.priceId}`
-      console.log('Testing connectivity to:', testUrl)
-      
-      const response = await fetch(testUrl, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      })
-      
-      console.log('Connectivity test response:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        headers: Object.fromEntries(response.headers.entries())
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        return {
-          success: true,
-          message: 'Paddle API connectivity test successful',
-          status: response.status,
-          data: data
-        }
-      } else {
-        const errorData = await response.json().catch(() => ({}))
-        return {
-          success: false,
-          message: `Paddle API returned error: ${response.status} ${response.statusText}`,
-          status: response.status,
-          error: errorData
-        }
-      }
-    } catch (error) {
-      console.error('Connectivity test failed:', error)
-      return {
-        success: false,
-        message: `Connectivity test failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        error: error instanceof Error ? error.message : error
-      }
-    }
-  }
-
-  // Retrieve a price by ID (helps validate configuration)
-  async getPrice(priceId: string) {
-    try {
-      console.log('Fetching price using Paddle SDK:', priceId)
-      const sdk = this.ensureSDKInitialized()
-      
-      // Check if prices property exists
-      if (!sdk.prices) {
-        console.log('prices not available, trying direct API call')
-        return await this.makeRequest(`/prices/${priceId}`)
-      }
-      
-      const price = await sdk.prices.get(priceId)
-      console.log('Price retrieved successfully:', price)
-      return price
-    } catch (error) {
-      console.error('Error retrieving price:', error)
-      throw error
-    }
-  }
-
-  // Retrieve a checkout session
-  async getCheckoutSession(sessionId: string) {
-    try {
-      const session = await this.makeRequest(`/transactions/${sessionId}`)
-      return session
-    } catch (error) {
-      console.error('Error retrieving checkout session:', error)
-      throw error
-    }
-  }
-
-  // Retrieve a transaction by id (alias for checkout session)
-  async getTransaction(transactionId: string) {
-    try {
-      const transaction = await this.makeRequest(`/transactions/${transactionId}`)
-      return transaction
-    } catch (error) {
-      console.error('Error retrieving transaction:', error)
-      throw error
-    }
-  }
-
-  // Create a customer
-  async createCustomer(data: {
-    email: string
-    name?: string
-    customData?: Record<string, any>
-  }) {
-    console.log('Creating Paddle customer using SDK:', data.email)
-    
-    try {
-      const sdk = this.ensureSDKInitialized()
-      
-      // Check if customers property exists
-      if (!sdk.customers) {
-        console.log('customers not available, trying direct API call')
-        return await this.makeRequest('/customers', {
-          method: 'POST',
-          body: JSON.stringify({
-            email: data.email,
-            name: data.name,
-            custom_data: data.customData || {}
-          })
-        })
-      }
-      
-      const customer = await sdk.customers.create({
-        email: data.email,
-        name: data.name,
-        customData: data.customData || {}
-      })
-      
-      console.log('Customer created successfully:', customer.id)
-      return customer
-    } catch (error) {
-      console.error('Error creating customer:', error)
-      throw error
-    }
-  }
-
-  // Retrieve a customer
-  async getCustomer(customerId: string) {
-    try {
-      const customer = await this.makeRequest(`/customers/${customerId}`)
-      return customer
-    } catch (error) {
-      console.error('Error retrieving customer:', error)
-      throw error
-    }
-  }
-
-  // List customers
-  async listCustomers(options: { email?: string; limit?: number } = {}) {
-    try {
-      console.log('Listing customers with options:', options)
-      const sdk = this.ensureSDKInitialized()
-      const customers = sdk.customers.list({
-        email: options.email ? [options.email] : undefined,
-        perPage: options.limit || 10
-      })
-      console.log('Customers found:', customers.data?.length || 0)
-      return customers
-    } catch (error) {
-      console.error('Error listing customers:', error)
-      return { data: [] }
-    }
-  }
-
-  // Get customer by email
-  async getCustomerByEmail(email: string) {
-    try {
-      console.log('Searching for customer by email:', email)
-      
-      // Try the search with email filter
-      const sdk = this.ensureSDKInitialized()
-      const customers = sdk.customers.list({
-        email: [email],
-        perPage: 10
-      })
-      
-      console.log('Search result:', {
-        hasData: !!customers.data,
-        dataLength: customers.data?.length || 0,
-        customers: customers.data?.map(c => ({ id: c.id, email: c.email })) || []
-      })
-      
-      if (customers.data && customers.data.length > 0) {
-        const foundCustomer = customers.data.find(c => c.email === email)
-        if (foundCustomer) {
-          console.log('Found existing customer:', foundCustomer.id, foundCustomer.email)
-          return foundCustomer
-        } else {
-          console.log('No exact email match found, but found customers:', customers.data.length)
-          // Return the first one as fallback
-          console.log('Using first customer as fallback:', customers.data[0].id)
-          return customers.data[0]
-        }
-      } else {
-        console.log('No customer found with email:', email)
-        return null
-      }
-    } catch (error) {
-      console.error('Error searching for customer by email:', error)
-      return null
-    }
-  }
-
-  // Create a subscription
+  // Create a subscription with trial period
   async createSubscription(data: {
     customerId: string
+    customerEmail: string
+    customerName?: string
     priceId: string
-    customData?: Record<string, any>
+    trialDays?: number
+    existingCustomerId?: string // Optional: use existing Paddle customer ID to avoid conflicts
   }) {
-    console.log('Creating Paddle subscription via transaction:', data)
-    
+    if (!this.apiKey) {
+      throw new Error('PADDLE_API_KEY is required')
+    }
+
+    const paddle = this.ensureSDKInitialized()
+
     try {
-      // In Paddle, subscriptions are created via transactions with recurring items
-      const sdk = this.ensureSDKInitialized()
-      const transaction = await sdk.transactions.create({
-        customerId: data.customerId,
-        items: [
-          {
-            priceId: data.priceId,
-            quantity: 1
+      // First, create or get customer
+      let customerId: string | undefined
+      
+      // Use existing customer ID if provided (from database)
+      if (data.existingCustomerId) {
+        customerId = data.existingCustomerId
+        console.log('Using existing customer ID from database:', customerId)
+      } else {
+        try {
+          // Try to find existing customer by email
+          const customers = await paddle.customers.list({
+            email: data.customerEmail,
+          })
+          
+          if (customers && customers.data && customers.data.length > 0) {
+            customerId = customers.data[0].id
+            console.log('Found existing customer by email:', customerId)
+          } else {
+            // Try to create new customer
+            try {
+              const customer = await paddle.customers.create({
+                email: data.customerEmail,
+                name: data.customerName,
+                customData: {
+                  user_id: data.customerId,
+                  user_email: data.customerEmail
+                }
+              })
+              customerId = customer.id
+              console.log('Created new customer:', customerId)
+            } catch (createError: any) {
+              // If customer creation fails due to email conflict, extract customer ID from error
+              if (createError.message && createError.message.includes('conflicts with customer')) {
+                console.log('Customer email conflict detected, extracting customer ID from error...')
+                // Extract customer ID from error message: "customer email conflicts with customer of id ctm_xxx"
+                const match = createError.message.match(/customer of id ([a-z0-9_]+)/i)
+                if (match && match[1]) {
+                  customerId = match[1]
+                  console.log('Using customer ID from conflict error:', customerId)
+                } else {
+                  // Try listing again - sometimes the list doesn't return all results immediately
+                  console.log('Retrying customer list after conflict...')
+                  await new Promise(resolve => setTimeout(resolve, 1000)) // Wait a bit
+                  const retryCustomers = await paddle.customers.list({
+                    email: data.customerEmail,
+                  })
+                  if (retryCustomers && retryCustomers.data && retryCustomers.data.length > 0) {
+                    customerId = retryCustomers.data[0].id
+                    console.log('Found customer on retry:', customerId)
+                  } else {
+                    throw createError
+                  }
+                }
+              } else {
+                throw createError
+              }
+            }
           }
-        ],
-        customData: data.customData || {}
-      })
-      
-      console.log('Transaction created successfully:', transaction.id)
-      
-      // The transaction should contain subscription information
-      return {
-        id: transaction.id,
-        status: transaction.status,
-        nextBilledAt: transaction.nextBilledAt,
-        billingCycle: transaction.billingCycle,
-        subscriptionId: transaction.subscriptionId
+        } catch (customerError: any) {
+          console.error('Error creating/finding customer:', customerError)
+          // If it's a conflict error, try to extract the customer ID
+          if (customerError.message && customerError.message.includes('conflicts with customer')) {
+            const match = customerError.message.match(/customer of id ([a-z0-9_]+)/i)
+            if (match && match[1]) {
+              customerId = match[1]
+              console.log('Using customer ID from conflict error:', customerId)
+            } else {
+              throw customerError
+            }
+          } else {
+            throw customerError
+          }
+        }
       }
-    } catch (error) {
-      console.error('Error creating subscription transaction:', error)
-      throw error
-    }
-  }
 
-  // Retrieve a subscription
-  async getSubscription(subscriptionId: string) {
-    try {
-      const subscription = await this.makeRequest(`/subscriptions/${subscriptionId}`)
-      return subscription
-    } catch (error) {
-      console.error('Error retrieving subscription:', error)
-      throw error
-    }
-  }
+      if (!customerId) {
+        throw new Error('Failed to create or find customer')
+      }
 
-  // Cancel a subscription
-  async cancelSubscription(subscriptionId: string) {
-    console.log('Cancelling Paddle subscription:', subscriptionId)
-    
-    try {
-      const subscription = await this.makeRequest(`/subscriptions/${subscriptionId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          status: 'canceled'
-        })
+      // Paddle SDK v3 doesn't have subscriptions.create method
+      // Use REST API directly to create subscription
+      const requestBody = {
+        customer_id: customerId,
+        items: [{
+          price_id: data.priceId,
+          quantity: 1
+        }],
+        custom_data: {
+          user_id: data.customerId,
+          user_email: data.customerEmail
+        }
+      }
+
+      console.log('Creating subscription via REST API:', { customerId, priceId: data.priceId })
+
+      const subscriptionResponse = await fetch(`${this.baseUrl}/subscriptions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+          'Paddle-Version': '1'
+        },
+        body: JSON.stringify(requestBody)
       })
-      
-      console.log('Subscription cancelled successfully:', subscription.id)
-      return subscription
-    } catch (error) {
-      console.error('Error cancelling subscription:', error)
-      throw error
+
+      const responseData = await subscriptionResponse.json().catch(() => ({}))
+
+      if (!subscriptionResponse.ok) {
+        console.error('Paddle API error:', responseData)
+        const errorMessage = responseData.error?.detail || 
+                           responseData.error?.message || 
+                           responseData.errors?.[0]?.detail ||
+                           `Failed to create subscription: ${subscriptionResponse.statusText}`
+        throw new Error(errorMessage)
+      }
+
+      // Paddle API returns data in nested structure: { data: { id, status, ... } }
+      const subscription = responseData.data || responseData
+
+      // Calculate trial end date (7 days from now if not provided by Paddle)
+      const trialEndDate = data.trialDays 
+        ? new Date(Date.now() + data.trialDays * 24 * 60 * 60 * 1000)
+        : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Default 7 days
+
+      console.log('✅ Subscription created via REST API:', subscription.id)
+
+      return {
+        subscriptionId: subscription.id,
+        customerId: customerId,
+        status: subscription.status || 'trialing',
+        trialEndsAt: subscription.trial_ends_at || subscription.trialEndsAt || trialEndDate.toISOString(),
+        nextBilledAt: subscription.next_billed_at || subscription.nextBilledAt || subscription.next_billed_at || null
+      }
+    } catch (error: any) {
+      console.error('Error creating Paddle subscription:', error)
+      throw new Error(`Failed to create subscription: ${error.message || 'Unknown error'}`)
     }
   }
 
   // Verify webhook signature
-  verifyWebhookSignature(payload: string, signature: string): boolean {
-    if (!signature || !paddleConfig.webhookSecret) {
-      console.log('Missing signature or webhook secret, skipping verification')
-      return true // Allow webhook to proceed for testing
+  verifyWebhookSignature(body: string, signature: string): boolean {
+    if (!paddleConfig.webhookSecret || !signature) {
+      return false
     }
 
     try {
       const crypto = require('crypto')
-      const expectedSignature = crypto
-        .createHmac('sha256', paddleConfig.webhookSecret)
-        .update(payload)
-        .digest('hex')
+      const hmac = crypto.createHmac('sha256', paddleConfig.webhookSecret)
+      hmac.update(body)
+      const computedSignature = hmac.digest('hex')
       
       // Paddle sends signature as "sha256=<hash>"
-      let receivedSignature = signature.replace('sha256=', '')
+      const receivedHash = signature.replace('sha256=', '')
       
-      // Ensure both signatures are the same length
-      const expectedBuffer = Buffer.from(expectedSignature, 'hex')
-      const receivedBuffer = Buffer.from(receivedSignature, 'hex')
-      
-      // Check if buffers have the same length
-      if (expectedBuffer.length !== receivedBuffer.length) {
-        console.error('Signature length mismatch:', {
-          expected: expectedBuffer.length,
-          received: receivedBuffer.length,
-          expectedSignature,
-          receivedSignature
-        })
-        return true // Allow webhook to proceed for testing
-      }
-      
-      return crypto.timingSafeEqual(expectedBuffer, receivedBuffer)
+      return crypto.timingSafeEqual(
+        Buffer.from(computedSignature),
+        Buffer.from(receivedHash)
+      )
     } catch (error) {
       console.error('Error verifying webhook signature:', error)
-      return true // Allow webhook to proceed for testing
+      return false
     }
+  }
+
+  // Get subscription details
+  async getSubscription(subscriptionId: string) {
+    const paddle = this.ensureSDKInitialized()
+    const subscription = await paddle.subscriptions.get(subscriptionId)
+    
+    // Format the response to match our expected structure
+    return {
+      id: subscription.id,
+      status: subscription.status,
+      customerId: (subscription as any).customer_id || subscription.customerId,
+      trialEndsAt: (subscription as any).trial_end || (subscription as any).trialEndsAt || null,
+      nextBilledAt: (subscription as any).next_billed_at || (subscription as any).nextBilledAt || null
+    }
+  }
+
+  // Get customer details
+  async getCustomer(customerId: string) {
+    const paddle = this.ensureSDKInitialized()
+    const customer = await paddle.customers.get(customerId)
+    return {
+      id: customer.id,
+      email: (customer as any).email || customer.email,
+      name: (customer as any).name || customer.name
+    }
+  }
+
+  // List subscriptions for a customer
+  async listSubscriptions(customerId: string) {
+    const paddle = this.ensureSDKInitialized()
+    return await paddle.subscriptions.list({
+      customerId: customerId
+    })
+  }
+
+  // Find subscription by customer email
+  async findSubscriptionByEmail(email: string) {
+    const paddle = this.ensureSDKInitialized()
+    
+    // First find customer by email
+    const customers = await paddle.customers.list({
+      email: email
+    })
+    
+    if (!customers || !customers.data || customers.data.length === 0) {
+      return null
+    }
+    
+    const customerId = customers.data[0].id
+    
+    // Then find subscriptions for this customer
+    const subscriptions = await paddle.subscriptions.list({
+      customerId: customerId
+    })
+    
+    if (!subscriptions || !subscriptions.data || subscriptions.data.length === 0) {
+      return null
+    }
+    
+    // Return the most recent active/trialing subscription
+    const activeSub = subscriptions.data.find((sub: any) => 
+      sub.status === 'active' || sub.status === 'trialing'
+    ) || subscriptions.data[0]
+    
+    return {
+      subscriptionId: activeSub.id,
+      customerId: customerId,
+      status: activeSub.status
+    }
+  }
+
+  // Cancel subscription
+  async cancelSubscription(subscriptionId: string) {
+    const paddle = this.ensureSDKInitialized()
+    return await paddle.subscriptions.cancel(subscriptionId)
   }
 }
 
-// Initialize the API client
 export const paddleAPI = new PaddleAPI()
 
-// Helper function to update user subscription in Supabase
+// Helper function to update user subscription in database
 export async function updateUserSubscription(
   userId: string, 
-  subscriptionData: {
-    subscription_status: 'active' | 'cancelled' | 'trial' | 'free'
-    paddle_customer_id?: string
-    paddle_subscription_id?: string
-    subscription_ends_at?: string
+  updates: {
+    subscription_status?: 'active' | 'cancelled' | 'trial' | 'free' | 'expired' | 'past_due'
+    paddle_subscription_id?: string | null
+    paddle_customer_id?: string | null
+    subscription_ends_at?: string | null
+    trial_ends_at?: string | null
   }
 ) {
   const supabase = await createClient()
 
   const { error } = await supabase
     .from('profiles')
-    .update(subscriptionData)
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString()
+    })
     .eq('id', userId)
 
   if (error) {
@@ -670,5 +344,6 @@ export async function updateUserSubscription(
     throw error
   }
 
-  console.log('User subscription updated successfully:', userId)
+  return { success: true }
 }
+

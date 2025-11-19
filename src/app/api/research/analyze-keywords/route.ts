@@ -59,9 +59,127 @@ async function followRedirects(
 
   // Check if it's a redirect status (3xx)
   if (response.status >= 300 && response.status < 400) {
-    const location = response.headers.get('location')
+    // Try to get location from various headers (case-insensitive)
+    let location = response.headers.get('location') || 
+                   response.headers.get('Location') ||
+                   response.headers.get('LOCATION')
+    
+    // If no location header, try Refresh header (some servers use this)
     if (!location) {
-      throw new Error(`Redirect (${response.status}) detected but no location header found for ${url}`)
+      const refresh = response.headers.get('refresh') || 
+                      response.headers.get('Refresh') ||
+                      response.headers.get('REFRESH')
+      if (refresh) {
+        // Extract URL from Refresh header (format: "0; url=https://example.com" or "5; URL=https://example.com")
+        const urlMatch = refresh.match(/url\s*=\s*([^\s;]+)/i)
+        if (urlMatch) {
+          location = urlMatch[1].trim()
+          console.log(`Found redirect URL in Refresh header: ${location}`)
+        }
+      }
+    }
+    
+    // If still no location, try multiple fallback strategies
+    if (!location) {
+      console.warn(`Redirect (${response.status}) detected but no location header found for ${url}. Trying fallback strategies...`)
+      
+      // Read response body once for multiple uses
+      let responseText: string | null = null
+      try {
+        const clonedResponse = response.clone()
+        responseText = await clonedResponse.text()
+      } catch (bodyError) {
+        console.warn('Could not read response body:', bodyError)
+      }
+      
+      // Strategy 1: Try to extract redirect from response body (HTML meta refresh)
+      if (responseText) {
+        // Check for meta refresh tag
+        const metaRefreshMatch = responseText.match(/<meta[^>]*http-equiv\s*=\s*["']?refresh["']?[^>]*content\s*=\s*["']?[^"']*url\s*=\s*([^\s"'>]+)/i)
+        if (metaRefreshMatch) {
+          location = metaRefreshMatch[1].trim()
+          console.log(`Found redirect URL in meta refresh tag: ${location}`)
+        } else {
+          // Check for JavaScript redirect
+          const jsRedirectMatch = responseText.match(/window\.location\s*=\s*["']([^"']+)["']/i) ||
+                                 responseText.match(/location\.href\s*=\s*["']([^"']+)["']/i)
+          if (jsRedirectMatch) {
+            location = jsRedirectMatch[1].trim()
+            console.log(`Found redirect URL in JavaScript: ${location}`)
+          }
+        }
+      }
+      
+      // Strategy 2: Try URL variations (remove/add trailing slash)
+      if (!location) {
+        try {
+          const urlObj = new URL(url)
+          const variations = [
+            url.endsWith('/') ? url.slice(0, -1) : url + '/',
+            urlObj.pathname === '/' ? url : urlObj.origin,
+          ]
+          
+          for (const variation of variations) {
+            if (variation !== url && !visitedUrls.has(variation)) {
+              console.log(`Trying URL variation: ${variation}`)
+              try {
+                const { finalUrl: varFinalUrl, response: varResponse } = await followRedirects(variation, maxRedirects - 1, visitedUrls)
+                if (varResponse.ok) {
+                  console.log(`URL variation succeeded: ${variation} -> ${varFinalUrl}`)
+                  return { finalUrl: varFinalUrl, response: varResponse }
+                }
+              } catch (varError) {
+                console.warn(`URL variation ${variation} failed:`, varError)
+              }
+            }
+          }
+        } catch (urlVarError) {
+          console.warn('URL variation strategy failed:', urlVarError)
+        }
+      }
+      
+      // Strategy 3: Try with automatic redirect following
+      if (!location) {
+        try {
+          const autoResponse = await fetch(url, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+              'Accept-Language': 'en-US,en;q=0.5',
+            },
+            redirect: 'follow', // Let fetch handle redirects automatically
+            signal: AbortSignal.timeout(30000),
+          })
+          
+          if (autoResponse.ok) {
+            console.log(`Automatic redirect following succeeded for ${url} -> ${autoResponse.url}`)
+            return { finalUrl: autoResponse.url, response: autoResponse }
+          } else {
+            console.warn(`Automatic redirect returned status ${autoResponse.status}`)
+          }
+        } catch (autoError: any) {
+          console.warn('Automatic redirect following failed:', autoError.message || autoError)
+        }
+      }
+      
+      // Strategy 4: For 307/308, try to use the response body as content if it exists
+      if (!location && (response.status === 307 || response.status === 308) && responseText) {
+        if (responseText.length > 100) {
+          console.log(`Using redirect response body as content (${responseText.length} chars)`)
+          // Create a new Response object with the text content
+          const textResponse = new Response(responseText, {
+            status: 200,
+            statusText: 'OK',
+            headers: response.headers,
+          })
+          return { finalUrl: url, response: textResponse }
+        }
+      }
+      
+      // If all strategies fail, throw error
+      if (!location) {
+        throw new Error(`Redirect (${response.status}) detected but no location header found for ${url}. All fallback strategies failed.`)
+      }
     }
 
     // Resolve relative URLs
