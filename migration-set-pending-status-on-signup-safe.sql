@@ -1,6 +1,6 @@
 -- Migration to set new users to 'pending' status instead of 'trial'
 -- This ensures users must complete checkout before accessing the app
--- The webhook will update to 'trial' or 'active' after checkout completes
+-- SAFE VERSION: Handles missing columns and constraint updates
 
 -- Step 1: Ensure all required columns exist
 ALTER TABLE public.profiles 
@@ -81,19 +81,24 @@ EXCEPTION
 END;
 $$;
 
--- Recreate the trigger
+-- Step 5: Recreate the trigger
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW 
   EXECUTE FUNCTION public.handle_new_user();
 
--- Add comment
+-- Step 6: Grant necessary permissions
+GRANT EXECUTE ON FUNCTION public.handle_new_user() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.handle_new_user() TO anon;
+
+-- Step 7: Add comment
 COMMENT ON FUNCTION public.handle_new_user() IS 'Automatically creates user profile with pending status. User must complete checkout to start trial.';
 
--- Success message
+-- Step 8: Success message
 DO $$ 
 BEGIN 
   RAISE NOTICE '✅ Trigger updated: New users will have pending status';
   RAISE NOTICE '✅ Users must complete checkout before accessing the app';
+  RAISE NOTICE '✅ All required columns verified';
 END $$;
 
