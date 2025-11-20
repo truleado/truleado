@@ -2,6 +2,19 @@
 -- This ensures all users who haven't completed checkout are blocked
 -- Only moves users who don't have a paddle_subscription_id (haven't completed checkout)
 
+-- Step 0: Update CHECK constraint to allow 'pending' status
+-- Drop existing constraints that might block 'pending'
+ALTER TABLE public.profiles 
+DROP CONSTRAINT IF EXISTS check_subscription_status;
+
+ALTER TABLE public.profiles 
+DROP CONSTRAINT IF EXISTS profiles_subscription_status_check;
+
+-- Recreate constraint with 'pending' included
+ALTER TABLE public.profiles 
+ADD CONSTRAINT check_subscription_status 
+CHECK (subscription_status IN ('trial', 'active', 'expired', 'cancelled', 'past_due', 'pending', 'free'));
+
 -- Step 1: Show count of users that will be affected
 DO $$ 
 DECLARE
