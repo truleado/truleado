@@ -49,15 +49,26 @@ export default function SignUp() {
     if (error) {
       setError(error.message)
     } else {
-      // Ensure user has 'pending' status (in case webhook doesn't fire)
+      // CRITICAL: Ensure user has 'pending' status (in case webhook doesn't fire or trigger sets 'trial')
+      // This is a safety net to block fresh signups until checkout
+      // Wait for this to complete before redirecting to ensure status is set
       try {
-        await fetch('/api/auth/ensure-pending-status', {
+        const response = await fetch('/api/auth/ensure-pending-status', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        }).catch(err => console.warn('Failed to ensure pending status:', err))
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        })
+        if (response.ok) {
+          const data = await response.json()
+          console.log('✅ Ensured pending status for fresh signup:', data)
+        } else {
+          console.warn('Failed to ensure pending status:', response.status)
+        }
+        // Small delay to ensure database update propagates
+        await new Promise(resolve => setTimeout(resolve, 500))
       } catch (error) {
         console.warn('Error ensuring pending status:', error)
-        // Don't fail signup if this fails
+        // Don't fail signup if this fails, but log it
       }
       
       // Send welcome email in the background (don't block signup)
@@ -71,7 +82,8 @@ export default function SignUp() {
       }
       
       // Redirect to checkout to collect payment information
-      router.push('/checkout')
+      // Use replace to prevent back button from bypassing checkout
+      router.replace('/checkout')
     }
     
     setLoading(false)

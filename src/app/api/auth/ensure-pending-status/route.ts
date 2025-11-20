@@ -25,12 +25,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
-    // If user was just created (within last 5 minutes) and has 'trial' status,
-    // change it to 'pending' to require checkout
+    // For fresh signups: If user was just created (within last 10 minutes) 
+    // and has 'trial' status (from old trigger), change it to 'pending'
     const profileCreatedAt = new Date(profile.created_at)
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000)
+    const isFreshSignup = profileCreatedAt > tenMinutesAgo
     
-    if (profileCreatedAt > fiveMinutesAgo && profile.subscription_status === 'trial') {
+    // Also check if user has no paddle_subscription_id (hasn't completed checkout)
+    const { data: fullProfile } = await supabase
+      .from('profiles')
+      .select('paddle_subscription_id')
+      .eq('id', user.id)
+      .single()
+    
+    const hasNoSubscription = !fullProfile?.paddle_subscription_id
+    
+    // If it's a fresh signup with 'trial' status and no subscription, set to 'pending'
+    if (isFreshSignup && profile.subscription_status === 'trial' && hasNoSubscription) {
       const fallbackTrialEndsAt = new Date()
       fallbackTrialEndsAt.setDate(fallbackTrialEndsAt.getDate() + 7)
       
@@ -48,12 +59,36 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to update status' }, { status: 500 })
       }
 
-      console.log('✅ Updated user status to pending:', user.id)
+      console.log('✅ Updated fresh signup status to pending:', user.id)
       return NextResponse.json({ 
         success: true, 
         message: 'Status updated to pending',
         subscription_status: 'pending'
       })
+    }
+    
+    // Also handle case where status is null or empty (shouldn't happen but just in case)
+    if (isFreshSignup && (!profile.subscription_status || profile.subscription_status === '')) {
+      const fallbackTrialEndsAt = new Date()
+      fallbackTrialEndsAt.setDate(fallbackTrialEndsAt.getDate() + 7)
+      
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          subscription_status: 'pending',
+          trial_ends_at: fallbackTrialEndsAt.toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id)
+
+      if (!updateError) {
+        console.log('✅ Set null status to pending for fresh signup:', user.id)
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Status set to pending',
+          subscription_status: 'pending'
+        })
+      }
     }
 
     // If already pending or other status, just return current status
