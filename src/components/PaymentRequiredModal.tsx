@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, CreditCard, AlertTriangle, Lock } from 'lucide-react'
+import { X, CreditCard, AlertTriangle, Lock, LogOut } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 
 interface PaymentRequiredModalProps {
@@ -18,7 +18,8 @@ export function PaymentRequiredModal({
   trialTimeRemaining = 'Trial expired'
 }: PaymentRequiredModalProps) {
   const [isProcessing, setIsProcessing] = useState(false)
-  const { user } = useAuth()
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const { user, signOut } = useAuth()
 
   const handleUpdatePayment = async () => {
     setIsProcessing(true)
@@ -35,6 +36,25 @@ export function PaymentRequiredModal({
       alert('Failed to open payment page. Please try again.')
     } finally {
       setIsProcessing(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+    try {
+      await signOut()
+      // signOut already redirects to homepage, but ensure redirect happens
+      if (typeof window !== 'undefined') {
+        window.location.href = '/'
+      }
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Even on error, redirect to homepage
+      if (typeof window !== 'undefined') {
+        window.location.href = '/'
+      }
+    } finally {
+      setIsLoggingOut(false)
     }
   }
 
@@ -134,14 +154,22 @@ export function PaymentRequiredModal({
             </div>
 
             {/* Action Buttons */}
-            <div className="flex space-x-3 pt-4">
+            <div className="flex flex-col space-y-3 pt-4">
               <button
                 onClick={handleUpdatePayment}
-                disabled={isProcessing}
-                className="flex-1 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
+                disabled={isProcessing || isLoggingOut}
+                className="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
               >
                 <CreditCard className="w-5 h-5" />
                 <span>{isProcessing ? 'Processing...' : subscriptionStatus === 'pending' ? 'Complete Payment' : 'Update Payment Method'}</span>
+              </button>
+              <button
+                onClick={handleLogout}
+                disabled={isProcessing || isLoggingOut}
+                className="w-full px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
+              >
+                <LogOut className="w-5 h-5" />
+                <span>{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
               </button>
             </div>
 
