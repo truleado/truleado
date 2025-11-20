@@ -49,6 +49,17 @@ export default function SignUp() {
     if (error) {
       setError(error.message)
     } else {
+      // Ensure user has 'pending' status (in case webhook doesn't fire)
+      try {
+        await fetch('/api/auth/ensure-pending-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        }).catch(err => console.warn('Failed to ensure pending status:', err))
+      } catch (error) {
+        console.warn('Error ensuring pending status:', error)
+        // Don't fail signup if this fails
+      }
+      
       // Send welcome email in the background (don't block signup)
       try {
         sendWelcomeEmailDirect(email, name.trim()).catch(err => 
