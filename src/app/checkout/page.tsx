@@ -17,6 +17,9 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null)
+  const [clientToken, setClientToken] = useState<string | null>(null)
+  const [priceId, setPriceId] = useState<string | null>(null)
+  const [environment, setEnvironment] = useState<string | null>(null)
   const paddleInitialized = useRef(false)
 
   const loadPaddleScript = useCallback((): Promise<void> => {
@@ -159,13 +162,18 @@ export default function CheckoutPage() {
         throw new Error(errorData.error || 'Failed to get checkout configuration')
       }
 
-      const { clientToken, priceId, environment } = await response.json()
+      const { clientToken: token, priceId: pid, environment: env } = await response.json()
 
-      if (!clientToken || !priceId) {
+      if (!token || !pid) {
         throw new Error('Checkout configuration missing. Please check your Paddle settings.')
       }
 
-      console.log('Paddle config received:', { hasToken: !!clientToken, hasPriceId: !!priceId, environment })
+      // Store for later use (reopening checkout)
+      setClientToken(token)
+      setPriceId(pid)
+      setEnvironment(env)
+
+      console.log('Paddle config received:', { hasToken: !!token, hasPriceId: !!pid, environment: env })
 
       // Load Paddle.js script
       await loadPaddleScript()
@@ -217,7 +225,7 @@ export default function CheckoutPage() {
       }
 
       // Open full-screen checkout
-      openFullScreenCheckout(clientToken, priceId, environment)
+      openFullScreenCheckout(token, pid, env)
 
     } catch (err) {
       console.error('Error initializing checkout:', err)
@@ -350,9 +358,32 @@ export default function CheckoutPage() {
                     </svg>
                   </div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-4">Checkout is Open</h3>
-                  <p className="text-gray-600">
+                  <p className="text-gray-600 mb-6">
                     Please complete the payment form that opened above. Once you're done, you'll be redirected to your dashboard.
                   </p>
+                  <button
+                    onClick={async () => {
+                      if (clientToken && priceId && environment) {
+                        try {
+                          setIsInitializing(false)
+                          setError(null)
+                          openFullScreenCheckout(clientToken, priceId, environment)
+                        } catch (err) {
+                          console.error('Error reopening checkout:', err)
+                          setError('Failed to reopen checkout. Please refresh the page.')
+                        }
+                      } else {
+                        // Re-initialize if tokens are missing
+                        initializeCheckout()
+                      }
+                    }}
+                    className="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span>Reopen Checkout</span>
+                  </button>
                 </div>
               )}
             </div>
